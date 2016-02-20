@@ -48,7 +48,7 @@ module Superhosting
         print opt_parser.to_s
 
         print "\n"
-        print get_childs_banners(@node) if (@node.is_a? Hash)
+        print get_childs_banners(@node)
         print "\n"
       end
 
