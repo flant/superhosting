@@ -1,2 +1,0 @@
-describe 'container' do
-end
