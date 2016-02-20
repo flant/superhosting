@@ -1,6 +1,6 @@
 module Superhosting
   module Controllers
-    class Containter < Controller
+    class Container < Controller
       def list
 
       end

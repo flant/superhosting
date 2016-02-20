@@ -17,3 +17,5 @@ require 'superhosting/controllers/site'
 require 'superhosting/controllers/site/alias'
 
 require 'superhosting/controllers/user'
+
+require 'superhosting/docker_api'
