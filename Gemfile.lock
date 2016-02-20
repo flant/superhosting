@@ -1,0 +1,54 @@
+GIT
+  remote: https://github.com/flant/path_mapper.git
+  revision: 394f14367031c597f93af75575d515e25250fe09
+  specs:
+    path_mapper (0.0.1)
+
+PATH
+  remote: .
+  specs:
+    superhosting (0.1.0)
+      mixlib-cli
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    coderay (1.1.0)
+    diff-lcs (1.2.5)
+    excon (0.45.4)
+    method_source (0.8.2)
+    mixlib-cli (1.5.0)
+    pry (0.10.3)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
+    rake (10.5.0)
+    rspec (3.4.0)
+      rspec-core (~> 3.4.0)
+      rspec-expectations (~> 3.4.0)
+      rspec-mocks (~> 3.4.0)
+    rspec-core (3.4.3)
+      rspec-support (~> 3.4.0)
+    rspec-expectations (3.4.0)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.4.0)
+    rspec-mocks (3.4.1)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.4.0)
+    rspec-support (3.4.1)
+    slop (3.6.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (~> 1.10)
+  excon (>= 0.45.4, < 1.0)
+  path_mapper!
+  pry
+  rake (~> 10.0)
+  rspec (~> 3.4.0)
+  superhosting!
+
+BUNDLED WITH
+   1.11.2

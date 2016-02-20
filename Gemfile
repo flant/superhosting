@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 gemspec
 
-gem 'path_mapper', git: 'git@gitlab.flant.ru:flant-superhosting/path-mapper.git'
+gem 'path_mapper', git: 'https://github.com/flant/path_mapper.git'
 
 group :development do
   gem 'pry'
