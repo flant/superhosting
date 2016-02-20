@@ -1,4 +1,5 @@
 require 'superhosting/version'
+require 'mixlib/cli'
 
 require 'superhosting/controller'
 
