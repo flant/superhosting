@@ -1,12 +1,13 @@
 module Superhosting
   module Cli
     module Cmd
-      class AdminPasswd < Base
+      class MysqlUserAdd < Base
         option :generate,
                :short => '-g',
                :long  => '--generate'
 
         def run
+          
         end
       end
     end

@@ -1,1 +1,10 @@
 #!/usr/bin/env ruby
+
+require 'superhosting'
+
+begin
+  Superhosting::Cli::Base.start(ARGV)
+rescue Superhosting::Cli::Error => e
+  $stderr.puts(e.message)
+  exit 1
+end

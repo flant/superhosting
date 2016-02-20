@@ -1,8 +1,9 @@
 module Superhosting
   module Cli
     module Cmd
-      class AdminDelete < Base
+      class ContainerList < Base
         def run
+          
         end
       end
     end
