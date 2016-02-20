@@ -1,19 +1,19 @@
 module Superhosting
   module Controllers
     class Admin < Controller
-      def add(name)
+      def add(name:)
 
       end
 
-      def delete(name)
+      def delete(name:)
 
       end
 
-      def passwd(name, generate: nil)
+      def passwd(name:, generate: nil)
 
       end
 
-      def container(name)
+      def container(name:)
         Container.new(name)
       end
     end

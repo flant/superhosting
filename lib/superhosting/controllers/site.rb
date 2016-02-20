@@ -1,19 +1,19 @@
 module Superhosting
   module Controllers
     class Site < Controller
-      def add(name, container_name:)
+      def add(name:, container_name:)
 
       end
 
-      def delete(name)
+      def delete(name:)
 
       end
 
-      def rename(name)
+      def rename(name:)
 
       end
 
-      def alias(name)
+      def alias(name:)
         AliasController.new(name)
       end
     end

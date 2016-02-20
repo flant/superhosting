@@ -5,35 +5,35 @@ module Superhosting
 
       end
 
-      def add(name, model: :required, mail: nil, admin_mail: :required)
+      def add(name:, model: :required, mail: nil, admin_mail: :required)
 
       end
 
-      def delete(name)
+      def delete(name:)
 
       end
 
-      def change(name, model: :required, mail: nil, admin_mail: :required)
+      def change(name:, model: :required, mail: nil, admin_mail: :required)
 
       end
 
-      def update(name)
+      def update(name:)
 
       end
 
-      def reconfig(name)
+      def reconfig(name:)
 
       end
 
-      def save(name, to:)
+      def save(name:, to:)
 
       end
 
-      def restore(name, from:, model: :required, mail: nil, admin_mail: :required)
+      def restore(name:, from:, model: :required, mail: nil, admin_mail: :required)
 
       end
 
-      def admin(name)
+      def admin(name:)
         Admin.new(name)
       end
     end

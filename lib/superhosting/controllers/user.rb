@@ -5,7 +5,7 @@ module Superhosting
 
       end
 
-      def add(name, container_name:, no_ssh: false, no_ftp: false)
+      def add(name:, container_name:, no_ssh: false, no_ftp: false)
 
       end
 
@@ -13,11 +13,11 @@ module Superhosting
 
       end
 
-      def delete(name, container_name:)
+      def delete(name:, container_name:)
 
       end
 
-      def change(name, container_name:, no_ssh: false, no_ftp: false)
+      def change(name:, container_name:, no_ssh: false, no_ftp: false)
 
       end
     end

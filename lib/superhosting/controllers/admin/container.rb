@@ -10,11 +10,11 @@ module Superhosting
 
         end
 
-        def add(name)
+        def add(name:)
 
         end
 
-        def delete(name)
+        def delete(name:)
 
         end
       end

@@ -6,11 +6,11 @@ module Superhosting
           @site_name = site_name
         end
 
-        def add(name)
+        def add(name:)
 
         end
 
-        def delete(name)
+        def delete(name:)
 
         end
       end
