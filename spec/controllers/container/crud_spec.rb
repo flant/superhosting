@@ -4,6 +4,6 @@ describe Superhosting::Controllers::Container do
   include SpecHelpers::Controllers::Container
 
   it 'add' do
-    add_container(name: 'test-container')
+    container_add(name: 'test-container-1')
   end
 end

@@ -4,4 +4,7 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'path_mapper', git: 'git@gitlab.flant.ru:flant-superhosting/path-mapper.git'
-gem 'pry'
+
+group :development do
+  gem 'pry'
+end

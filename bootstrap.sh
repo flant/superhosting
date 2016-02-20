@@ -12,3 +12,13 @@ git clone https://github.com/flant/pam_docker.git
 cd pam_docker
 make
 make install-ubuntu-14.04
+
+curl -sSL https://get.rvm.io | sudo bash -s stable
+source /etc/profile
+
+rvm install 2.2.1 --verify-downloads 1 --disable-binary --quiet-curl
+rvm alias create default 2.2.1
+gem install bundler
+
+cd /vagrant
+bundle install
