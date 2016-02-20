@@ -6,6 +6,10 @@ module Superhosting
                :short => '-s',
                :long  => '--site'
 
+        def self.superbanner(path=[])
+          self.banner("sx #{path.join(' ')} <name> #{'(options)' unless self.options.empty?}")
+        end
+
         def run
           
         end

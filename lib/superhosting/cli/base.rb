@@ -127,16 +127,20 @@ module Superhosting
           klass.to_s.gsub(/([[:lower:]])([[:upper:]])/, '\1 \2').split(' ').map(&:downcase)
         end
 
-        def set_banners(node, strings=[])
+        def set_banners(node, path=[])
           node.each do |k,v|
-            commands = strings.dup
-            commands << k
+            path_ = path.dup
+            path_ << k
             if v.is_a? Hash
-              set_banners(v, commands)
+              set_banners(v, path_)
             else
-              v.banner("sx #{commands.join(' ')} #{'(options)' unless v.options.empty?}")
+              v.superbanner(path_)
             end
           end
+        end
+
+        def superbanner(path=[])
+          self.banner("sx #{path.join(' ')} #{'(options)' unless self.options.empty?}")
         end
       end
     end
