@@ -4,7 +4,7 @@ require 'superhosting'
 
 begin
   Superhosting::Cli::Base.start(ARGV)
-rescue Superhosting::Cli::Error => e
+rescue Superhosting::Cli::Errors::Base => e
   $stderr.puts(e.message)
   exit 1
 end

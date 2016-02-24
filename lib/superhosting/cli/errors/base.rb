@@ -1,8 +1,7 @@
 module Superhosting
   module Cli
-    module Cmd
-      class MysqlGrant < Base
-
+    module Errors
+      class Base < Exception
       end
     end
   end

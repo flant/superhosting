@@ -12,8 +12,8 @@ module Superhosting
         option :admin_mail,
                :long  => '--admin-mail'
 
-        def run
-          
+        def self.has_required_param?
+          true
         end
       end
     end

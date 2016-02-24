@@ -5,10 +5,6 @@ module Superhosting
         option :generate,
                :short => '-g',
                :long  => '--generate'
-
-        def run
-          
-        end
       end
     end
   end

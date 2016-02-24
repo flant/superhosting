@@ -3,11 +3,12 @@ module Superhosting
     module Cmd
       class SiteAliasDelete < Base
         option :site_name,
-               :short => '-s',
-               :long  => '--site'
+               :short => '-s NAME',
+               :long  => '--site NAME',
+							 :required => true
 
-        def run
-          
+        def self.has_required_param?
+          true
         end
       end
     end

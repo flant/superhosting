@@ -2,8 +2,8 @@ module Superhosting
   module Controllers
     class Admin
       class Container < Controller
-        def initialize(admin_name)
-          @admin_name = admin_name
+        def initialize(name:)
+          @admin_name = name
         end
 
         def list

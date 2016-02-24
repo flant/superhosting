@@ -5,8 +5,9 @@ module Superhosting
       include Mixlib::CLI
 
       COMMANDS_MODULE = Cmd
+      CONTROLLERS_MODULE = Superhosting::Controllers
 
-      banner '##### SX #####'
+      banner "#{?# * 100}\n#{?# * 49}SX#{?# * 49}\n#{?# * 100}\n\n"
 
       option :verbosity,
              :short => '-v',
@@ -21,10 +22,10 @@ module Superhosting
       def initialize(argv, node)
         super()
 
-        parse_options(argv)
+        @pos_args = parse_options(argv)
         @node = node
 
-        if config[:help]
+        if config[:help] or self.class == Base
           self.help
           exit 1
         end
@@ -53,78 +54,72 @@ module Superhosting
       end
 
       def run
-        self.help
+        method = get_controller
+
+        opts = {}
+        method.parameters.each do |req, name|
+          if req.to_s.start_with? 'key'
+            opt = config[name]
+
+            if opt.nil? and name.to_s.end_with? 'name'
+              res = config.keys.select {|k| k.to_s.end_with? 'name' }
+              opt = config[res.first] if res.one?
+            end
+
+            opts.merge!(name => opt)
+          end
+        end
+
+        method.call(**opts)
+      end
+
+      def get_controller
+        node = CONTROLLERS_MODULE
+        names = self.class.split_toggle_case_name(self.class.name.split('::').last)
+
+        names.each do |n|
+          c_name = n.capitalize.to_sym
+          m_name = n.to_sym
+
+          if node.respond_to? :constants and node.constants.include? c_name
+            node = node.const_get(c_name)
+          elsif node.respond_to? :instance_methods and node.instance_methods(false).include? m_name
+            params = node.instance_method(:initialize).parameters
+
+            args = []
+            params.each do |req, name|
+              arg = @pos_args.shift
+              raise Errors::Base.new('You must supply required parameter') if arg.nil?
+
+              if req == :req
+                args << arg
+              elsif req == :reqkey
+                args << { name => arg }
+              end
+            end
+
+            return node.new(*args).method(m_name)
+          end
+        end
+        raise Errors::Base.new('Method doesn\'t found')
       end
 
       class << self
         def start(args)
+          def clear_args(args, cmd)
+            split_toggle_case_name(cmd).length.times{ args.shift }
+            args
+          end
+
           prepend
           cmd, node = get_cmd_and_node(args)
+          args = clear_args(args, cmd)
           cmd.new(args, node).run
         end
 
         def prepend
-          set_banners(get_commands_hierarchy)
-        end
-
-        def get_cmd_and_node(args)
-          def positional_arguments(args)
-            args.select { |arg| arg =~ /^(([[:alnum:]])[[:alnum:]\_\-]+)$/ }
-          end
-
-          def find_cmd(words)
-            def get_class(class_name)
-              COMMANDS_MODULE.const_get(class_name)
-            rescue NameError
-              return false
-            end
-
-            match = nil
-            until match || words.empty?
-              candidate = words.map(&:capitalize).join
-              unless match = get_class(candidate)
-                words.pop
-              end
-            end
-            match
-          end
-
-          def find_node(names)
-            node = get_commands_hierarchy
-            key = ''
-            names.each do |n|
-              break unless node[n]
-              key = n
-              node = node[n]
-            end
-            { key => node }
-          end
-
-          cmd_words = positional_arguments(args)
-          if cmd = find_cmd(cmd_words.dup)
-            [cmd, find_node(toggle_case_to_args(cmd.name.split('::').last))]
-          else
-            [self, find_node(cmd_words)]
-          end
-        end
-
-        def get_commands_hierarchy
-          def get_commands
-            COMMANDS_MODULE.constants.select {|c| Class === COMMANDS_MODULE.const_get(c) }
-          end
-
-          get_commands.inject({}) do |h,k|
-            node = h
-            parts = toggle_case_to_args(k)
-            parts.each do |cmd|
-              node = (node[cmd] ||= (cmd == parts.last) ? COMMANDS_MODULE.const_get(k) : {})
-            end
-            h
-          end
-        end
-
-        def toggle_case_to_args(klass)
-          klass.to_s.gsub(/([[:lower:]])([[:upper:]])/, '\1 \2').split(' ').map(&:downcase)
+          set_commands_hierarchy
+          set_banners(@@commands_hierarchy)
         end
 
         def set_banners(node, path=[])
@@ -134,13 +129,65 @@ module Superhosting
             if v.is_a? Hash
               set_banners(v, path_)
             else
-              v.superbanner(path_)
+              v.banner("sx #{path_.join(' ')}#{' <param>' if v.has_required_param?}#{' (options)' unless v.options.empty?}")
             end
           end
         end
 
-        def superbanner(path=[])
-          self.banner("sx #{path.join(' ')} #{'(options)' unless self.options.empty?}")
+        def has_required_param?
+          false
+        end
+
+        def set_commands_hierarchy
+          def get_commands
+            COMMANDS_MODULE.constants.select {|c| Class === COMMANDS_MODULE.const_get(c) }.sort
+          end
+
+          @@commands_hierarchy = get_commands.inject({}) do |h,k|
+            node = h
+            parts = split_toggle_case_name(k)
+            parts.each do |cmd|
+              node = (node[cmd] ||= (cmd == parts.last) ? COMMANDS_MODULE.const_get(k) : {})
+            end
+            h
+          end
+        end
+
+        def split_toggle_case_name(klass)
+          klass.to_s.gsub(/([[:lower:]])([[:upper:]])/, '\1 \2').split(' ').map(&:downcase)
+        end
+
+        def get_cmd_and_node(args)
+          def positional_arguments(args)
+            args.select { |arg| arg =~ /^([[:alnum:]\_\-]+)$/ }
+          end
+
+          args = positional_arguments(args)
+          node = @@commands_hierarchy
+          path = []
+          key = ''
+          cmd = nil
+          while arg = args.shift and cmd.nil?
+            res = node.keys.select { |k| k.start_with? arg }
+
+            case res.count
+              when 1
+                key = res.first
+                cmd = node[key] if node[key].is_a? Class
+              when 0
+                break
+              else
+                raise Errors::AmbiguousCommand.new(path: path, commands: res)
+            end
+
+            path << key
+            node = node[key]
+          end
+
+          cmd ||= self
+          node = { key => node }
+
+          [cmd, node]
         end
       end
     end

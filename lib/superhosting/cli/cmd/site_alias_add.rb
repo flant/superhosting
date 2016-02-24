@@ -3,15 +3,12 @@ module Superhosting
     module Cmd
       class SiteAliasAdd < Base
         option :site_name,
-               :short => '-s',
-               :long  => '--site'
+               :short => '-s NAME',
+               :long  => '--site NAME',
+							 :required => true
 
-        def self.superbanner(path=[])
-          self.banner("sx #{path.join(' ')} <name> #{'(options)' unless self.options.empty?}")
-        end
-
-        def run
-          
+        def self.has_required_param?
+          true
         end
       end
     end

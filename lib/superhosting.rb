@@ -16,6 +16,8 @@ require 'superhosting/controllers/user'
 
 require 'superhosting/docker_api'
 
+require 'superhosting/cli/errors/base'
+Dir["#{File.dirname(__FILE__)}/superhosting/cli/errors/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}
+
 require 'superhosting/cli/base'
-require 'superhosting/cli/error'
 Dir["#{File.dirname(__FILE__)}/superhosting/cli/cmd/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}

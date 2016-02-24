@@ -2,8 +2,8 @@ module Superhosting
   module Cli
     module Cmd
       class ContainerDelete < Base
-        def run
-          
+        def self.has_required_param?
+          true
         end
       end
     end

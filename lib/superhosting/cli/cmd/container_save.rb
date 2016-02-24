@@ -5,8 +5,8 @@ module Superhosting
         option :save_to,
                :long  => '--to'
 
-        def run
-          
+        def self.has_required_param?
+          true
         end
       end
     end

@@ -1,9 +1,9 @@
 module Superhosting
   module Controllers
     class Site
-      class AliasController < Controller
-        def initialize(site_name)
-          @site_name = site_name
+      class Alias < Controller
+        def initialize(name)
+          @site_name = name
         end
 
         def add(name:)

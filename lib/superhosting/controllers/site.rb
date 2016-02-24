@@ -14,7 +14,7 @@ module Superhosting
       end
 
       def alias(name:)
-        AliasController.new(name)
+        Alias.new(name)
       end
     end
   end

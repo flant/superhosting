@@ -3,12 +3,9 @@ module Superhosting
     module Cmd
       class ContainerAdminList < Base
         option :container_name,
-               :short => '-c',
-               :long  => '--container'
-
-        def run
-          
-        end
+               :short => '-c NAME',
+               :long  => '--container NAME',
+							 :required => true
       end
     end
   end

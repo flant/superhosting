@@ -3,10 +3,12 @@ module Superhosting
     module Cmd
       class AdminContainerDelete < Base
         option :admin_name,
-               :short => '-a',
-               :long  => '--admin'
+               :short => '-a NAME',
+               :long  => '--admin NAME',
+							 :required => true
 
-        def run
+        def self.has_required_param?
+          true
         end
       end
     end
