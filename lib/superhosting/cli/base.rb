@@ -5,25 +5,31 @@ module Superhosting
       include Mixlib::CLI
 
       COMMANDS_MODULE = Cmd
-      CONTROLLERS_MODULE = Superhosting::Controllers
+      CONTROLLERS_MODULE = Superhosting::Controller
 
       banner "#{?# * 100}\n#{?# * 49}SX#{?# * 49}\n#{?# * 100}\n\n"
 
       option :verbosity,
              :short => '-v',
-             :long  => '--verbose',
-             :description => 'More verbose output. Use twice for max verbosity'
+             :long  => '--verbose'
 
       option :help,
              :short        => '-h',
-             :long         => '--help',
-             :description  => 'Show this message'
+             :long         => '--help'
+
+      option :debug,
+             :long         => '--debug',
+             :boolean => true
 
       def initialize(argv, node)
         super()
 
         @pos_args = parse_options(argv)
         @node = node
+
+        @logger = Logger.new(STDOUT)
+        @logger.level = config[:debug] ? Logger::DEBUG : Logger::INFO
+        @logger.formatter = proc {|severity, datetime, progname, msg| sprintf("%s\n", msg.to_s.strip) }
 
         if config[:help] or self.class == Base
           self.help
@@ -46,11 +52,8 @@ module Superhosting
           end
         end
 
-        print opt_parser.to_s
-
-        print "\n"
-        print get_childs_banners(@node)
-        print "\n"
+        @logger.info(opt_parser.to_s)
+        @logger.info(get_childs_banners(@node))
       end
 
       def run
@@ -58,7 +61,9 @@ module Superhosting
 
         opts = {}
         method.parameters.each do |req, name|
-          if req.to_s.start_with? 'key'
+          if name == :name
+            opts.merge!(name => @pos_args.shift)
+          elsif req.to_s.start_with? 'key'
             opt = config[name]
 
             if opt.nil? and name.to_s.end_with? 'name'
@@ -86,19 +91,16 @@ module Superhosting
           elsif node.respond_to? :instance_methods and node.instance_methods(false).include? m_name
             params = node.instance_method(:initialize).parameters
 
-            args = []
+            opts = {}
             params.each do |req, name|
-              arg = @pos_args.shift
-              raise Errors::Base.new('You must supply required parameter') if arg.nil?
-
-              if req == :req
-                args << arg
+              if name =~ /logger/
+                opts.merge!(name => @logger)
               elsif req == :reqkey
-                args << { name => arg }
+                opts << { name => @pos_args.shift }
               end
             end
 
-            return node.new(*args).method(m_name)
+            return node.new(**opts).method(m_name)
           end
         end
         raise Errors::Base.new('Method doesn\'t found')
