@@ -1,9 +1,10 @@
 module Superhosting
-  module Controllers
+  module Controller
     class Site
-      class Alias < Controller
-        def initialize(name)
+      class Alias < Base
+        def initialize(name:, **kvargs)
           @site_name = name
+          super(kvargs)
         end
 
         def add(name:)

@@ -5,8 +5,7 @@ module Superhosting
         option :container_name,
                :short => '-c NAME',
                :long  => '--container NAME',
-							:required => true
-
+							 :required => true
 
         def self.has_required_param?
           true

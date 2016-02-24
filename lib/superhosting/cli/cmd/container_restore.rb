@@ -10,10 +10,10 @@ module Superhosting
                :long  => '--model'
 
         option :mail,
-               :long  => '--mail'
+               :long  => '--mail MAIL'
 
         option :admin_mail,
-               :long  => '--admin-mail'
+               :long  => '--admin-mail MAIL'
 
         def self.has_required_param?
           true

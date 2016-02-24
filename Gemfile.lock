@@ -1,6 +1,12 @@
 GIT
+  remote: https://github.com/flant/net_status.git
+  revision: 95a87cb24fda046aa03c5f8e43a3bcc536e25702
+  specs:
+    net_status (0.2.0)
+
+GIT
   remote: https://github.com/flant/path_mapper.git
-  revision: 394f14367031c597f93af75575d515e25250fe09
+  revision: 3b0230ddf80a3a3566961ba71da2da0b3ef90db3
   specs:
     path_mapper (0.0.1)
 
@@ -13,7 +19,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    coderay (1.1.0)
+    coderay (1.1.1)
     diff-lcs (1.2.5)
     excon (0.45.4)
     method_source (0.8.2)
@@ -44,6 +50,7 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 1.10)
   excon (>= 0.45.4, < 1.0)
+  net_status!
   path_mapper!
   pry
   rake (~> 10.0)

@@ -1,6 +1,6 @@
 module Superhosting
-  module Controllers
-    class Site < Controller
+  module Controller
+    class Site < Base
       def add(name:, container_name:)
 
       end
@@ -14,7 +14,7 @@ module Superhosting
       end
 
       def alias(name:)
-        Alias.new(name)
+        Alias.new(name: name, logger: @logger)
       end
     end
   end

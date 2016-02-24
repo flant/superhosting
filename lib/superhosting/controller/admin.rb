@@ -1,6 +1,6 @@
 module Superhosting
-  module Controllers
-    class Admin < Controller
+  module Controller
+    class Admin < Base
       def add(name:)
 
       end
@@ -14,7 +14,7 @@ module Superhosting
       end
 
       def container(name:)
-        Container.new(name)
+        Container.new(name: name, logger: @logger)
       end
     end
   end

@@ -4,7 +4,8 @@ module Superhosting
       class MysqlUserAdd < Base
         option :generate,
                :short => '-g',
-               :long  => '--generate'
+               :long  => '--generate',
+               :boolean => true
       end
     end
   end

@@ -1,6 +1,6 @@
 module Superhosting
-  module Controllers
-    class Mysql < Controller
+  module Controller
+    class Mysql < Base
       def db
         Db.new
       end

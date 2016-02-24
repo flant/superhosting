@@ -1,6 +1,6 @@
 module Superhosting
-  module Controllers
-    class Container < Controller
+  module Controller
+    class Container < Base
       def list
 
       end
@@ -34,7 +34,7 @@ module Superhosting
       end
 
       def admin(name:)
-        Admin.new(name)
+        Admin.new(name: name, logger: @logger)
       end
     end
   end

@@ -1,7 +1,7 @@
 module Superhosting
-  module Controllers
+  module Controller
     class Mysql
-      class Db < Controller
+      class Db < Base
         def add
 
         end

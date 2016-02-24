@@ -1,9 +1,10 @@
 module Superhosting
-  module Controllers
-    class Container
-      class Admin < Controller
-        def initialize(name:)
-          @container_name = name
+  module Controller
+    class Admin
+      class Container < Base
+        def initialize(name:, **kvargs)
+          @admin_name = name
+          super(kvargs)
         end
 
         def list

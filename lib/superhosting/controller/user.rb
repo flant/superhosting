@@ -1,6 +1,6 @@
 module Superhosting
-  module Controllers
-    class User < Controller
+  module Controller
+    class User < Base
       def list
 
       end

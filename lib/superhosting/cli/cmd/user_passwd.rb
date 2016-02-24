@@ -4,7 +4,8 @@ module Superhosting
       class UserPasswd < Base
         option :generate,
                :short => '-g',
-               :long  => '--generate'
+               :long  => '--generate',
+               :boolean => true
 
         def self.has_required_param?
           true

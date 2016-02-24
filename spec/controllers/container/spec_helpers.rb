@@ -1,8 +1,8 @@
 module SpecHelpers
-  module Controllers
+  module Controller
     module Container
       def container_controller
-        @container_controller ||= Superhosting::Controllers::Container.new
+        @container_controller ||= Superhosting::Controller::Container.new
       end
 
       def docker_api
@@ -14,5 +14,5 @@ module SpecHelpers
         expect(docker_api.container_info(kwargs[:name])).not_to be_nil
       end
     end # Container
-  end # Controllers
+  end # Controller
 end # SpecHelpers

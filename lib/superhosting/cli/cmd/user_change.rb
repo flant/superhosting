@@ -4,11 +4,13 @@ module Superhosting
       class UserChange < Base
         option :no_ssh,
                :short => '-s',
-               :long  => '--no-ssh'
+               :long  => '--no-ssh',
+               :boolean => true
 
         option :no_ftp,
                :short => '-f',
-               :long  => '--no-ftp'
+               :long  => '--no-ftp',
+               :boolean => true
 
         option :container_name,
                :short => '-c NAME',

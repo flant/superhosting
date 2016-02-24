@@ -1,7 +1,7 @@
 module Superhosting
-  module Controllers
+  module Controller
     class Mysql
-      class User < Controller
+      class User < Base
         def add(generate:)
 
         end

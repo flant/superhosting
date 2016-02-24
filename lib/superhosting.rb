@@ -1,18 +1,19 @@
 require 'mixlib/cli'
+require 'logger'
 
 require 'superhosting/version'
 
-require 'superhosting/controller'
-require 'superhosting/controllers/admin'
-require 'superhosting/controllers/admin/container'
-require 'superhosting/controllers/container'
-require 'superhosting/controllers/container/admin'
-require 'superhosting/controllers/mysql'
-require 'superhosting/controllers/mysql/db'
-require 'superhosting/controllers/mysql/user'
-require 'superhosting/controllers/site'
-require 'superhosting/controllers/site/alias'
-require 'superhosting/controllers/user'
+require 'superhosting/base'
+require 'superhosting/controller/admin'
+require 'superhosting/controller/admin/container'
+require 'superhosting/controller/container'
+require 'superhosting/controller/container/admin'
+require 'superhosting/controller/mysql'
+require 'superhosting/controller/mysql/db'
+require 'superhosting/controller/mysql/user'
+require 'superhosting/controller/site'
+require 'superhosting/controller/site/alias'
+require 'superhosting/controller/user'
 
 require 'superhosting/docker_api'
 
@@ -21,3 +22,5 @@ Dir["#{File.dirname(__FILE__)}/superhosting/cli/errors/*.rb"].each{|cmd| require
 
 require 'superhosting/cli/base'
 Dir["#{File.dirname(__FILE__)}/superhosting/cli/cmd/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}
+
+Superhosting::Cli::Base.start ['u', 'a', 'sadasd', '-c', 'ddddd']
