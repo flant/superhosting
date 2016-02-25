@@ -1,6 +1,3 @@
-require 'excon'
-require 'json'
-
 module Superhosting
   class DockerApi
     def initialize(**kwargs)
