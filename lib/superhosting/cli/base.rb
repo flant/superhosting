@@ -64,25 +64,16 @@ module Superhosting
       end
 
       def run
-        def get_subcontroller_option
-          key = :"#{self.class.get_split_class_name[-2]}_name"
-          config[key] if config.key? key
-        end
-
         method = get_controller
-
-        opts = {}
-        method.parameters.each do |req, name|
-          if req.to_s.start_with? 'key'
-            opt = config[name]
-            raise Errors::Base.new('You must supply required parameter') unless opt = get_subcontroller_option || @pos_args.shift if name == :name
-            opts.merge!(name => opt)
-          end
-        end
-        method.call(**opts)
+        res = action(method)
       end
 
       def get_controller
+        def get_subcontroller_option
+          key = :"#{self.class.get_split_class_name.first}_name"
+          config[key] unless config[key].nil?
+        end
+
         node = CONTROLLERS_MODULE
         names = self.class.get_split_class_name
 
@@ -99,9 +90,9 @@ module Superhosting
             params.each do |req, name|
               if req.to_s.start_with? 'key'
                 if name == :name
-                  raise Errors::Base.new('You must supply required parameter') unless opt = @pos_args.shift
-                elsif config.key? :name
-                  opt = config[:name]
+                  opt = get_subcontroller_option
+                elsif config.key? name
+                  opt = config[name]
                 end
                 opts.merge!(name => opt) unless opt.nil?
               end
@@ -113,6 +104,18 @@ module Superhosting
           end
         end
         raise Errors::Base.new('Method doesn\'t found')
+      end
+
+      def action(method)
+        opts = {}
+        method.parameters.each do |req, name|
+          if req.to_s.start_with? 'key'
+            opt = config[name]
+            raise Errors::Base.new('You must supply required parameter') unless opt = @pos_args.shift if name == :name
+            opts.merge!(name => opt)
+          end
+        end
+        method.parameters.empty? ? method.call : method.call(**opts)
       end
 
       class << self

@@ -2,9 +2,9 @@ module Superhosting
   module Cli
     module Cmd
       class AdminContainerAdd < Base
-        option :container_name,
-               :short => '-c NAME',
-               :long  => '--container NAME',
+        option :admin_name,
+               :short => '-a NAME',
+               :long  => '--admin NAME',
 							 :required => true
 
         def self.has_required_param?
