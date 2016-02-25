@@ -1,8 +1,8 @@
 GIT
   remote: https://github.com/flant/net_status.git
-  revision: 95a87cb24fda046aa03c5f8e43a3bcc536e25702
+  revision: 066163f8f651c2f7d75bc3e667290612e99e7c73
   specs:
-    net_status (0.2.0)
+    net_status (0.2.1)
 
 GIT
   remote: https://github.com/flant/path_mapper.git
@@ -15,6 +15,7 @@ PATH
   specs:
     superhosting (0.1.0)
       mixlib-cli
+      mixlib-shellout
 
 GEM
   remote: https://rubygems.org/
@@ -24,6 +25,7 @@ GEM
     excon (0.45.4)
     method_source (0.8.2)
     mixlib-cli (1.5.0)
+    mixlib-shellout (2.2.6)
     pry (0.10.3)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)

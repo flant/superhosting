@@ -8,7 +8,7 @@ module Superhosting
       CONTROLLERS_MODULE = Superhosting::Controller
       CONTROLLER_BASE_OPTIONS = [:config_path, :lib_path]
 
-      banner "#{?# * 50}\n#{?# * 24}SX#{?# * 24}\n#{?# * 50}\n\n"
+      banner "#{?= * 50}\n#{?- * 19}SUPERHOSTING#{?- * 19}\n#{?= * 50}\n\n"
 
       option :help,
              :short        => '-h',

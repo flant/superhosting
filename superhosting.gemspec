@@ -16,6 +16,7 @@ Gem::Specification.new do |spec|
   spec.executables   = ['sx']
 
   spec.add_dependency 'mixlib-cli'
+  spec.add_dependency 'mixlib-shellout'
 
   spec.add_development_dependency 'bundler', '~> 1.10'
   spec.add_development_dependency 'rake', '~> 10.0'

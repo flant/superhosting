@@ -1,7 +1,10 @@
 require 'mixlib/cli'
+require 'mixlib/shellout'
 require 'logger'
+require 'pathname'
 
 require 'path_mapper'
+require 'net_status'
 
 require 'superhosting/version'
 
