@@ -7,21 +7,20 @@ module Superhosting
       COMMANDS_MODULE = Cmd
       CONTROLLERS_MODULE = Superhosting::Controller
 
-      banner "#{?# * 100}\n#{?# * 49}SX#{?# * 49}\n#{?# * 100}\n\n"
-
-      option :verbosity,
-             :short => '-v',
-             :long  => '--verbose'
+      banner "#{?# * 50}\n#{?# * 24}SX#{?# * 24}\n#{?# * 50}\n\n"
 
       option :help,
              :short        => '-h',
-             :long         => '--help'
+             :long         => '--help',
+             :on           => :tail
 
       option :debug,
              :long         => '--debug',
-             :boolean => true
+             :boolean      => true,
+             :on           => :tail
 
       def initialize(argv, node)
+        self.class.options.merge!(Base::options)
         super()
 
         @pos_args = parse_options(argv)
@@ -52,35 +51,31 @@ module Superhosting
           end
         end
 
-        @logger.info(opt_parser.to_s)
-        @logger.info(get_childs_banners(@node))
+        @logger.info("#{opt_parser.to_s}\n#{get_childs_banners(@node) if self.class == Base}")
       end
 
       def run
+        def get_subcontroller_option
+          key = :"#{self.class.get_split_class_name[-2]}_name"
+          config[key] if config.key? key
+        end
+
         method = get_controller
 
         opts = {}
         method.parameters.each do |req, name|
-          if name == :name
-            opts.merge!(name => @pos_args.shift)
-          elsif req.to_s.start_with? 'key'
+          if req.to_s.start_with? 'key'
             opt = config[name]
-
-            if opt.nil? and name.to_s.end_with? 'name'
-              res = config.keys.select {|k| k.to_s.end_with? 'name' }
-              opt = config[res.first] if res.one?
-            end
-
+            raise Errors::Base.new('You must supply required parameter') unless opt = get_subcontroller_option || @pos_args.shift if name == :name
             opts.merge!(name => opt)
           end
         end
-
         method.call(**opts)
       end
 
       def get_controller
         node = CONTROLLERS_MODULE
-        names = self.class.split_toggle_case_name(self.class.name.split('::').last)
+        names = self.class.get_split_class_name
 
         names.each do |n|
           c_name = n.capitalize.to_sym
@@ -93,13 +88,17 @@ module Superhosting
 
             opts = {}
             params.each do |req, name|
-              if name =~ /logger/
-                opts.merge!(name => @logger)
-              elsif req == :reqkey
-                opts << { name => @pos_args.shift }
+              if req.to_s.start_with? 'key'
+                if name == :name
+                  raise Errors::Base.new('You must supply required parameter') unless opt = @pos_args.shift
+                elsif config.key? :name
+                  opt = config[:name]
+                end
+                opts.merge!(name => opt) unless opt.nil?
               end
             end
 
+            opts.merge!(logger: @logger)
             return node.new(**opts).method(m_name)
           end
         end
@@ -121,10 +120,10 @@ module Superhosting
 
         def prepend
           set_commands_hierarchy
-          set_banners(@@commands_hierarchy)
+          set_banners
         end
 
-        def set_banners(node, path=[])
+        def set_banners(node=@@commands_hierarchy, path=[])
           node.each do |k,v|
             path_ = path.dup
             path_ << k
@@ -153,6 +152,10 @@ module Superhosting
             end
             h
           end
+        end
+
+        def get_split_class_name
+          self.split_toggle_case_name(self.name.split('::').last)
         end
 
         def split_toggle_case_name(klass)

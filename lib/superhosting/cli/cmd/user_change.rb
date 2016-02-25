@@ -3,12 +3,10 @@ module Superhosting
     module Cmd
       class UserChange < Base
         option :no_ssh,
-               :short => '-s',
                :long  => '--no-ssh',
                :boolean => true
 
         option :no_ftp,
-               :short => '-f',
                :long  => '--no-ftp',
                :boolean => true
 

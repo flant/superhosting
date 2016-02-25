@@ -13,8 +13,8 @@ module Superhosting
 
       end
 
-      def container(name:)
-        Container.new(name: name, logger: @logger)
+      def container(name:, logger: @logger)
+        Container.new(name: name, logger: logger)
       end
     end
   end

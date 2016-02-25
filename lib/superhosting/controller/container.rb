@@ -33,8 +33,8 @@ module Superhosting
 
       end
 
-      def admin(name:)
-        Admin.new(name: name, logger: @logger)
+      def admin(name:, logger: @logger)
+        Admin.new(name: name, logger: logger)
       end
     end
   end

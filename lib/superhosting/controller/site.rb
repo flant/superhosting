@@ -13,8 +13,8 @@ module Superhosting
 
       end
 
-      def alias(name:)
-        Alias.new(name: name, logger: @logger)
+      def alias(name:, logger: @logger)
+        Alias.new(name: name, logger: logger)
       end
     end
   end

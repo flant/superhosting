@@ -22,5 +22,3 @@ Dir["#{File.dirname(__FILE__)}/superhosting/cli/errors/*.rb"].each{|cmd| require
 
 require 'superhosting/cli/base'
 Dir["#{File.dirname(__FILE__)}/superhosting/cli/cmd/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}
-
-Superhosting::Cli::Base.start ['u', 'a', 'sadasd', '-c', 'ddddd']
