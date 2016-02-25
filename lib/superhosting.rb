@@ -1,6 +1,8 @@
 require 'mixlib/cli'
 require 'logger'
 
+require 'path_mapper'
+
 require 'superhosting/version'
 
 require 'superhosting/base'

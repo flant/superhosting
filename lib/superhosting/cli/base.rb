@@ -6,6 +6,7 @@ module Superhosting
 
       COMMANDS_MODULE = Cmd
       CONTROLLERS_MODULE = Superhosting::Controller
+      CONTROLLER_BASE_OPTIONS = [:config_path, :lib_path]
 
       banner "#{?# * 50}\n#{?# * 24}SX#{?# * 24}\n#{?# * 50}\n\n"
 
@@ -17,6 +18,14 @@ module Superhosting
       option :debug,
              :long         => '--debug',
              :boolean      => true,
+             :on           => :tail
+
+      option :config_path,
+             :long         => '--config-path PATH',
+             :on           => :tail
+
+      option :lib_path,
+             :long         => '--lib-path PATH',
              :on           => :tail
 
       def initialize(argv, node)
@@ -98,6 +107,7 @@ module Superhosting
               end
             end
 
+            CONTROLLER_BASE_OPTIONS.each {|opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
             opts.merge!(logger: @logger)
             return node.new(**opts).method(m_name)
           end
