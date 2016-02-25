@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/flant/net_status.git
-  revision: 20355c565ea7e6c56666f77c81471a07b8b094b9
+  revision: d00182e04c1d9c86f4092693539ead466bf71026
   specs:
     net_status (0.2.3)
 
