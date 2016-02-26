@@ -39,10 +39,7 @@ module Superhosting
         @logger.level = config[:debug] ? Logger::DEBUG : Logger::INFO
         @logger.formatter = proc {|severity, datetime, progname, msg| sprintf("%s\n", msg.to_s.strip) }
 
-        if config[:help] or self.class == Base
-          self.help
-          exit 1
-        end
+        self.help if config[:help] or self.class == Base
       end
 
       def help
@@ -61,6 +58,8 @@ module Superhosting
         end
 
         @logger.info("#{opt_parser.to_s}\n#{get_childs_banners(@node) if self.class == Base}")
+
+        exit 1
       end
 
       def run
@@ -111,7 +110,7 @@ module Superhosting
         method.parameters.each do |req, name|
           if req.to_s.start_with? 'key'
             opt = config[name]
-            raise Errors::Base.new('You must supply required parameter') unless opt = @pos_args.shift if name == :name
+            self.help unless opt = @pos_args.shift if name == :name
             opts.merge!(name => opt)
           end
         end
@@ -143,7 +142,7 @@ module Superhosting
             if v.is_a? Hash
               set_banners(v, path_)
             else
-              v.banner("sx #{path_.join(' ')}#{' <param>' if v.has_required_param?}#{' (options)' unless v.options.empty?}")
+              v.banner("sx #{path_.join(' ')}#{" <#{path.last}>" if v.has_required_param?}#{' (options)' unless v.options.empty?}")
             end
           end
         end
