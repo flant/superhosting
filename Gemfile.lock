@@ -1,12 +1,12 @@
 GIT
   remote: https://github.com/flant/net_status.git
-  revision: 066163f8f651c2f7d75bc3e667290612e99e7c73
+  revision: c0ebc73f893c883d45b41beb058216eebc92c650
   specs:
-    net_status (0.2.1)
+    net_status (0.2.3)
 
 GIT
   remote: https://github.com/flant/path_mapper.git
-  revision: 3b0230ddf80a3a3566961ba71da2da0b3ef90db3
+  revision: d945adf271b4d01e1a970f999a6e047175a73814
   specs:
     path_mapper (0.0.1)
 

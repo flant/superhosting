@@ -2,6 +2,8 @@ require 'mixlib/cli'
 require 'mixlib/shellout'
 require 'logger'
 require 'pathname'
+require 'excon'
+require 'json'
 
 require 'path_mapper'
 require 'net_status'
