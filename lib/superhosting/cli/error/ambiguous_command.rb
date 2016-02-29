@@ -1,6 +1,6 @@
 module Superhosting
   module Cli
-    module Errors
+    module Error
       class AmbiguousCommand < Base
         def initialize(msg: 'Ambiguous command', commands:, path: '')
           msg = "#{msg}: #{path.join(' ')} (#{commands.join('|')})"

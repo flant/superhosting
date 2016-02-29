@@ -3,8 +3,8 @@ module Superhosting
     module Cmd
       class ContainerAdd < Base
         option :model,
-               :short => '-m',
-               :long  => '--model'
+               :short => '-m MODEL',
+               :long  => '--model MODEL'
 
         option :mail,
                :long  => '--mail MAIL'

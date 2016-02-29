@@ -6,7 +6,7 @@ module Superhosting
 
       COMMANDS_MODULE = Cmd
       CONTROLLERS_MODULE = Superhosting::Controller
-      CONTROLLER_BASE_OPTIONS = [:config_path, :lib_path]
+      CONTROLLER_BASE_OPTIONS = [:config_path, :lib_path, :docker_socket]
 
       banner "#{?= * 50}\n#{?- * 19}SUPERHOSTING#{?- * 19}\n#{?= * 50}\n\n"
 
@@ -26,6 +26,10 @@ module Superhosting
 
       option :lib_path,
              :long         => '--lib-path PATH',
+             :on           => :tail
+
+      option :docker_socket,
+             :long         => '--docker-socket PATH',
              :on           => :tail
 
       def initialize(argv, node)
@@ -102,7 +106,7 @@ module Superhosting
             return node.new(**opts).method(m_name)
           end
         end
-        raise Errors::Base.new('Method doesn\'t found')
+        raise Error::Base.new('Method doesn\'t found')
       end
 
       def action(method)
@@ -114,7 +118,18 @@ module Superhosting
             opts.merge!(name => opt)
           end
         end
-        method.parameters.empty? ? method.call : method.call(**opts)
+        self.help unless @pos_args.empty? # only one position argument
+
+        begin
+          net_status = method.parameters.empty? ? method.call : method.call(**opts)
+          net_status ||= {}
+
+          raise Error::Controller, net_status[:message] || net_status[:error] unless net_status[:error].nil?
+          @logger.debug(net_status[:d].inspect)
+          @logger.debug('Done!')
+        rescue NetStatus::Exception => e
+          raise Error::Controller, e.net_status[:message] || e.net_status[:error]
+        end
       end
 
       class << self
@@ -194,7 +209,7 @@ module Superhosting
               when 0
                 break
               else
-                raise Errors::AmbiguousCommand.new(path: path, commands: res)
+                raise Error::AmbiguousCommand.new(path: path, commands: res)
             end
 
             path << key

@@ -1,12 +1,12 @@
 GIT
   remote: https://github.com/flant/net_status.git
-  revision: c0ebc73f893c883d45b41beb058216eebc92c650
+  revision: 5f849b682cec89c5c3a53e97c13137cad49eebed
   specs:
-    net_status (0.2.3)
+    net_status (0.2.4)
 
 GIT
   remote: https://github.com/flant/path_mapper.git
-  revision: d945adf271b4d01e1a970f999a6e047175a73814
+  revision: 2c362e88381a35b903bce23414a68333e577b37f
   specs:
     path_mapper (0.0.1)
 
@@ -22,7 +22,7 @@ GEM
   specs:
     coderay (1.1.1)
     diff-lcs (1.2.5)
-    excon (0.45.4)
+    excon (0.47.0)
     method_source (0.8.2)
     mixlib-cli (1.5.0)
     mixlib-shellout (2.2.6)
@@ -50,7 +50,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.10)
+  bundler (>= 1.1)
   excon (>= 0.45.4, < 1.0)
   net_status!
   path_mapper!

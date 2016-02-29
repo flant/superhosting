@@ -1,7 +1,7 @@
 module Superhosting
   module Cli
-    module Errors
-      class Base < Exception
+    module Error
+      class Controller < Base
       end
     end
   end

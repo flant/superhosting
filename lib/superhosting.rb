@@ -4,6 +4,9 @@ require 'logger'
 require 'pathname'
 require 'excon'
 require 'json'
+require 'etc'
+require 'erb'
+require 'ostruct'
 
 require 'path_mapper'
 require 'net_status'
@@ -24,8 +27,8 @@ require 'superhosting/controller/user'
 
 require 'superhosting/docker_api'
 
-require 'superhosting/cli/errors/base'
-Dir["#{File.dirname(__FILE__)}/superhosting/cli/errors/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}
+require 'superhosting/cli/error/base'
+Dir["#{File.dirname(__FILE__)}/superhosting/cli/error/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}
 
 require 'superhosting/cli/base'
 Dir["#{File.dirname(__FILE__)}/superhosting/cli/cmd/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}
