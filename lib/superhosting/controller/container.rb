@@ -3,10 +3,10 @@ module Superhosting
     class Container < Base
       def list
         docker = @docker_api.container_list.map {|c| c['Names'].first.slice(1..-1) }.to_set
-        sx = @config.containers._grep(/.*/).map {|name, m| name if m.is_a? PathMapper::Mapper }.compact.to_set
+        sx = @config.containers._grep(/.*/).map {|n| n._name if n.is_a? PathMapper::DirNode }.compact.to_set
         containers = (docker & sx)
 
-        { d: containers.to_a }
+        { data: containers.to_a }
       end
 
       def add(name:, mail: 'model', admin_mail: nil, model: nil)
@@ -15,7 +15,7 @@ module Superhosting
 
         # config
         config_path_ = "#{@config_path}/containers/#{name}"
-        FileUtils.rm_rf config_path_
+        config_path_mapper = PathMapper.new(config_path_)
         FileUtils.mkdir_p config_path_
 
         # model
@@ -42,6 +42,8 @@ module Superhosting
 
         # lib
         lib_path_ = "#{@lib_path}/containers/#{name}"
+        lib_path_mapper = PathMapper.new(lib_path_)
+        FileUtils.rm_rf "#{lib_path_}/configs"
         FileUtils.mkdir_p "#{lib_path_}/configs"
         FileUtils.mkdir_p "#{lib_path_}/web"
 
@@ -55,16 +57,27 @@ module Superhosting
         write_if_not_exist("#{lib_path_}/configs/etc-passwd", "#{name}:x:#{user.uid}:#{user.gid}::/web/:")
 
         # services
-        cserv = @config.containers.f(name).services._grep(/.*\.erb/).to_h
-        mserv = model_mapper.services._grep(/.*\.erb/).to_h
+        cserv = @config.containers.f(name).services._grep(/.*\.erb/).map {|n| [n._name, n]}.to_h
+        mserv = model_mapper.services._grep(/.*\.erb/).map {|n| [n._name, n]}.to_h
         services = mserv.merge!(cserv)
 
         supervisor_path = "#{lib_path_}/supervisor"
         FileUtils.mkdir_p supervisor_path
-        services.each do |n, erb|
-          text = erb(erb, model: model_, container: PathMapper::Mapper.new(config_path_))
-          create_conf("#{supervisor_path}/#{n[/.*[^\.erb]/]}", text)
+        services.each do |_name, node|
+          text = erb(node, model: model_, container: config_path_mapper)
+          create_conf("#{supervisor_path}/#{_name[/.*[^\.erb]/]}", text)
         end
+
+        # container
+        commands = []
+        [model_mapper, @config].each do |mapper|
+          unless mapper.f('container.rb').nil?
+            ex = ScriptExecutor::Container.new(model: model_mapper, configs: config_path_mapper, lib_configs: lib_path_mapper.configs)
+            ex.execute(mapper.f('container.rb').to_s)
+            commands += ex.commands
+          end
+        end
+        commands.each {|c| self.command c }
 
         # docker
         write_if_not_exist('/etc/security/docker.conf', "@#{name} #{name}")

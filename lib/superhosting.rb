@@ -7,6 +7,7 @@ require 'json'
 require 'etc'
 require 'erb'
 require 'ostruct'
+require 'pry-remote'
 
 require 'path_mapper'
 require 'net_status'
@@ -24,6 +25,9 @@ require 'superhosting/controller/mysql/user'
 require 'superhosting/controller/site'
 require 'superhosting/controller/site/alias'
 require 'superhosting/controller/user'
+
+require 'superhosting/script_executor/base'
+require 'superhosting/script_executor/container'
 
 require 'superhosting/docker_api'
 

@@ -5,6 +5,6 @@ require 'superhosting'
 begin
   Superhosting::Cli::Base.start(ARGV)
 rescue Superhosting::Cli::Error::Base => e
-  $stderr.puts(e.message)
+  $stderr.puts([e.net_status[:error], e.net_status[:message]].compact.join(': '))
   exit 1
 end

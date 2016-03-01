@@ -124,11 +124,11 @@ module Superhosting
           net_status = method.parameters.empty? ? method.call : method.call(**opts)
           net_status ||= {}
 
-          raise Error::Controller, net_status[:message] || net_status[:error] unless net_status[:error].nil?
-          @logger.debug(net_status[:d].inspect)
+          raise Error::Controller, net_status unless net_status[:error].nil?
+          @logger.info(net_status[:data]) unless net_status[:data].nil?
           @logger.debug('Done!')
         rescue NetStatus::Exception => e
-          raise Error::Controller, e.net_status[:message] || e.net_status[:error]
+          raise Error::Controller, e.net_status
         end
       end
 
