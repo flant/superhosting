@@ -29,3 +29,5 @@ gem install bundler
 
 cd /vagrant
 bundle install
+
+cp -r /vagrant/bootstrap/* /
