@@ -16,13 +16,16 @@ cd pam_docker
 make
 make install-ubuntu-14.04
 
-curl -sSL https://rvm.io/mpapis.asc | sudo gpg --import -
+curl -sSL https://rvm.io/mpapis.asc | gpg --import -
 curl -sSL https://get.rvm.io | sudo bash -s stable
+
+echo 'source /etc/profile.d/rvm.sh' >> /etc/bash.bashrc
 source /etc/profile.d/rvm.sh
 
+rvm group add rvm vagrant
 rvm install 2.2.1 --quiet-curl
 rvm --default use 2.2.1
+gem install bundler
 
 cd /vagrant
-gem install bundler
 bundle install
