@@ -1,0 +1,11 @@
+language: ruby
+rvm:
+- 2.2.1
+deploy:
+  provider: rubygems
+  api_key:
+    secure: zVrSJRx992jsyfOywuEPsi/xJogvspgadByoZX4+2wVrvTtkA/6lNnutm7rKwOeO57GsX4siKsOQ43j1nT0N+gwjb/XKfn0yaev657eAC/1ybvZMu98dZ+J2FjAAouz4qqtfacAczf7mXf0Xi53K+az6GUMeuldxdDDyhm5Xr3ZhPqhueh7eIijNVdSx+vK78qTgRNjZFrXsqvN+SdS8ZT0ZPqvKcI6MarOppdpavCUbYWIyx6bOcKictc3CbS5XdM3n9iPM3ribhj/vqkX+nruRQf9oqq7ZnqU4oan3jdTlo3ZAdaiKWcDhjgzOBJkojUTEEgWGgnBFHZNNaRcdXGo9TADUcvM8fd/59eX71EuB3WL+kHgLKwkWT1/pnTuPk+PVJfR3df46UaEMQkF4b7fxigJ1sXzt+zJ3CJD+X5ejR+c8E4bYCxZXWFxhZhi+UG3sFJQVOIRJE8Hohs2gLdvxBYyjgrCCk+TJaCxgU1gg5CbfuQ05oblpNk12E2GwAa9iPue89X80GVvkO/twTeTN2LAw3lOacuacU+BIyzohly6t7V1YiNQq0p9Sqlvvnnrwkqgp1jAuD56tOeLzjTsEkrHnuGstIJnh+GzbsJLm/BcXCnLcdbdvpKn66Pt9z+RmsRfW01QptWpYx8I2DgJtVjWEYeDKwJCZ8/c0rmc=
+  gem: superhosting
+  on:
+    tags: true
+    repo: flant/superhosting
