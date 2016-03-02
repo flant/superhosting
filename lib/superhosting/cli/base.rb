@@ -67,8 +67,31 @@ module Superhosting
       end
 
       def run
+        begin
+          net_status = action
+          net_status ||= {}
+
+          raise Error::Controller, net_status unless net_status[:error].nil?
+          @logger.info(net_status[:data]) unless net_status[:data].nil?
+          @logger.debug('Done!')
+        rescue NetStatus::Exception => e
+          raise Error::Controller, e.net_status
+        end
+      end
+
+      def action
         method = get_controller
-        res = action(method)
+        opts = {}
+        method.parameters.each do |req, name|
+          if req.to_s.start_with? 'key'
+            opt = config[name]
+            self.help unless opt = @pos_args.shift if name == :name
+            opts.merge!(name => opt)
+          end
+        end
+        self.help unless @pos_args.empty? # only one position argument
+
+        method.parameters.empty? ? method.call : method.call(**opts)
       end
 
       def get_controller
@@ -107,29 +130,6 @@ module Superhosting
           end
         end
         raise Error::Base.new('Method doesn\'t found')
-      end
-
-      def action(method)
-        opts = {}
-        method.parameters.each do |req, name|
-          if req.to_s.start_with? 'key'
-            opt = config[name]
-            self.help unless opt = @pos_args.shift if name == :name
-            opts.merge!(name => opt)
-          end
-        end
-        self.help unless @pos_args.empty? # only one position argument
-
-        begin
-          net_status = method.parameters.empty? ? method.call : method.call(**opts)
-          net_status ||= {}
-
-          raise Error::Controller, net_status unless net_status[:error].nil?
-          @logger.info(net_status[:data]) unless net_status[:data].nil?
-          @logger.debug('Done!')
-        rescue NetStatus::Exception => e
-          raise Error::Controller, e.net_status
-        end
       end
 
       class << self

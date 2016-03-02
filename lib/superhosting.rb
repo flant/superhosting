@@ -7,12 +7,13 @@ require 'json'
 require 'etc'
 require 'erb'
 require 'ostruct'
-require 'pry-remote'
+require 'pry-byebug'
 
 require 'path_mapper'
 require 'net_status'
 
 require 'superhosting/version'
+require 'superhosting/helpers'
 
 require 'superhosting/base'
 require 'superhosting/controller/admin'
@@ -28,6 +29,7 @@ require 'superhosting/controller/user'
 
 require 'superhosting/script_executor/base'
 require 'superhosting/script_executor/container'
+require 'superhosting/script_executor/site'
 
 require 'superhosting/docker_api'
 

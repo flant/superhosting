@@ -1,5 +1,7 @@
 module Superhosting
   class Base
+    include Helpers
+
     def initialize(config_path: '/etc/sx', lib_path: '/var/lib/sx', logger: nil, docker_socket: nil)
       @config_path = Pathname.new(config_path)
       @lib_path = Pathname.new(lib_path)
@@ -30,27 +32,6 @@ module Superhosting
       cmd.run_command
       debug([cmd.stdout, cmd.stderr].join("\n"))
       cmd
-    end
-
-    def create_conf(path, conf)
-      File.open(path, 'w') {|f| f.write(conf) }
-    end
-
-    def write_if_not_exist(path, line)
-       File.open(path, 'a+') do |f|
-         f.puts(line) unless f.each_line.any? { |l| l =~ Regexp.new(line) }
-       end
-    end
-
-    def remove_line_from_file(path, line)
-      lines = File.readlines(path).select {|l| l !~ Regexp.new(line) }
-      File.open(path, 'w') {|f| f.write lines.join('') }
-    end
-
-    def erb(node, vars)
-      ERB.new(node).result(OpenStruct.new(vars).instance_eval { binding })
-    rescue Exception => e
-      raise NetStatus::Exception, e.net_status.merge!( message: "#{e.backtrace.first.sub! '(erb)', node._path}: #{e.message}")
     end
   end
 end

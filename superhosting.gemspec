@@ -22,5 +22,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rspec', '~> 3.4.0'
   spec.add_development_dependency 'excon', '>= 0.45.4', '< 1.0'
-  spec.add_development_dependency 'pry-remote'
+  spec.add_development_dependency 'pry-byebug'
+  spec.add_development_dependency 'pry-stack_explorer'
 end

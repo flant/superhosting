@@ -3,8 +3,7 @@ module Superhosting
     module Error
       class AmbiguousCommand < Base
         def initialize(msg: 'Ambiguous command', commands:, path: '')
-          msg = "#{msg}: #{path.join(' ')} (#{commands.join('|')})"
-          super(msg)
+          super(error: "#{msg}: #{path.join(' ')} (#{commands.join('|')})")
         end
       end
     end

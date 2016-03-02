@@ -1,17 +1,21 @@
 module Superhosting
   module ScriptExecutor
     class Base
-      def initialize(**kwargs)
+      include Helpers
+
+      attr_accessor :commands
+      attr_accessor :model, :lib, :config
+
+      def initialize(model:, lib:, config:, **kwargs)
         kwargs.each do |k, v|
           instance_variable_set("@#{k}", v)
           self.class.class_eval("attr_accessor :#{k}")
         end
-      end
 
-      def instance_variables_to_hash
-        self.instance_variables.map do |name|
-          [name.to_s[1..-1].to_sym, self.instance_variable_get(name)]
-        end.to_h
+        self.commands = []
+        self.model = model
+        self.lib = lib
+        self.config = config
       end
 
       def execute(script)
