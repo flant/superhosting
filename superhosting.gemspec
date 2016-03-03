@@ -16,6 +16,8 @@ Gem::Specification.new do |spec|
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.executables   = ['sx']
 
+  spec.required_ruby_version = '>= 2.2.1'
+
   spec.add_dependency 'mixlib-cli', '>= 1.5.0', '< 2.0'
   spec.add_dependency 'mixlib-shellout', '>= 2.2.6', '< 3.0'
   spec.add_dependency 'path_mapper', '>= 0.0.1', '< 1.0'
