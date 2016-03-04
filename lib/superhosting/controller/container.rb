@@ -110,7 +110,7 @@ module Superhosting
         model = container_mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
 
-        if self.not_existing_validation(name: name).net_status_ok? and self.running_validation(name: name).net_status_ok?
+        if self.existing_validation(name: name).net_status_ok? and self.running_validation(name: name).net_status_ok?
           site_controller = self.get_controller(Site)
           sites = container_mapper.sites._grep_dirs.map { |n| n._name }
           sites.each {|s| site_controller.delete(name: s).net_status_ok! }

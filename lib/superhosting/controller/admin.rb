@@ -21,6 +21,22 @@ module Superhosting
         @admins_mapper = @config.admins
       end
 
+      def list
+        admins = {}
+        @admins_mapper._grep_dirs.map do |admin|
+          name = admin._name
+
+          @container_admin_controller = self.get_controller(Admin::Container, name: name)
+          if (resp = @container_admin_controller.list).net_status_ok?
+            admins[name] = resp[:data]
+          else
+            return resp
+          end
+        end
+
+        { data: admins }
+      end
+
       def add(name:, generate: false)
         if (resp = self.not_existing_validation(name: name)).net_status_ok?
           admin_dir = @admins_mapper.f(name)
