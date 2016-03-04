@@ -1,6 +1,8 @@
 module Superhosting
   module Controller
     class User < Base
+      USER_NAME_FORMAT = /^[a-z][-a-z0-9_]{1,32}$/
+
       def initialize(**kwargs)
         super(**kwargs)
         @container_controller = self.get_controller(Container)
@@ -8,7 +10,7 @@ module Superhosting
 
       def list(container_name:)
         if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
-          { data: _get_group_users(name: container_name) }
+          { data: _group_get_users(name: container_name) }
         else
           resp
         end
@@ -25,8 +27,18 @@ module Superhosting
         elsif (resp = @container_controller.existing_validation(name: container_name)).net_status_ok? and
           (resp = self.not_existing_validation(name: name, container_name: container_name)).net_status_ok?
           shell = ftp_only ? '/usr/sbin/nologin' : '/bin/bash'
-          self._add(name: name, container_name: container_name, home_dir: home_dir, shell: shell)
-          generate ? { data: self.passwd(name: user_name, generate: generate).net_status_ok![:data] } : {}
+
+          if (resp = self._add(name: name, container_name: container_name, home_dir: home_dir, shell: shell)).net_status_ok?
+            if generate
+              if (resp = self.passwd(name: user_name, generate: generate)).net_status_ok?
+                return { data: resp[:data] }
+              end
+            else
+              {}
+            end
+          else
+            resp
+          end
         else
           resp
         end
@@ -61,16 +73,43 @@ module Superhosting
         end
       end
 
+      def _get(name:)
+        begin
+          Etc.getpwnam(name)
+        rescue ArgumentError => e
+          nil
+        end
+      end
+
       def _add(name:, container_name:, shell: '/usr/sbin/nologin', home_dir: "/web/#{container_name}")
         self._add_custom(name: "#{container_name}_#{name}", group: container_name, shell: shell, home_dir: home_dir)
       end
 
       def _add_custom(name:, group:, shell: '/usr/sbin/nologin', home_dir: "/web/#{group}")
-        container_lib_mapper = @lib.containers.f(group)
-        passwd_path = container_lib_mapper.configs.f('etc-passwd')._path
-        self.command("useradd #{name} -g #{group} -d #{home_dir} -s #{shell}")
-        user = self._get(name: name)
-        pretty_write(passwd_path, "#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
+        if (resp = self.adding_validation(name: name, container_name: group)).net_status_ok?
+          container_lib_mapper = @lib.containers.f(group)
+          passwd_path = container_lib_mapper.configs.f('etc-passwd')._path
+          self.command("useradd #{name} -g #{group} -d #{home_dir} -s #{shell}")
+          user = self._get(name: name)
+          pretty_write(passwd_path, "#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
+          {}
+        else
+          resp
+        end
+      end
+
+      def _del(name:)
+        self.command("userdel #{name}")
+      end
+
+      def _create_password(generate: false)
+        password = generate ? SecureRandom.hex : ask('Password:  ') { |q| q.echo = "*" }
+        encrypted_password = OpenSSL::Digest::MD5.hexdigest(password)
+        { password: password, encrypted_password: encrypted_password }
+      end
+
+      def _update_password(name:, encrypted_password:)
+        self.command("usermod -p #{encrypted_password} #{name}")
       end
 
       def _group_get(name:)
@@ -85,19 +124,11 @@ module Superhosting
         self.command("groupadd #{name}")
       end
 
-      def _del(name:)
-        self.command("userdel #{name}")
+      def _group_del(name:)
+        self.command("groupdel #{name}")
       end
 
-      def _get(name:)
-        begin
-          Etc.getpwnam(name)
-        rescue ArgumentError => e
-          nil
-        end
-      end
-
-      def _get_group_users(name:)
+      def _group_get_users(name:)
         if group = self._group_get(name: name)
           gid = group.gid
 
@@ -111,18 +142,13 @@ module Superhosting
         end
       end
 
-      def _del_group_users(name:)
-        self._get_group_users(name: name).each {|user| self._del(name: user) }
+      def _group_del_users(name:)
+        self._group_get_users(name: name).each {|user| self._del(name: user) }
       end
 
-      def _create_password(generate: false)
-        password = generate ? SecureRandom.hex : ask('Password:  ') { |q| q.echo = "*" }
-        encrypted_password = OpenSSL::Digest::MD5.hexdigest(password)
-        { password: password, encrypted_password: encrypted_password }
-      end
-
-      def _update_password(name:, encrypted_password:)
-        self.command("usermod -p #{encrypted_password} #{name}")
+      def adding_validation(name:, container_name:)
+        return { error: :input_error, message: "Invalid user name '#{name}' only '#{USER_NAME_FORMAT}'" } if name !~ USER_NAME_FORMAT
+        self.not_existing_validation(name: name, container_name: container_name)
       end
 
       def existing_validation(name:, container_name:)

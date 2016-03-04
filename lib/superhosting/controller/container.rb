@@ -55,14 +55,18 @@ module Superhosting
         # user / group
         user_controller = self.get_controller(User)
         user_controller._group_add(name: name)
-        user_controller._add_custom(name: name, group: name)
+        unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?
+          return resp
+        end
         user = user_controller._get(name: name)
         pretty_write(container_lib_mapper.configs.f('etc-group')._path, "#{name}:x:#{user.gid}:")
 
         # system users
         users = [container_mapper.system_users, model_mapper.system_users].find {|f| f.is_a? PathMapper::FileNode }
         users.lines.each do |u|
-          user_controller._add(name: u.strip, container_name: name)
+          unless (resp = user_controller._add(name: u.strip, container_name: name)).net_status_ok?
+            return resp
+          end
         end unless users.nil?
 
         # chown
@@ -136,7 +140,8 @@ module Superhosting
           pretty_remove('/etc/security/docker.conf', "@#{name} #{name}")
 
           user_controller = self.get_controller(User)
-          user_controller._del_group_users(name: name)
+          user_controller._group_del_users(name: name)
+          user_controller._group_del(name: name)
 
           FileUtils.rm_rf container_lib_mapper._path
           FileUtils.rm_rf container_mapper._path

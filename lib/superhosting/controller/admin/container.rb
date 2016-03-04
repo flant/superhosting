@@ -34,7 +34,9 @@ module Superhosting
           if (resp = @container_controller.existing_validation(name: name)).net_status_ok? and
               (resp = @user_controller.not_existing_validation(name: admin_name, container_name: name)).net_status_ok?
             user, encrypted_password = @admin_passwd.split(':')
-            @user_controller._add(name: admin_name, container_name: name, shell: '/bin/bash')
+            unless (resp = @user_controller._add(name: admin_name, container_name: name, shell: '/bin/bash')).net_status_ok?
+              return resp
+            end
             encrypted_password.empty? ? @user_controller._update_password(name: user, encrypted_password: encrypted_password) : {}
           else
             resp

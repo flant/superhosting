@@ -14,7 +14,7 @@ module SpecHelpers
       end
 
       def container_add(**kwargs)
-        container_controller.add(**kwargs)
+        expect_net_status_ok(container_controller.add(**kwargs))
 
         container_name = kwargs[:name]
         config_mapper = container_controller.config
@@ -63,6 +63,39 @@ module SpecHelpers
 
         # container
         expect(docker_api.container_info(container_name)).not_to be_nil
+      end
+
+      def container_delete(**kwargs)
+        expect_net_status_ok(container_controller.delete(**kwargs))
+
+        container_name = kwargs[:name]
+        config_mapper = container_controller.config
+        lib_mapper = container_controller.lib
+        models_mapper = config_mapper.models
+        container_mapper = config_mapper.containers.f(container_name)
+        container_lib_mapper = lib_mapper.containers.f(container_name)
+        web_mapper = PathMapper.new('/web')
+        etc_mapper = PathMapper.new('/etc')
+
+        # /etc/sx
+        not_expect_dir(container_mapper)
+
+        # /var/lib/sx
+        not_expect_dir(container_lib_mapper)
+
+        # web
+        not_expect_dir(web_mapper.f(container_name))
+
+        # group / user
+        not_expect_group(container_name)
+        not_expect_user(container_name)
+        not_expect_in_file(etc_mapper.passwd, /#{container_name}.*\/usr\/sbin\/nologin/)
+
+        # docker
+        not_expect_in_file(etc_mapper.security.f('docker.conf'), "@#{container_name} #{container_name}")
+
+        # container
+        expect(docker_api.container_info(container_name)).to be_nil
       end
     end # Container
   end # Controller
