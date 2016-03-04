@@ -66,7 +66,7 @@ module Superhosting
         end unless users.nil?
 
         # chown
-        self.command("chown -R #{name}:#{name} #{container_lib_mapper.web._path}")
+        FileUtils.chown_R name, name, container_lib_mapper.web._path
 
         # services
         # cserv = @config.containers.f(name).services._grep(/.*\.erb/).map {|n| [n._name, n]}.to_h
