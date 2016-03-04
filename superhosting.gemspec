@@ -31,4 +31,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'pry-byebug', '>= 3.3.0', '< 4.0'
   spec.add_development_dependency 'pry-stack_explorer', '>= 0.4.9.2', '< 1.0'
   spec.add_development_dependency 'travis', '~> 1.8', '>= 1.8.2'
+  spec.add_development_dependency 'highline', '~> 1.7', '>= 1.7.8'
 end

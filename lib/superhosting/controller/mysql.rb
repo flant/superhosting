@@ -2,11 +2,11 @@ module Superhosting
   module Controller
     class Mysql < Base
       def db
-        Db.new
+        self.get_controller(Db)
       end
 
       def user
-        User.new
+        self.get_controller(User)
       end
 
       def grant

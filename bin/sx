@@ -4,7 +4,7 @@ require 'superhosting'
 
 begin
   Superhosting::Cli::Base.start(ARGV)
-rescue Superhosting::Cli::Error::Base => e
+rescue NetStatus::Exception => e
   $stderr.puts([e.net_status[:error], e.net_status[:message]].compact.join(': '))
   exit 1
 end

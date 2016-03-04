@@ -5,6 +5,11 @@ module Superhosting
 
       DOMAIN_NAME_FORMAT = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/
 
+      def initialize(**kwargs)
+        super(**kwargs)
+        @container_controller = self.get_controller(Container)
+      end
+
       def site_index
         def generate
           @site_index = {}
@@ -13,7 +18,7 @@ module Superhosting
               names = []
               names << s._name
               s.aliases.lines {|n| names << n.strip } unless s.aliases.nil?
-              raise NetStatus::Exception.new(error: :error, message: "Conflict between container_sites: '#{@site_index[s._name][:site]._path}' and '#{s._path}'") if @site_index.key? s._name
+              raise NetStatus::Exception, { error: :error, message: "Conflict between containers sites: '#{@site_index[s._name][:site]._path}' and '#{s._path}'" } if @site_index.key? s._name
               names.each {|n| @site_index[n] = { container: c, site: s } }
             end
           end
@@ -24,58 +29,24 @@ module Superhosting
       end
 
       def add(name:, container_name:)
-        return { error: :input_error, message: "Invalid site name '#{name}' only '#{DOMAIN_NAME_FORMAT}'" } if name !~ DOMAIN_NAME_FORMAT
-        return { error: :logical_error, message: 'Site already exists.' } if self.site_index.include? name
-        return { error: :logical_error, message: "Container '#{container_name}' doesn\'t exists." } if (config_path_mapper = @config.containers.f(container_name)).nil?
-
-        site_mapper = config_path_mapper.sites.f(name)
-        FileUtils.mkdir_p site_mapper._path
-
-        lib_path_mapper = PathMapper.new("#{@lib_path}/containers/#{container_name}")
-        model = config_path_mapper.model(default: @config.default_model)
-        model_mapper = @config.models.f(:"#{model}")
-
-        lib_sites_path = lib_path_mapper.registry.sites
-        unless model_mapper.f('site.rb').nil?
-          registry_path = lib_sites_path.f(name)._path
-          FileUtils.mkdir_p lib_sites_path._path
-          ex = ScriptExecutor::Site.new(
-              site: site_mapper, site_name: name,
-              container: config_path_mapper, container_name: name, container_lib: lib_path_mapper, registry_path: registry_path,
-              model: model_mapper, config: @config, lib: @lib
-          )
-          ex.execute(model_mapper.f('site.rb'))
-          ex.commands.each {|c| self.command c }
-        end
-
-        {}
-      end
-
-      def delete(name:)
-        if site = self.site_index[name]
-          FileUtils.rm_rf site[:site]._path
-          container_sites = site[:container].sites
-          FileUtils.rm_rf container_sites._path if container_sites.nil?
-
-          config_path_mapper = site[:container]
-          lib_path_mapper = PathMapper.new("#{@lib_path}/containers/#{config_path_mapper._name}")
-          model = config_path_mapper.model(default: @config.default_model)
+        if (resp = self.adding_validation(name: name)).net_status_ok? and
+            (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+          container_mapper = @config.containers.f(container_name)
+          container_lib_mapper = @lib.containers.f(container_name)
+          site_mapper = container_mapper.sites.f(name)
+          model = container_mapper.model(default: @config.default_model)
           model_mapper = @config.models.f(:"#{model}")
 
-          lib_sites_path = lib_path_mapper.registry.sites
+          FileUtils.mkdir_p site_mapper._path
+          FileUtils.mkdir_p container_lib_mapper.web.f(name)._path
 
-          unless (registry_site = lib_sites_path.f(name)).nil?
-            FileUtils.rm registry_site.lines
-            FileUtils.rm registry_site._path
-          end
-
+          registry_sites_mapper = container_lib_mapper.registry.sites
           unless model_mapper.f('site.rb').nil?
-            registry_path = lib_sites_path.f(name)._path
-            FileUtils.mkdir_p lib_sites_path._path
+            registry_path = registry_sites_mapper.f(name)._path
+            FileUtils.mkdir_p registry_sites_mapper._path
             ex = ScriptExecutor::Site.new(
-                site: site[:site], site_name: name,
-                container: config_path_mapper, container_name: name, container_lib: lib_path_mapper,
-                registry_path: registry_path, on_reconfig_only: true,
+                site: site_mapper, site_name: name,
+                container: container_mapper, container_name: name, container_lib: container_lib_mapper, registry_path: registry_path,
                 model: model_mapper, config: @config, lib: @lib
             )
             ex.execute(model_mapper.f('site.rb'))
@@ -83,23 +54,86 @@ module Superhosting
           end
 
           {}
+        else
+          resp
+        end
+      end
+
+      def delete(name:)
+        if self.existing_validation(name: name).net_status_ok?
+          site = self.site_index[name]
+          container_sites = site[:container].sites
+          container_mapper = site[:container]
+          container_lib_mapper = @lib.containers.f(container_mapper._name)
+          lib_web_site_mapper = container_lib_mapper.web.f(name)
+          model = container_mapper.model(default: @config.default_model)
+          model_mapper = @config.models.f(:"#{model}")
+
+          FileUtils.rm_rf site[:site]._path
+          FileUtils.rm_rf container_sites._path if container_sites.empty?
+          FileUtils.rm_rf lib_web_site_mapper._path if lib_web_site_mapper.nil?
+
+          registry_sites_mapper = container_lib_mapper.registry.sites
+
+          unless model_mapper.f('site.rb').nil?
+            registry_path = registry_sites_mapper.f(name)._path
+            FileUtils.mkdir_p registry_sites_mapper._path
+            ex = ScriptExecutor::Site.new(
+                site: site[:site], site_name: name,
+                container: container_mapper, container_name: name, container_lib: container_lib_mapper,
+                registry_path: registry_path, on_reconfig_only: true,
+                model: model_mapper, config: @config, lib: @lib
+            )
+            ex.execute(model_mapper.f('site.rb'))
+            ex.commands.each {|c| self.command c }
+          end
+
+          unless (registry_site = registry_sites_mapper.f(name)).nil?
+            FileUtils.rm registry_site.lines
+            FileUtils.rm registry_site._path
+          end
+          FileUtils.rm_rf registry_sites_mapper._path if registry_sites_mapper.empty?
+
+          {}
+        else
+          self.debug("Site '#{name}' has already been deleted")
         end
       end
 
       def rename(name:, new_name:)
-        return { error: :logical_error, message: "Site '#{name}' doesn't exists." } unless site = self.site_index[name]
-        return { error: :logical_error, message: "Site '#{new_name}' already exists." } if self.site_index[new_name]
+        if (resp = self.existing_validation(name: name)).net_status_ok? and
+            (resp = self.adding_validation(name: new_name)).net_status_ok?
+          site = self.site_index[name]
+          container_mapper = @config.containers.f(site[:container]._name)
+          container_lib_mapper = @lib.containers.f(container_mapper._name)
 
-        FileUtils.mv site[:container].sites.f(name)._path, site[:container].sites.f(new_name)._path
+          FileUtils.mv site[:container].sites.f(name)._path, site[:container].sites.f(new_name)._path
 
-        lib_path_mapper = PathMapper.new("#{@lib_path}/containers/#{site[:container]._name}")
-        unless (lib_sites_path = lib_path_mapper.registry.sites).nil?
-          FileUtils.mv lib_sites_path.f(name), lib_sites_path.f(new_name)
+          unless (registry_sites_mapper = container_lib_mapper.registry.sites).nil?
+            FileUtils.mv registry_sites_mapper.f(name)._path, registry_sites_mapper.f(new_name)._path unless registry_sites_mapper.f(name).nil?
+          end
+
+          {}
+        else
+          resp
         end
       end
 
-      def alias(name:, logger: @logger)
-        Alias.new(name: name, logger: logger)
+      def alias(name:)
+        self.get_controller(Alias, name: name)
+      end
+
+      def adding_validation(name:)
+        return { error: :input_error, message: "Invalid site name '#{name}' only '#{DOMAIN_NAME_FORMAT}'" } if name !~ DOMAIN_NAME_FORMAT
+        self.not_existing_validation(name: name)
+      end
+
+      def existing_validation(name:)
+        self.site_index[name].nil? ? { error: :logical_error, message: "Site '#{name}' doesn't exists." } : {}
+      end
+
+      def not_existing_validation(name:)
+        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, message: "Site '#{name}' already exists." } : {}
       end
     end
   end

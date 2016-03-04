@@ -2,18 +2,24 @@ module Superhosting
   module Cli
     module Cmd
       class UserAdd < Base
-        option :no_ssh,
-               :long  => '--no-ssh',
+        option :ftp_only,
+               :short => '-f',
+               :long  => '--ftp-only',
                :boolean => true
 
-        option :no_ftp,
-               :long  => '--no-ftp',
-               :boolean => true
+        option :ftp_dir,
+               :short => '-d',
+               :long  => '--ftp-dir DIR'
 
         option :container_name,
                :short => '-c NAME',
                :long  => '--container NAME',
 							 :required => true
+
+        option :generate,
+               :short => '-g',
+               :long  => '--generate',
+               :boolean => true
 
         def self.has_required_param?
           true

@@ -20,6 +20,8 @@ curl -sSL https://rvm.io/mpapis.asc | gpg --import -
 curl -sSL https://get.rvm.io | sudo bash -s stable
 
 echo 'source /etc/profile.d/rvm.sh' >> /etc/bash.bashrc
+echo 'export BUNDLE_GEMFILE=/vagrant/Gemfile' >> /etc/bash.bashrc
+
 source /etc/profile.d/rvm.sh
 
 rvm group add rvm vagrant

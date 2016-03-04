@@ -8,11 +8,17 @@ require 'etc'
 require 'erb'
 require 'ostruct'
 require 'pry-byebug'
+require 'openssl'
+require 'securerandom'
+require 'highline/import'
 
 require 'path_mapper'
 require 'net_status'
 
 require 'superhosting/version'
+
+require 'superhosting/helper/file'
+require 'superhosting/helper/erb'
 require 'superhosting/helpers'
 
 require 'superhosting/base'

@@ -19,7 +19,7 @@ module Superhosting
           opts = instance_variables_to_hash(self).merge(options)
           FileUtils.mkdir_p File.dirname(save_to)
           File.open(save_to, 'w') {|f| f.write(erb(script_mapper, **opts)) }
-          create_conf(self.registry_path, save_to)
+          file_write(self.registry_path, save_to)
         end
       end
 

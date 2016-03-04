@@ -1,12 +1,12 @@
 GIT
   remote: https://github.com/flant/net_status.git
-  revision: 50e9cceac16a288f9ffa396c070b2bbfe5f9d01d
+  revision: bc15e72f65018eaddf3ccfecd0b7cd9901a7ff31
   specs:
     net_status (0.0.2)
 
 GIT
   remote: https://github.com/flant/path_mapper.git
-  revision: 03d57883e9db7eeb46ef361b3c54002f86b78cd6
+  revision: 2a81c27d426108ed13c00f62791bebf1d8c3f724
   specs:
     path_mapper (0.0.2)
 
@@ -103,6 +103,7 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 1.7)
   excon (>= 0.45.4, < 1.0)
+  highline (~> 1.7, >= 1.7.8)
   net_status!
   path_mapper!
   pry (>= 0.10.3, < 1.0)
