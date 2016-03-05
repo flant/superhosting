@@ -141,7 +141,6 @@ module Superhosting
 
           user_controller = self.get_controller(User)
           user_controller._group_del_users(name: name)
-          user_controller._group_del(name: name)
 
           FileUtils.rm_rf container_lib_mapper._path
           FileUtils.rm_rf container_mapper._path
