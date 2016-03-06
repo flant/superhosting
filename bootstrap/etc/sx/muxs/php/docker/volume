@@ -1,2 +1,3 @@
-/sys/fs/cgroup/:/sys/fs/cgroup/
+/sys/fs/cgroup:/sys/fs/cgroup
 /web:/web
+/var/lib/sx:/var/lib/sx
