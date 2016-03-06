@@ -1,0 +1,21 @@
+server {
+  listen 0.0.0.0:80;
+
+  server_name <%= ([@site.name] + @site.aliases).compact.map(&:punicode).join ' ' %>;
+  set $sx_container "<%= @container.name %>";
+  access_log /web/<%= @container.name %>/logs/<%= @site.name %>_access_nginx.log main;
+  error_log /web/<%= @container.name %>/logs/<%= @site.name %>_error_nginx.log error;
+
+  location ~* ^\/.+\.(jpg|jpeg|gif|png|svg|ico|css|zip|tgz|gz|rar|bz2|pdf|txt|tar|wav|bmp|rtf|js|flv|swf|html|htm|ttf|eot|woff)$ {
+    root /web/<%= @container.name %>/<%= [@site.name, @site.document_root].compact.join '/' %>/;
+    try_files $uri @backend;
+  }
+
+  location / {
+    fastcgi_pass unix:/web/<%= @container.name %>/<%= @site.name %>.sock;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    include fastcgi_params;
+  }
+
+  include /etc/nginx/server.conf.d/*.conf;
+}

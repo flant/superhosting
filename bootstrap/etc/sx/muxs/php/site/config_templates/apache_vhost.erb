@@ -1,0 +1,26 @@
+<VirtualHost *:8080>
+ServerName <%= punicode @site.name %>
+<% @site.aliases.each do |site_alias| %>
+ServerAlias <%= punicode site_alias %>
+<% end %>
+  DocumentRoot /web/<%= @container.name %>/<%= [@site.name, @site.document_root].join '/' %>/
+  CustomLog /web/<%= @container.name %>/logs/<%= @site.name %>_access_apache.log vhost_log_format
+  ErrorLog /web/<%= @container.name %>/logs/<%= @site.name %>_error_apache.log
+
+  <IfModule mod_fastcgi.c>
+    AddType application/x-httpd-fastphp5 .php
+    Action application/x-httpd-fastphp5 /php5-fcgi
+    Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
+    FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -socket /web/<%= @container.name %>/<%= @site.name %>.sock -pass-header Authorization
+    <Directory /usr/lib/cgi-bin>
+      Require all granted
+    </Directory>
+  </IfModule>
+
+  <Directory "/web/<%= @container.name %>/<%= [@site.name, @site.document_root].join '/' %>/">
+    Options FollowSymLinks
+    Order allow,deny
+    Allow from all
+    AllowOverride All
+  </Directory>
+</VirtualHost>
