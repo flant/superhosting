@@ -5,8 +5,8 @@ require 'superhosting/version'
 Gem::Specification.new do |spec|
   spec.name          = "superhosting"
   spec.version       = Superhosting::VERSION
-  spec.authors       = ["Алексей Игрычев"]
-  spec.email         = ["alexey.igrychev@flant.ru"]
+  spec.authors       = ["Alexey Igrychev", "Timofey Kirillov", "Dmitry Stolyarov"]
+  spec.email         = ["alexey.igrychev@flant.com", "timofey.kirillov@flant.com", "dmitry.stolyarov@flant.com"]
 
   spec.summary       = "The tool for web hosting using docker containers"
   spec.description   = "#{spec.summary}."
