@@ -29,7 +29,7 @@ module Superhosting
         model_mapper = @config.models.f(:"#{model_}")
 
         # image
-        return { error: :input_error, message: "No docker_image specified in model '#{model_}.'" } unless (image = model_mapper.docker_image(default: nil))
+        return { error: :input_error, message: "No docker_image specified in model '#{model_}'." } unless (image = model_mapper.docker_image(default: nil))
 
         # mail
         unless mail != 'no'
