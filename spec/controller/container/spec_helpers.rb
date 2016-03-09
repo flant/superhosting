@@ -31,7 +31,7 @@ module SpecHelpers
         expect_dir(models_mapper)
 
         # /etc/sx/models
-        model = config_mapper.default_model
+        model = config_mapper.default_model.value
         model_mapper = models_mapper.f(model)
         expect_dir(model_mapper)
         expect_file(model_mapper.docker_image)
@@ -71,7 +71,6 @@ module SpecHelpers
         container_name = kwargs[:name]
         config_mapper = container_controller.config
         lib_mapper = container_controller.lib
-        models_mapper = config_mapper.models
         container_mapper = config_mapper.containers.f(container_name)
         container_lib_mapper = lib_mapper.containers.f(container_name)
         web_mapper = PathMapper.new('/web')

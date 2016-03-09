@@ -5,7 +5,7 @@ module Superhosting
 
       def list
         docker = @docker_api.container_list.map {|c| c['Names'].first.slice(1..-1) }.to_set
-        sx = @config.containers._grep_dirs.map {|n| n._name }.to_set
+        sx = @config.containers.grep_dirs.map {|n| n.name }.to_set
         containers = (docker & sx)
 
         { data: containers.to_a }
@@ -14,7 +14,7 @@ module Superhosting
       def add(name:, mail: 'model', admin_mail: nil, model: nil)
         if !(resp = self.adding_validation(name: name)).net_status_ok?
           return resp
-        elsif (model_ = model || @config.default_model(default: nil)).nil?
+        elsif (model_ = model || @config.default_model.value).nil?
           return { error: :input_error, message: 'No model given.' }
         end
 
@@ -22,24 +22,25 @@ module Superhosting
 
         # config
         container_mapper = @config.containers.f(name)
-        FileUtils.mkdir_p container_mapper._path
+        container_mapper.create!
 
         # model
-        file_write(container_mapper.model._path, model) unless model.nil?
+        container_mapper.model.put!(model) unless model.nil?
         model_mapper = @config.models.f(:"#{model_}")
 
         # image
-        return { error: :input_error, message: "No docker_image specified in model '#{model_}'." } unless (image = model_mapper.docker_image(default: nil))
+        return { error: :input_error, message: "No docker_image specified in model '#{model_}'." } unless (image = model_mapper.docker_image.value)
 
         # mail
         unless mail != 'no'
           if mail == 'yes'
-            file_write(container_mapper.mail._path, mail)
-            admin_mail_ = admin_mail
-            file_write(container_mapper.admin_mail._path, admin_mail_) unless admin_mail_.nil?
+            container_mapper.mail.put!(mail)
+            unless (admin_mail_ = admin_mail).nil?
+              container_mapper.admin_mail.put!(admin_mail_)
+            end
           elsif mail == 'model'
             if model_mapper.default_mail == 'yes'
-              admin_mail_ = admin_mail || model_mapper.default_admin_mail(default: nil)
+              admin_mail_ = admin_mail || model_mapper.default_admin_mail.value
             end
           end
           return { error: :input_error, message: 'Admin mail required.' } if defined? admin_mail_ and admin_mail_.nil?
@@ -47,10 +48,10 @@ module Superhosting
 
         # lib
         container_lib_mapper = @lib.containers.f(name)
-        FileUtils.rm_rf container_lib_mapper.configs._path
-        FileUtils.mkdir_p container_lib_mapper.configs._path
-        FileUtils.mkdir_p container_lib_mapper.web._path
-        self.command("ln -fs #{container_lib_mapper.web._path} /web/#{name}")
+        container_lib_mapper.configs.delete!
+        container_lib_mapper.configs.create!
+        container_lib_mapper.web.create!
+        self.command("ln -fs #{container_lib_mapper.web.path} /web/#{name}")
 
         # user / group
         user_controller = self.get_controller(User)
@@ -59,10 +60,10 @@ module Superhosting
           return resp
         end
         user = user_controller._get(name: name)
-        pretty_write(container_lib_mapper.configs.f('etc-group')._path, "#{name}:x:#{user.gid}:")
+        pretty_write(container_lib_mapper.configs.f('etc-group').path, "#{name}:x:#{user.gid}:")
 
         # system users
-        users = [container_mapper.system_users, model_mapper.system_users].find {|f| f.is_a? PathMapper::FileNode }
+        users = [container_mapper.system_users, model_mapper.system_users].find {|f| f.file? }
         users.lines.each do |u|
           unless (resp = user_controller._add(name: u.strip, container_name: name)).net_status_ok?
             return resp
@@ -70,16 +71,16 @@ module Superhosting
         end unless users.nil?
 
         # chown
-        FileUtils.chown_R name, name, container_lib_mapper.web._path
+        FileUtils.chown_R name, name, container_lib_mapper.web.path
 
         # services
-        # cserv = @config.containers.f(name).services._grep(/.*\.erb/).map {|n| [n._name, n]}.to_h
-        mserv = model_mapper.services._grep(/.*\.erb/).map {|n| [n._name, n]}.to_h
+        # cserv = @config.containers.f(name).services.grep(/.*\.erb/).map {|n| [n.name, n]}.to_h
+        mserv = model_mapper.services.grep(/.*\.erb/).map {|n| [n.name, n]}.to_h
         # services = mserv.merge!(cserv)
         services = mserv
 
-        supervisor_path = container_lib_mapper.supervisor._path
-        FileUtils.mkdir_p supervisor_path
+        supervisor_path = container_lib_mapper.supervisor
+        supervisor_path.create!
         services.each do |_name, node|
           text = erb(node, model: model_, container: container_mapper)
           file_write("#{supervisor_path}/#{_name[/.*[^\.erb]/]}", text)
@@ -87,7 +88,7 @@ module Superhosting
 
         # container
         unless model_mapper.f('container.rb').nil?
-          registry_path = container_lib_mapper.registry.f('container')._path
+          registry_path = container_lib_mapper.registry.f('container').path
           ex = ScriptExecutor::Container.new(
               container: container_mapper, container_name: name, container_lib: container_lib_mapper, registry_path: registry_path,
               model: model_mapper, config: @config, lib: @lib
@@ -100,8 +101,8 @@ module Superhosting
         pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
 
         # run container
-        self.command "docker run --detach --name #{name} -v #{container_lib_mapper.configs._path}/:/.configs:ro
-                      -v #{container_lib_mapper.web._path}:/web/#{name} #{image} /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf".split
+        self.command "docker run --detach --name #{name} -v #{container_lib_mapper.configs.path}/:/.configs:ro
+                      -v #{container_lib_mapper.web.path}:/web/#{name} #{image} /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf".split
 
         return { error: :error, message: 'Unable to run docker container.' } unless @docker_api.container_info(name)
 
@@ -111,21 +112,25 @@ module Superhosting
       def delete(name:)
         container_mapper = @config.containers.f(name)
         container_lib_mapper = @lib.containers.f(name)
-        model = container_mapper.model(default: @config.default_model)
+        model = container_mapper.model(default: @config.default_model).value
         model_mapper = @config.models.f(:"#{model}")
 
         if self.existing_validation(name: name).net_status_ok? and self.running_validation(name: name).net_status_ok?
           site_controller = self.get_controller(Site)
-          sites = container_mapper.sites._grep_dirs.map { |n| n._name }
-          sites.each {|s| site_controller.delete(name: s).net_status_ok! }
+          sites = container_mapper.sites.grep_dirs.map { |n| n.name }
+          sites.each do |s|
+            unless (resp = site_controller.delete(name: s)).net_status_ok?
+              return resp
+            end
+          end
 
           unless (container = container_lib_mapper.registry.f('container')).nil?
             FileUtils.rm container.lines
-            FileUtils.rm container._path
+            container.delete!
           end
 
           unless model_mapper.f('container.rb').nil?
-            registry_path = container_lib_mapper.registry.f('container')._path
+            registry_path = container_lib_mapper.registry.f('container').path
             ex = ScriptExecutor::Container.new(
                 container: container_mapper, container_name: name, container_lib: container_lib_mapper,
                 registry_path: registry_path, on_reconfig_only: true,
@@ -142,8 +147,8 @@ module Superhosting
           user_controller = self.get_controller(User)
           user_controller._group_del_users(name: name)
 
-          FileUtils.rm_rf container_lib_mapper._path
-          FileUtils.rm_rf container_mapper._path
+          container_lib_mapper.delete!(full: true)
+          container_mapper.delete!(full: true)
 
           {}
         else

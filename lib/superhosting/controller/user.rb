@@ -18,7 +18,7 @@ module Superhosting
 
       def add(name:, container_name:, ftp_dir: nil, ftp_only: false, generate: false)
         container_web = "/web/#{container_name}"
-        home_dir = ftp_dir.nil? ? container_web : File.join(container_web, ftp_dir)
+        home_dir = ftp_dir.nil? ? container_web : container_web.path.join(ftp_dir)
 
         if !ftp_dir.nil? and !ftp_only
           { error: :logical_error, message: 'Option \'ftp-only\' is required if specified \'ftp-dir\'' }
@@ -51,17 +51,18 @@ module Superhosting
       end
 
       def delete(name:, container_name:)
-        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok? and
-            (resp = self.existing_validation(name: name, container_name: container_name)).net_status_ok?
+        if self.not_existing_validation(name: name, container_name: container_name).net_status_ok?
+          self.debug("User '#{name}' has already been deleted")
+        elsif (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
           container_lib_mapper = @lib.containers.f(container_name)
-          passwd_path = container_lib_mapper.configs.f('etc-passwd')._path
+          passwd_path = container_lib_mapper.configs.f('etc-passwd').path
           user_name = "#{container_name}_#{name}"
           self._del(name: user_name)
           pretty_remove(passwd_path, /#{user_name}.*/)
 
           {}
         else
-          self.debug("User '#{name}' has already been deleted")
+          resp
         end
       end
 
@@ -88,7 +89,7 @@ module Superhosting
       def _add_custom(name:, group:, shell: '/usr/sbin/nologin', home_dir: "/web/#{group}")
         if (resp = self.adding_validation(name: name, container_name: group)).net_status_ok?
           container_lib_mapper = @lib.containers.f(group)
-          passwd_path = container_lib_mapper.configs.f('etc-passwd')._path
+          passwd_path = container_lib_mapper.configs.f('etc-passwd').path
           self.command("useradd #{name} -g #{group} -d #{home_dir} -s #{shell}")
           user = self._get(name: name)
           pretty_write(passwd_path, "#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
@@ -129,7 +130,7 @@ module Superhosting
       end
 
       def _group_get_users(name:)
-        if group = self._group_get(name: name)
+        if (group = self._group_get(name: name))
           gid = group.gid
 
           users = []
@@ -153,7 +154,7 @@ module Superhosting
 
       def existing_validation(name:, container_name:)
         container_lib_mapper = @lib.containers.f(container_name)
-        passwd_path = container_lib_mapper.configs.f('etc-passwd')._path
+        passwd_path = container_lib_mapper.configs.f('etc-passwd').path
         user_name = "#{container_name}_#{name}"
 
         check_in_file(passwd_path, name) ?  {} : { error: :logical_error, message: "User '#{user_name}' doesn't exists" }

@@ -14,7 +14,7 @@ module Superhosting
 
       def config(save_to, script, **options)
         unless self.on_reconfig_only
-          script_mapper = self.container.f(script, default: self.model.f(script))
+          script_mapper = self.container.f(script, default: self.model.f(script)).value
           raise NetStatus::Exception.new(error: :error, message: 'File does not exist') if script_mapper.nil?
           opts = instance_variables_to_hash(self).merge(options)
           FileUtils.mkdir_p File.dirname(save_to)
@@ -25,7 +25,7 @@ module Superhosting
 
       # def container_config(save_to, script, **options)
       #   raise NetStatus::Exception.new(error: :error, message: "File '#{save_to}' has incorrect name format") if save_to.include? File::SEPARATOR
-      #   config(File.join(self.lib_configs._path, save_to), script, options)
+      #   config(File.join(self.lib_configs.path, save_to), script, options)
       # end
 
       def on_reconfig(cmd)

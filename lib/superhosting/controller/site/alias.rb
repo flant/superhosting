@@ -13,7 +13,7 @@ module Superhosting
           if self.existing_validation(name: name).net_status_ok?
             self.debug("Alias '#{name}' already exists")
           elsif (resp = @site.adding_validation(name: name)).net_status_ok?
-            file_write(@site_descriptor[:site].aliases._path, name)
+            file_append(@site_descriptor[:site].aliases.path, name)
           else
             resp
           end
@@ -23,13 +23,13 @@ module Superhosting
           if self.not_existing_validation(name: name).net_status_ok?
             self.debug("Alias '#{name}' has already been deleted")
           else
-            pretty_remove(@site_descriptor[:site].aliases._path, name)
+            pretty_remove(@site_descriptor[:site].aliases.path, name)
             {}
           end
         end
 
         def existing_validation(name:)
-          check_in_file(@site_descriptor[:site].aliases._path, name) ?  {} : { error: :logical_error, message: "Alias '#{name}' doesn't exists" }
+          check_in_file(@site_descriptor[:site].aliases.path, name) ?  {} : { error: :logical_error, message: "Alias '#{name}' doesn't exists" }
         end
 
         def not_existing_validation(name:)

@@ -6,9 +6,10 @@ module Superhosting
       def admin_index
         def generate
           @admin_index = {}
-          @admins_mapper._grep_dirs.each do |admin_name|
-            @admin_container_controller = self.get_controller(Admin::Container, name: admin_name._name)
-            @admin_index[admin_name._name] = @admin_container_controller._users_list.net_status_ok![:data]
+          @admins_mapper.grep_dirs.each do |dir_name|
+            admin_name = dir_name.name
+            @admin_container_controller = self.get_controller(Admin::Container, name: admin_name)
+            @admin_index[admin_name] = @admin_container_controller._users_list.net_status_ok![:data]
           end
           @admin_index
         end
@@ -23,12 +24,12 @@ module Superhosting
 
       def list
         admins = {}
-        @admins_mapper._grep_dirs.map do |admin|
-          name = admin._name
+        @admins_mapper.grep_dirs.map do |dir_name|
+          admin_name = dir_name.name
 
-          @container_admin_controller = self.get_controller(Admin::Container, name: name)
+          @container_admin_controller = self.get_controller(Admin::Container, name: admin_name)
           if (resp = @container_admin_controller.list).net_status_ok?
-            admins[name] = resp[:data]
+            admins[admin_name] = resp[:data]
           else
             return resp
           end
@@ -40,9 +41,9 @@ module Superhosting
       def add(name:, generate: false)
         if (resp = self.not_existing_validation(name: name)).net_status_ok?
           admin_dir = @admins_mapper.f(name)
-          FileUtils.mkdir_p admin_dir._path
+          admin_dir.create!
           file_write(admin_dir.passwd._path)
-          self.command("chmod 640 #{admin_dir._path}")
+          self.command("chmod 640 #{admin_dir.path}")
 
           self.passwd(name: name, generate: generate)
         else
@@ -53,7 +54,7 @@ module Superhosting
       def delete(name:)
         if self.existing_validation(name: name).net_status_ok?
           admin_dir = @admins_mapper.f(name)
-          FileUtils.rm_rf admin_dir._path unless admin_dir.nil?
+          admin_dir.delete! unless admin_dir.nil?
           {}
         else
           self.debug("Admin '#{name}' has already been deleted")
@@ -65,7 +66,7 @@ module Superhosting
           user_controller = self.get_controller(User)
           admin_dir = @admins_mapper.f(name)
           passwords = user_controller._create_password(generate: generate)
-          file_write(admin_dir.passwd._path, "#{name}:#{passwords[:encrypted_password]}")
+          admin_dir.passwd.put!("#{name}:#{passwords[:encrypted_password]}")
 
           admin_containers = self.admin_index[name]
           admin_containers.each do |user|
