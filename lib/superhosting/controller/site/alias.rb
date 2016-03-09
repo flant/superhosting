@@ -29,11 +29,11 @@ module Superhosting
         end
 
         def existing_validation(name:)
-          check_in_file(@site_descriptor[:site].aliases.path, name) ?  {} : { error: :logical_error, message: "Alias '#{name}' doesn't exists" }
+          check_in_file(@site_descriptor[:site].aliases.path, name) ?  {} : { error: :logical_error, code: :alias_does_not_exists, data: { name: name } }
         end
 
         def not_existing_validation(name:)
-          self.existing_validation.net_status_ok? ? {}: { error: :logical_error, message: "Alias '#{name}' already exists" }
+          self.existing_validation.net_status_ok? ? {}: { error: :logical_error, code: :alias_already_exists, data: { name: name } }
         end
       end
     end

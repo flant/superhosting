@@ -11,6 +11,7 @@ require 'pry-byebug'
 require 'openssl'
 require 'securerandom'
 require 'highline/import'
+require 'i18n'
 
 require 'path_mapper'
 require 'net_status'

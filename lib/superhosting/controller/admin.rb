@@ -84,11 +84,11 @@ module Superhosting
       end
 
       def existing_validation(name:)
-        (@config.admins.f(name)).nil? ? { error: :logical_error, message: "Admin '#{name}' doesn't exists" } : {}
+        (@config.admins.f(name)).nil? ? { error: :logical_error, code: :admin_does_not_exists, data: { name: name } } : {}
       end
 
       def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, message: "Admin '#{name}' already exists" } : {}
+        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :admin_already_exists, data: { name: name } } : {}
       end
     end
   end

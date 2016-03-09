@@ -21,9 +21,9 @@ module Superhosting
         home_dir = ftp_dir.nil? ? container_web : container_web.path.join(ftp_dir)
 
         if !ftp_dir.nil? and !ftp_only
-          { error: :logical_error, message: 'Option \'ftp-only\' is required if specified \'ftp-dir\'' }
+          { error: :logical_error, code: :ftp_only_is_required }
         elsif File.exists? home_dir
-          { error: :logical_error, message: "Incorrect ftp-dir '#{home_dir}'"}
+          { error: :logical_error, code: :incorrect_ftp_dir, data: { dir: home_dir } }
         elsif (resp = @container_controller.existing_validation(name: container_name)).net_status_ok? and
           (resp = self.not_existing_validation(name: name, container_name: container_name)).net_status_ok?
           shell = ftp_only ? '/usr/sbin/nologin' : '/bin/bash'
@@ -148,7 +148,7 @@ module Superhosting
       end
 
       def adding_validation(name:, container_name:)
-        return { error: :input_error, message: "Invalid user name '#{name}' only '#{USER_NAME_FORMAT}'" } if name !~ USER_NAME_FORMAT
+        return { error: :input_error, code: :invalid_user_name, data: { name: name, regex: USER_NAME_FORMAT } } if name !~ USER_NAME_FORMAT
         self.not_existing_validation(name: name, container_name: container_name)
       end
 
@@ -157,11 +157,11 @@ module Superhosting
         passwd_path = container_lib_mapper.configs.f('etc-passwd').path
         user_name = "#{container_name}_#{name}"
 
-        check_in_file(passwd_path, name) ?  {} : { error: :logical_error, message: "User '#{user_name}' doesn't exists" }
+        check_in_file(passwd_path, name) ?  {} : { error: :logical_error, code: :user_does_not_exists, data: { name: user_name } }
       end
 
       def not_existing_validation(name:, container_name:)
-        self.existing_validation(name: name, container_name: container_name).net_status_ok? ? { error: :logical_error, message: "User '#{name}_#{container_name}' already exists" } : {}
+        self.existing_validation(name: name, container_name: container_name).net_status_ok? ? { error: :logical_error, code: :user_already_exists, data: { name: "#{name}_#{container_name}" } } : {}
       end
     end
   end

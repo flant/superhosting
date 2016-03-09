@@ -18,7 +18,10 @@ module Superhosting
               names = []
               names << site_dir.name
               site_dir.aliases.lines {|n| names << n.strip } unless site_dir.aliases.nil?
-              raise NetStatus::Exception, { error: :error, message: "Conflict between containers sites: '#{@site_index[site_dir.name][:site].path}' and '#{site_dir.path}'" } if @site_index.key? site_dir.name
+              raise NetStatus::Exception, {
+                  code: :site_container_name_conflict,
+                  data: { site1: @site_index[site_dir.name][:site].path, site2: site_dir.path }
+              } if @site_index.key? site_dir.name
               names.each {|n| @site_index[n] = { container: container_dir, site: site_dir } }
             end
           end
@@ -123,16 +126,16 @@ module Superhosting
       end
 
       def adding_validation(name:)
-        return { error: :input_error, message: "Invalid site name '#{name}' only '#{DOMAIN_NAME_FORMAT}'" } if name !~ DOMAIN_NAME_FORMAT
+        return { error: :input_error, code: :invalid_site_name, data: { name: name, regex: DOMAIN_NAME_FORMAT } } if name !~ DOMAIN_NAME_FORMAT
         self.not_existing_validation(name: name)
       end
 
       def existing_validation(name:)
-        self.site_index[name].nil? ? { error: :logical_error, message: "Site '#{name}' doesn't exists." } : {}
+        self.site_index[name].nil? ? { error: :logical_error, code: :site_does_not_exists, data: { name: name } } : {}
       end
 
       def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, message: "Site '#{name}' already exists." } : {}
+        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :site_already_exists, data: { name: name} } : {}
       end
     end
   end

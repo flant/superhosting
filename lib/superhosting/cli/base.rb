@@ -148,6 +148,13 @@ module Superhosting
         def prepend
           set_commands_hierarchy
           set_banners
+          i18n_initialize
+        end
+
+        def i18n_initialize
+          I18n.load_path << "#{File.dirname(__FILE__)}/config/net_status.yml"
+          I18n.reload!
+          I18n.locale = :en
         end
 
         def set_banners(node=@@commands_hierarchy, path=[])

@@ -15,7 +15,7 @@ module Superhosting
         if !(resp = self.adding_validation(name: name)).net_status_ok?
           return resp
         elsif (model_ = model || @config.default_model.value).nil?
-          return { error: :input_error, message: 'No model given.' }
+          return { error: :input_error, code: :no_model_given }
         end
 
         FileUtils.mkdir_p '/web'
@@ -29,7 +29,7 @@ module Superhosting
         model_mapper = @config.models.f(:"#{model_}")
 
         # image
-        return { error: :input_error, message: "No docker_image specified in model '#{model_}'." } unless (image = model_mapper.docker_image.value)
+        return { error: :input_error, code: :no_docker_image_specified_in_model, data: { model: model_} } unless (image = model_mapper.docker_image.value)
 
         # mail
         unless mail != 'no'
@@ -43,7 +43,7 @@ module Superhosting
               admin_mail_ = admin_mail || model_mapper.default_admin_mail.value
             end
           end
-          return { error: :input_error, message: 'Admin mail required.' } if defined? admin_mail_ and admin_mail_.nil?
+          return { error: :input_error, code: :admin_mail_required } if defined? admin_mail_ and admin_mail_.nil?
         end
 
         # lib
@@ -104,7 +104,7 @@ module Superhosting
         self.command "docker run --detach --name #{name} -v #{container_lib_mapper.configs.path}/:/.configs:ro
                       -v #{container_lib_mapper.web.path}:/web/#{name} #{image} /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf".split
 
-        return { error: :error, message: 'Unable to run docker container.' } unless @docker_api.container_info(name)
+        return { error: :error, code: :unable_to_run_docker_container } unless @docker_api.container_info(name)
 
         {}
       end
@@ -181,24 +181,24 @@ module Superhosting
       end
 
       def adding_validation(name:)
-        return { error: :input_error, message: "Invalid container name '#{name}' - only '#{CONTAINER_NAME_FORMAT}' are allowed" } if name !~ CONTAINER_NAME_FORMAT
+        return { error: :input_error, code: :invalid_container_name, data: { name: name, regex: CONTAINER_NAME_FORMAT } } if name !~ CONTAINER_NAME_FORMAT
         self.not_running_validation(name: name)
       end
 
       def running_validation(name:)
-        self.not_running_validation(name: name).net_status_ok? ? { error: :logical_error, message: 'Container isn\'t running.' } : {}
+        self.not_running_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_is_not_running, data: { name: name} } : {}
       end
 
       def not_running_validation(name:)
-        @docker_api.container_info(name).nil? ? {} : { error: :logical_error, message: 'Container already running.' }
+        @docker_api.container_info(name).nil? ? {} : { error: :logical_error, code: :container_is_already_running, data: { name: name } }
       end
 
       def existing_validation(name:)
-        (@lib.containers.f(name)).nil? ? { error: :logical_error, message: "Container '#{name}' doesn't exists" } : {}
+        (@lib.containers.f(name)).nil? ? { error: :logical_error, code: :container_does_not_exists, data: { name: name }  } : {}
       end
 
       def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, message: "Container '#{name}' already exists" } : {}
+        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_already_exists, data: { name: name }  } : {}
       end
     end
   end
