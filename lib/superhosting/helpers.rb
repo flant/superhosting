@@ -2,6 +2,7 @@ module Superhosting
   module Helpers
     include Helper::File
     include Helper::Erb
+    include Helper::Cmd
 
     def instance_variables_to_hash(obj)
       obj.instance_variables.map do |name|

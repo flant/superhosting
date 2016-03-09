@@ -20,6 +20,7 @@ require 'superhosting/version'
 
 require 'superhosting/helper/file'
 require 'superhosting/helper/erb'
+require 'superhosting/helper/cmd'
 require 'superhosting/helpers'
 
 require 'superhosting/base'

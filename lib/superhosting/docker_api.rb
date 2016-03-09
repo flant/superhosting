@@ -16,16 +16,29 @@ module Superhosting
       resp_if_success raw_connection.request(method: :get, path: "/containers/#{name}/json")
     end
 
-    def container_kill(name)
+    def container_list
+      resp_if_success raw_connection.request(method: :get, path: '/containers/json')
+    end
+
+    def container_kill!(name)
       resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/kill")
     end
 
-    def container_rm(name)
+    def container_rm!(name)
       resp_if_success raw_connection.request(method: :delete, path: "/containers/#{name}")
     end
 
-    def container_list
-      resp_if_success raw_connection.request(method: :get, path: '/containers/json')
+    def remove_inactive_container!(name)
+      self.container_rm!(name) if self.container_exists?(name) and !self.container_running?(name)
+    end
+
+    def container_running?(name)
+      resp = container_info(name)
+      resp.nil? ? false : resp['State']['Status'] == 'running'
+    end
+
+    def container_exists?(name)
+      container_info(name).nil? ? false : true
     end
   end
 end

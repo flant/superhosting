@@ -101,10 +101,12 @@ module Superhosting
         pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
 
         # run container
-        self.command "docker run --detach --name #{name} -v #{container_lib_mapper.configs.path}/:/.configs:ro
-                      -v #{container_lib_mapper.web.path}:/web/#{name} #{image} /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf".split
+        self.command "docker run --detach --name #{name} --entrypoint /usr/bin/supervisord -v #{container_lib_mapper.configs.path}/:/.configs:ro
+                      -v #{container_lib_mapper.web.path}:/web/#{name} #{image} -nc /etc/supervisor/supervisord.conf".split
 
-        return { error: :error, code: :unable_to_run_docker_container } unless @docker_api.container_info(name)
+        unless (resp = self.running_validation(name: name)).net_status_ok?
+          return resp
+        end
 
         {}
       end
@@ -140,8 +142,8 @@ module Superhosting
             ex.commands.each {|c| self.command c }
           end
 
-          @docker_api.container_kill(name)
-          @docker_api.container_rm(name)
+          @docker_api.container_kill!(name)
+          @docker_api.container_rm!(name)
           pretty_remove('/etc/security/docker.conf', "@#{name} #{name}")
 
           user_controller = self.get_controller(User)
@@ -181,6 +183,7 @@ module Superhosting
       end
 
       def adding_validation(name:)
+        @docker_api.remove_inactive_container!(name)
         return { error: :input_error, code: :invalid_container_name, data: { name: name, regex: CONTAINER_NAME_FORMAT } } if name !~ CONTAINER_NAME_FORMAT
         self.not_running_validation(name: name)
       end
@@ -190,7 +193,7 @@ module Superhosting
       end
 
       def not_running_validation(name:)
-        @docker_api.container_info(name).nil? ? {} : { error: :logical_error, code: :container_is_already_running, data: { name: name } }
+        @docker_api.container_running?(name) ? { error: :logical_error, code: :container_is_already_running, data: { name: name } } : {}
       end
 
       def existing_validation(name:)
