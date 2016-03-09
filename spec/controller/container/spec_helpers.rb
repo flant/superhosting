@@ -1,8 +1,7 @@
-require_relative '../spec_helpers'
-
 module SpecHelpers
   module Controller
     module Container
+      extend ActiveSupport::Concern
       include SpecHelpers::Base
 
       def container_controller
@@ -95,6 +94,17 @@ module SpecHelpers
 
         # container
         expect(docker_api.container_info(container_name)).to be_nil
+      end
+
+      included do
+        after :all do
+          run_command(["docker ps --filter 'name=test' -a | xargs docker stop"])
+          run_command(["docker ps --filter 'name=test' -a | xargs docker rm"])
+
+          Etc.passwd do |user|
+            run_command(["userdel", user.name]) if user.name.start_with? 'test'
+          end
+        end
       end
     end # Container
   end # Controller
