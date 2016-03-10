@@ -2,16 +2,35 @@ module SpecHelpers
   module Base
     include Superhosting::Helpers
 
+    def docker_api
+      @docker_api ||= Superhosting::DockerApi.new
+    end
+
     def method_missing(m, *args, &block)
       if m.to_s.start_with? 'not_'
         method = m[/(?<=not_)(.*)/]
         return reverse_expect(method, *args, &block) if respond_to? method
+      elsif m.to_s.include? '_with_exps'
+        return method_with_expectation(m, *args, &block)
       end
       super
     end
 
     def reverse_expect(m, *args, &block)
       expect { send(:"#{m}", *args, &block) }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
+    end
+
+    def method_with_expectation(m, *args, &block)
+      controller_method = m[/(.*)(?=_with_exps)/]
+      expectation_method = "#{controller_method}_exps"
+
+      kwargs = args.extract_options!
+      code = kwargs.delete(:code)
+
+      resp = self.send(controller_method.to_sym, *args, **kwargs)
+      expect_net_status(resp, code: code)
+      self.send(expectation_method, **kwargs) if self.respond_to? expectation_method
+      resp
     end
 
     def expect_dir(path_mapper)
@@ -34,12 +53,21 @@ module SpecHelpers
       expect { Etc.getpwnam(name) }.not_to raise_error
     end
 
-    def expect_file_owner(path_mapper, owner)
+    def expect_file_owner(path_mapper, owner_name)
+      owner = Etc.getgrnam(owner_name)
       expect(File.stat(path_mapper.path).gid).to be owner.gid
+    end
+
+    def expect_net_status(hash, code: nil)
+      if code
+        expect(hash).to include(code: code)
+      else
+        expect_net_status_ok(hash)
+      end
     end
 
     def expect_net_status_ok(hash)
       expect(hash).to_not include(:error)
     end
   end
-end # SpecHelpers
+end

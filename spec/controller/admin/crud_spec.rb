@@ -1,0 +1,51 @@
+require_relative 'spec_helpers'
+
+describe Superhosting::Controller::Admin do
+  include SpecHelpers::Controller::User
+  include SpecHelpers::Controller::Container
+  include SpecHelpers::Controller::Admin
+
+  it 'add' do
+    admin_add_with_exps(name: @admin_name, generate: true)
+  end
+
+  it 'delete' do
+    admin_add_with_exps(name: @admin_name, generate: true)
+    admin_delete_with_exps(name: @admin_name)
+  end
+
+  it 'passwd' do
+    with_admin do |admin_name|
+      admin_passwd_with_exps(name: admin_name, generate: true)
+    end
+  end
+
+  it 'list' do
+    with_admin do |admin_name|
+      expect(admin_list_with_exps[:data]).to include(admin_name)
+    end
+  end
+
+  it 'container_add' do
+    with_container do |container_name|
+      with_admin do |admin_name|
+        admin_container_add_with_exps(name: container_name)
+      end
+    end
+  end
+
+  it 'container_delete' do
+    with_container do |container_name|
+      with_admin do |admin_name|
+        admin_container_add_with_exps(name: container_name)
+        admin_container_delete_with_exps(name: container_name)
+      end
+    end
+  end
+
+  it 'container_list' do
+    with_admin_container do |container_name, admin_name|
+      expect(admin_container_list_with_exps[:data]).to include(container: container_name, user: "#{container_name}_admin_#{admin_name}")
+    end
+  end
+end
