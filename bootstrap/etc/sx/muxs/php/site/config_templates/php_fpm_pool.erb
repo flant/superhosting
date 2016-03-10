@@ -1,6 +1,6 @@
 [<%= @container.name %>_<%= @site.name >]
 
-user = <%= [@container.name, @container.php.user].compact.join '_' %>
+user = <%= [@container.name, @site.php.user].compact.join '_' %>
 group = <%= @container.name %>
 listen = /web/<%= @container.name %>/<%= @site.name %>.sock
 listen.owner = www-data
