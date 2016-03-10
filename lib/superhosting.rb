@@ -18,6 +18,8 @@ require 'net_status'
 
 require 'superhosting/version'
 
+require 'superhosting/patch/path_mapper_node'
+
 require 'superhosting/helper/file'
 require 'superhosting/helper/erb'
 require 'superhosting/helper/cmd'

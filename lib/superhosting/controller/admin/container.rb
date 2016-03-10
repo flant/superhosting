@@ -37,7 +37,7 @@ module Superhosting
             unless (resp = @user_controller._add(name: admin_name, container_name: name, shell: '/bin/bash')).net_status_ok?
               return resp
             end
-            encrypted_password.empty? ? @user_controller._update_password(name: user, encrypted_password: encrypted_password) : {}
+            encrypted_password.empty? ? {} : @user_controller._update_password(name: "#{name}_#{admin_name}", encrypted_password: encrypted_password)
           else
             resp
           end

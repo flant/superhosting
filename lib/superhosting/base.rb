@@ -24,7 +24,7 @@ module Superhosting
       if cmd.status.success?
         msg = [cmd.stdout, cmd.stderr].delete_if { |str| str.empty? }.join("\n")
         debug(msg) unless msg.empty?
-        cmd
+        {} # net_status_ok
       else
         raise NetStatus::Exception.new(error: :error, message: [cmd.stdout, cmd.stderr].join("\n"))
       end
@@ -35,7 +35,7 @@ module Superhosting
       cmd.run_command
       msg = [cmd.stdout, cmd.stderr].delete_if { |str| str.empty? }.join("\n")
       debug(msg) unless msg.empty?
-      cmd
+      {} # net_status_ok
     end
 
     def get_base_controller_options

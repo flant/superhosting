@@ -1,8 +1,6 @@
 module Superhosting
   module Controller
     class Site < Base
-      attr_reader :site_index
-
       DOMAIN_NAME_FORMAT = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/
 
       def initialize(**kwargs)
@@ -12,7 +10,7 @@ module Superhosting
 
       def site_index
         def generate
-          @site_index = {}
+          site_index = {}
           @config.containers.grep_dirs.each do |container_dir|
             container_dir.sites.grep_dirs.each do |site_dir|
               names = []
@@ -20,15 +18,15 @@ module Superhosting
               site_dir.aliases.lines {|n| names << n.strip } unless site_dir.aliases.nil?
               raise NetStatus::Exception, {
                   code: :site_container_name_conflict,
-                  data: { site1: @site_index[site_dir.name][:site].path, site2: site_dir.path }
-              } if @site_index.key? site_dir.name
-              names.each {|n| @site_index[n] = { container: container_dir, site: site_dir } }
+                  data: { site1: site_index[site_dir.name][:site].path, site2: site_dir.path }
+              } if site_index.key? site_dir.name
+              names.each {|n| site_index[n] = { container: container_dir, site: site_dir } }
             end
           end
-          @site_index
+          site_index
         end
 
-        @site_index ||= self.generate
+        self.generate
       end
 
       def add(name:, container_name:)
@@ -42,6 +40,7 @@ module Superhosting
 
           site_mapper.create!
           container_lib_mapper.web.f(name).create!
+          FileUtils.chown_R container_name, container_name, container_lib_mapper.web.f(name).path
 
           registry_sites_mapper = container_lib_mapper.registry.sites
           unless model_mapper.f('site.rb').nil?
@@ -73,11 +72,9 @@ module Superhosting
           model_mapper = @config.models.f(:"#{model}")
 
           site[:site].delete!(full: true)
-          container_sites.delete! if container_sites.empty?
-          lib_web_site_mapper.delete! if lib_web_site_mapper.nil?
+          lib_web_site_mapper.delete!(full: true)
 
           registry_sites_mapper = container_lib_mapper.registry.sites
-
           unless model_mapper.f('site.rb').nil?
             registry_path = registry_sites_mapper.f(name).path
             registry_sites_mapper.create!
@@ -108,8 +105,13 @@ module Superhosting
           site = self.site_index[name]
           container_mapper = @config.containers.f(site[:container].name)
           container_lib_mapper = @lib.containers.f(container_mapper.name)
+          container_site_mapper = site[:container].sites.f(name)
+          container_lib_site_mapper = container_lib_mapper.web.f(name)
+          container_site_mapper_new = site[:container].sites.f(new_name)
+          container_lib_site_mapper_new = container_lib_mapper.web.f(new_name)
 
-          FileUtils.mv site[:container].sites.f(name).path, site[:container].sites.f(new_name).path
+          FileUtils.mv container_site_mapper.path, container_site_mapper_new.path
+          FileUtils.mv container_lib_site_mapper.path, container_lib_site_mapper_new.path
 
           unless (registry_sites_mapper = container_lib_mapper.registry.sites).nil?
             FileUtils.mv registry_sites_mapper.f(name).path, registry_sites_mapper.f(new_name).path unless registry_sites_mapper.f(name).nil?

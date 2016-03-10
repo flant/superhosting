@@ -23,7 +23,9 @@ module Superhosting
           if self.not_existing_validation(name: name).net_status_ok?
             self.debug("Alias '#{name}' has already been deleted")
           else
-            pretty_remove(@site_descriptor[:site].aliases.path, name)
+            aliases_mapper = @site_descriptor[:site].aliases
+            pretty_remove(aliases_mapper.path, name)
+            aliases_mapper.delete! if aliases_mapper.empty?
             {}
           end
         end
@@ -33,7 +35,7 @@ module Superhosting
         end
 
         def not_existing_validation(name:)
-          self.existing_validation.net_status_ok? ? {}: { error: :logical_error, code: :alias_already_exists, data: { name: name } }
+          self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :alias_already_exists, data: { name: name } } : {}
         end
       end
     end

@@ -1,7 +1,7 @@
 module Superhosting
   module Controller
     class User < Base
-      USER_NAME_FORMAT = /^[a-z][-a-z0-9_]{1,32}$/
+      USER_NAME_FORMAT = /^[a-zA-Z][-a-zA-Z0-9_]{1,32}$/
 
       def initialize(**kwargs)
         super(**kwargs)
@@ -17,12 +17,12 @@ module Superhosting
       end
 
       def add(name:, container_name:, ftp_dir: nil, ftp_only: false, generate: false)
+        return { error: :logical_error, code: :ftp_only_is_required } if ftp_dir and !ftp_only
+
         container_web = "/web/#{container_name}"
         home_dir = ftp_dir.nil? ? container_web : container_web.path.join(ftp_dir)
 
-        if !ftp_dir.nil? and !ftp_only
-          { error: :logical_error, code: :ftp_only_is_required }
-        elsif File.exists? home_dir
+        if !File.exists? home_dir
           { error: :logical_error, code: :incorrect_ftp_dir, data: { dir: home_dir } }
         elsif (resp = @container_controller.existing_validation(name: container_name)).net_status_ok? and
           (resp = self.not_existing_validation(name: name, container_name: container_name)).net_status_ok?
@@ -45,7 +45,7 @@ module Superhosting
       end
 
       def passwd(name:, generate: false)
-        passwords = self._create_password(generate)
+        passwords = self._create_password(generate: generate)
         self._update_password(name: name, encrypted_password: passwords[:encrypted_password])
         generate ? { data: { password: passwords[:password], encrypted_password: passwords[:encrypted_password] } } : {}
       end
@@ -145,6 +145,7 @@ module Superhosting
 
       def _group_del_users(name:)
         self._group_get_users(name: name).each {|user| self._del(name: user) }
+        self._group_del(name: name)
       end
 
       def adding_validation(name:, container_name:)

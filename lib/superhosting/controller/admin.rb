@@ -1,23 +1,21 @@
 module Superhosting
   module Controller
     class Admin < Base
-      attr_reader :admin_index
-
       def admin_index
         def generate
-          @admin_index = {}
+          admin_index = {}
           @admins_mapper.grep_dirs.each do |dir_name|
             admin_name = dir_name.name
             @admin_container_controller = self.get_controller(Admin::Container, name: admin_name)
-            @admin_index[admin_name] = @admin_container_controller._users_list.net_status_ok![:data]
+            admin_index[admin_name] = @admin_container_controller._users_list.net_status_ok![:data]
           end
-          @admin_index
+          admin_index
         end
 
-        @admin_index ||= self.generate
+        self.generate
       end
 
-      def initialize(kwargs)
+      def initialize(**kwargs)
         super(**kwargs)
         @admins_mapper = @config.admins
       end
@@ -42,7 +40,7 @@ module Superhosting
         if (resp = self.not_existing_validation(name: name)).net_status_ok?
           admin_dir = @admins_mapper.f(name)
           admin_dir.create!
-          file_write(admin_dir.passwd._path)
+          admin_dir.passwd.put!(name)
           self.command("chmod 640 #{admin_dir.path}")
 
           self.passwd(name: name, generate: generate)

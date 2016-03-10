@@ -96,12 +96,12 @@ module Superhosting
 
       def get_controller
         def get_subcontroller_option
-          key = :"#{self.class.get_split_class_name.first}_name"
+          key = :"#{self.class.get_splited_class_name.first}_name"
           config[key] unless config[key].nil?
         end
 
         node = CONTROLLERS_MODULE
-        names = self.class.get_split_class_name
+        names = self.class.get_splited_class_name
 
         names.each do |n|
           c_name = n.capitalize.to_sym
@@ -188,7 +188,7 @@ module Superhosting
           end
         end
 
-        def get_split_class_name
+        def get_splited_class_name
           self.split_toggle_case_name(self.name.split('::').last)
         end
 

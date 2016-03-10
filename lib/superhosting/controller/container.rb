@@ -83,7 +83,7 @@ module Superhosting
         supervisor_path.create!
         services.each do |_name, node|
           text = erb(node, model: model_, container: container_mapper)
-          file_write("#{supervisor_path}/#{_name[/.*[^\.erb]/]}", text)
+          supervisor_path.f(_name[/.*[^\.erb]/]).put!(text)
         end
 
         # container
@@ -148,6 +148,7 @@ module Superhosting
 
           user_controller = self.get_controller(User)
           user_controller._group_del_users(name: name)
+          user_controller._group_del(name: name)
 
           container_lib_mapper.delete!(full: true)
           container_mapper.delete!(full: true)
