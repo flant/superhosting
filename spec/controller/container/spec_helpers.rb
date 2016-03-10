@@ -100,7 +100,7 @@ module SpecHelpers
         # /var/lib/sx
         not_expect_dir(container_lib_mapper)
 
-        # web
+        # /web
         not_expect_dir(web_mapper.f(container_name))
 
         # group / user

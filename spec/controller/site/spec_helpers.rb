@@ -42,14 +42,14 @@ module SpecHelpers
         site_mapper = container_mapper.sites.f(site_name)
         web_mapper = PathMapper.new('/web').f(container_name).f(site_name)
 
-        # etc/sx
+        # /etc/sx
         expect_dir(container_mapper.sites)
         expect_dir(site_mapper)
 
-        # var/lib/sx
+        # /var/lib/sx
         expect_dir(container_lib_mapper.web.f(site_name))
 
-        # web
+        # /web
         expect_dir(web_mapper)
         expect_file_owner(web_mapper, container_name)
       end
@@ -64,14 +64,14 @@ module SpecHelpers
         site_mapper = container_mapper.sites.f(site_name)
         web_mapper = PathMapper.new('/web').f(container_name).f(site_name)
 
-        # etc/sx
+        # /etc/sx
         not_expect_dir(site_mapper)
 
-        # var/lib/sx
+        # /var/lib/sx
         not_expect_dir(container_lib_mapper.web.f(site_name))
         not_expect_dir(container_lib_mapper.registry.sites.f(site_name))
 
-        # web
+        # /web
         not_expect_dir(web_mapper)
       end
 
@@ -101,6 +101,8 @@ module SpecHelpers
         not_expect_file(site_mapper.aliases)
         not_expect_in_file(site_mapper.aliases, /^#{alias_name}$/)
       end
+
+      # other
 
       def with_site
         site_add_with_exps(name: @site_name, container_name: @container_name)

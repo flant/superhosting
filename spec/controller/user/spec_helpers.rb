@@ -64,13 +64,15 @@ module SpecHelpers
         user_name = kwargs[:name]
         etc_mapper = PathMapper.new('/etc')
 
-        # etc/shadow
+        # /etc/shadow
         expect_in_file(etc_mapper.shadow, /#{user_name}:(?!!)/)
       end
 
       def user_change_exps(**kwargs)
         user_add_exps(kwargs)
       end
+
+      # other
 
       def with_user
         user_add_with_exps(name: @user_name, container_name: @container_name)
