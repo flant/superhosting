@@ -5,8 +5,8 @@ module Superhosting
         admin_index = {}
         @admins_mapper.grep_dirs.each do |dir_name|
           admin_name = dir_name.name
-          @admin_container_controller = self.get_controller(Admin::Container, name: admin_name)
-          admin_index[admin_name] = @admin_container_controller._users_list.net_status_ok![:data]
+          admin_container_controller = self.get_controller(Admin::Container, name: admin_name)
+          admin_index[admin_name] = admin_container_controller._users_list.net_status_ok![:data] || []
         end
         admin_index
       end
@@ -21,8 +21,8 @@ module Superhosting
         @admins_mapper.grep_dirs.map do |dir_name|
           admin_name = dir_name.name
 
-          @container_admin_controller = self.get_controller(Admin::Container, name: admin_name)
-          if (resp = @container_admin_controller.list).net_status_ok?
+          container_admin_controller = self.get_controller(Admin::Container, name: admin_name)
+          if (resp = container_admin_controller.list).net_status_ok?
             admins[admin_name] = resp[:data]
           else
             return resp
@@ -38,7 +38,6 @@ module Superhosting
           admin_dir.create!
           admin_dir.passwd.put!(name)
           self.command("chmod 640 #{admin_dir.path}")
-
           self.passwd(name: name, generate: generate)
         else
           resp
@@ -47,9 +46,14 @@ module Superhosting
 
       def delete(name:)
         if self.existing_validation(name: name).net_status_ok?
-          admin_dir = @admins_mapper.f(name)
-          admin_dir.delete!
-          {}
+          admin_container_controller = self.get_controller(Admin::Container, name: name)
+          if (resp = admin_container_controller._delete_all_users).net_status_ok?
+            admin_dir = @admins_mapper.f(name)
+            admin_dir.delete!
+            {}
+          else
+            resp
+          end
         else
           self.debug("Admin '#{name}' has already been deleted")
         end
@@ -62,10 +66,10 @@ module Superhosting
           passwords = user_controller._create_password(generate: generate)
           admin_dir.passwd.put!("#{name}:#{passwords[:encrypted_password]}")
 
-          admin_containers = self.admin_index[name]
-          admin_containers.each do |user|
-            user_controller._update_password(name: user, encrypted_password: passwords[:encrypted_password])
-          end unless admin_containers.nil?
+          users = admin_index[name]
+          users.each do |user_name|
+            user_controller._update_password(name: user_name, encrypted_password: passwords[:encrypted_password])
+          end
 
           { data: passwords }
         else

@@ -23,8 +23,11 @@ describe Superhosting::Controller::Admin do
   end
 
   it 'list' do
-    with_admin do |admin_name|
-      expect(admin_list_with_exps[:data]).to include(admin_name)
+    with_container do |container_name|
+      with_admin do |admin_name|
+        admin_container_add_with_exps(name: container_name)
+        expect(admin_list_with_exps[:data][admin_name]).to include({ container: container_name, user: "#{container_name}_admin_#{admin_name}"})
+      end
     end
   end
 

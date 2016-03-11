@@ -91,7 +91,7 @@ module Superhosting
           passwd_path = container_lib_mapper.configs.f('etc-passwd').path
           self.command("useradd #{name} -g #{group} -d #{home_dir} -s #{shell}")
           user = self._get(name: name)
-          pretty_write(passwd_path, "#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
+          pretty_override(passwd_path, "#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
         else
           resp
         end
@@ -102,13 +102,21 @@ module Superhosting
       end
 
       def _create_password(generate: false)
-        password = generate ? SecureRandom.hex : ask('Password:  ') { |q| q.echo = "*" }
-        encrypted_password = OpenSSL::Digest::MD5.hexdigest(password)
+        password = if generate
+          SecureRandom.hex
+        else
+          begin
+            pass = ask('Enter password: ') { |q| q.echo = false }
+            re_pass = ask('Repeat password: ') { |q| q.echo = false }
+          end until pass == re_pass
+          pass
+        end
+        encrypted_password = UnixCrypt::SHA512.build(password)
         { password: password, encrypted_password: encrypted_password }
       end
 
       def _update_password(name:, encrypted_password:)
-        self.command("usermod -p #{encrypted_password} #{name}")
+        self.command("usermod -p '#{encrypted_password}' #{name}")
       end
 
       def _group_get(name:)
@@ -152,11 +160,8 @@ module Superhosting
       end
 
       def existing_validation(name:, container_name:)
-        container_lib_mapper = @lib.containers.f(container_name)
-        passwd_path = container_lib_mapper.configs.f('etc-passwd').path
         user_name = "#{container_name}_#{name}"
-
-        check_in_file(passwd_path, user_name) ?  {} : { error: :logical_error, code: :user_does_not_exists, data: { name: user_name } }
+        check_in_file('/etc/passwd', user_name) ? {} : { error: :logical_error, code: :user_does_not_exists, data: { name: user_name } }
       end
 
       def not_existing_validation(name:, container_name:)

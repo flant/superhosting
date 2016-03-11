@@ -108,7 +108,7 @@ describe Superhosting::Controller::Site do
 
   it '@site_index:container_site_name_conflict' do
     config_mapper = container_controller.config
-    container_mapper = config_mapper.containers.some_container
+    container_mapper = config_mapper.containers.test_container
     container_mapper.sites.f(@site_name).create!
 
     with_container do |container_name|

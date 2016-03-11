@@ -67,9 +67,11 @@ module SpecHelpers
         config_mapper = admin_controller.config
         admins_mapper = config_mapper.admins
         admin_mapper = admins_mapper.f(admin_name)
+        etc_passwd_mapper = PathMapper.new('/etc/passwd')
 
         # /etc/sx/admins
         not_expect_dir(admin_mapper)
+        not_expect_in_file(etc_passwd_mapper, /_admin_#{admin_name}/)
       end
 
       def admin_container_add_exps(**kwargs)

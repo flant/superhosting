@@ -56,12 +56,33 @@ module Superhosting
           end
         end
 
+        def _containers_list
+          if (resp = self.list).net_status_ok?
+            containers = resp[:data].map {|elm| elm[:container] }
+            { data: containers }
+          else
+            resp
+          end
+        end
+
         def _users_list
           if (resp = self.list).net_status_ok?
-            containers = resp[:data]
-            users = containers.map {|container_name| "#{container_name}_admin_#{@admin_name}" }
-
+            users = resp[:data].map {|elm| elm[:user] }
             { data: users }
+          else
+            resp
+          end
+        end
+
+        def _delete_all_users
+          if (resp = self._containers_list).net_status_ok?
+            containers = resp[:data]
+            containers.each do |container_name|
+              unless (resp = self.delete(name: container_name)).net_status_ok?
+                return resp
+              end
+            end
+            {}
           else
             resp
           end

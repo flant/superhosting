@@ -11,6 +11,12 @@ module Superhosting
         {} # net_status_ok
       end
 
+      def pretty_override(path, line)
+        pretty_remove(path, line)
+        pretty_write(path, line)
+        {} # net_status_ok
+      end
+
       def pretty_remove(path, line)
         if ::File.exists? path
           lines = ::File.readlines(path).select {|l| l !~ Regexp.new(line) }
