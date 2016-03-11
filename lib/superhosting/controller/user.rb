@@ -108,7 +108,7 @@ module Superhosting
           begin
             pass = ask('Enter password: ') { |q| q.echo = false }
             re_pass = ask('Repeat password: ') { |q| q.echo = false }
-          end until pass == re_pass
+          end until pass == re_pass and !pass.empty?
           pass
         end
         encrypted_password = UnixCrypt::SHA512.build(password)
