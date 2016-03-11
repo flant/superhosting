@@ -3,6 +3,7 @@ module Superhosting
     module Cmd; end
     class Base
       include Mixlib::CLI
+      extend Helper::I18n
 
       COMMANDS_MODULE = Cmd
       CONTROLLERS_MODULE = Superhosting::Controller
@@ -139,7 +140,7 @@ module Superhosting
             args
           end
 
-          prepend
+          self.prepend
           cmd, node = get_cmd_and_node(args)
           args = clear_args(args, cmd)
           cmd.new(args, node).run
@@ -149,12 +150,6 @@ module Superhosting
           set_commands_hierarchy
           set_banners
           i18n_initialize
-        end
-
-        def i18n_initialize
-          I18n.load_path << "#{File.dirname(__FILE__)}/config/net_status.yml"
-          I18n.reload!
-          I18n.locale = :en
         end
 
         def set_banners(node=@@commands_hierarchy, path=[])

@@ -23,6 +23,7 @@ require 'superhosting/patch/path_mapper_node'
 require 'superhosting/helper/file'
 require 'superhosting/helper/erb'
 require 'superhosting/helper/cmd'
+require 'superhosting/helper/i18n'
 require 'superhosting/helpers'
 
 require 'superhosting/base'

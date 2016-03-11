@@ -28,6 +28,10 @@ module Superhosting
       resp_if_success raw_connection.request(method: :delete, path: "/containers/#{name}")
     end
 
+    def container_stop!(name)
+      resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/stop")
+    end
+
     def remove_inactive_container!(name)
       self.container_rm!(name) if self.container_exists?(name) and !self.container_running?(name)
     end

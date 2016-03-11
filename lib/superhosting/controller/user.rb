@@ -1,7 +1,7 @@
 module Superhosting
   module Controller
     class User < Base
-      USER_NAME_FORMAT = /^[a-zA-Z][-a-zA-Z0-9_]{1,32}$/
+      USER_NAME_FORMAT = /^[a-zA-Z][-a-zA-Z0-9_]{3,32}$/
 
       def initialize(**kwargs)
         super(**kwargs)
@@ -17,15 +17,16 @@ module Superhosting
       end
 
       def add(name:, container_name:, ftp_dir: nil, ftp_only: false, generate: false)
-        return { error: :logical_error, code: :ftp_only_is_required } if ftp_dir and !ftp_only
+        return { error: :logical_error, code: :option_ftp_only_is_required } if ftp_dir and !ftp_only
 
-        container_web = "/web/#{container_name}"
-        home_dir = ftp_dir.nil? ? container_web : container_web.path.join(ftp_dir)
+        web_mapper = PathMapper.new("/web/#{container_name}")
+        home_dir = ftp_dir.nil? ? web_mapper.path : web_mapper.f(ftp_dir).path
 
-        if !File.exists? home_dir
-          { error: :logical_error, code: :incorrect_ftp_dir, data: { dir: home_dir } }
-        elsif (resp = @container_controller.existing_validation(name: container_name)).net_status_ok? and
-          (resp = self.not_existing_validation(name: name, container_name: container_name)).net_status_ok?
+        if !(resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+          resp
+        elsif !File.exists? home_dir
+          { error: :logical_error, code: :incorrect_ftp_dir, data: { dir: home_dir.to_s } }
+        elsif (resp = self.not_existing_validation(name: name, container_name: container_name)).net_status_ok?
           shell = ftp_only ? '/usr/sbin/nologin' : '/bin/bash'
 
           if (resp = self._add(name: name, container_name: container_name, home_dir: home_dir, shell: shell)).net_status_ok?
@@ -51,18 +52,16 @@ module Superhosting
       end
 
       def delete(name:, container_name:)
-        if self.not_existing_validation(name: name, container_name: container_name).net_status_ok?
+        if !(resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+          resp
+        elsif self.not_existing_validation(name: name, container_name: container_name).net_status_ok?
           self.debug("User '#{name}' has already been deleted")
-        elsif (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+        else
           container_lib_mapper = @lib.containers.f(container_name)
           passwd_path = container_lib_mapper.configs.f('etc-passwd').path
           user_name = "#{container_name}_#{name}"
           self._del(name: user_name)
           pretty_remove(passwd_path, /#{user_name}.*/)
-
-          {}
-        else
-          resp
         end
       end
 
@@ -93,7 +92,6 @@ module Superhosting
           self.command("useradd #{name} -g #{group} -d #{home_dir} -s #{shell}")
           user = self._get(name: name)
           pretty_write(passwd_path, "#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
-          {}
         else
           resp
         end
@@ -158,11 +156,11 @@ module Superhosting
         passwd_path = container_lib_mapper.configs.f('etc-passwd').path
         user_name = "#{container_name}_#{name}"
 
-        check_in_file(passwd_path, name) ?  {} : { error: :logical_error, code: :user_does_not_exists, data: { name: user_name } }
+        check_in_file(passwd_path, user_name) ?  {} : { error: :logical_error, code: :user_does_not_exists, data: { name: user_name } }
       end
 
       def not_existing_validation(name:, container_name:)
-        self.existing_validation(name: name, container_name: container_name).net_status_ok? ? { error: :logical_error, code: :user_already_exists, data: { name: "#{name}_#{container_name}" } } : {}
+        self.existing_validation(name: name, container_name: container_name).net_status_ok? ? { error: :logical_error, code: :user_exists, data: { name: "#{container_name}_#{name}" } } : {}
       end
     end
   end

@@ -1,7 +1,7 @@
 module Superhosting
   module Controller
     class Container < Base
-      CONTAINER_NAME_FORMAT = /[a-zA-Z0-9][a-zA-Z0-9_.-]+/
+      CONTAINER_NAME_FORMAT = /^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/
 
       def list
         docker = @docker_api.container_list.map {|c| c['Names'].first.slice(1..-1) }.to_set
@@ -43,7 +43,7 @@ module Superhosting
               admin_mail_ = admin_mail || model_mapper.default_admin_mail.value
             end
           end
-          return { error: :input_error, code: :admin_mail_required } if defined? admin_mail_ and admin_mail_.nil?
+          return { error: :input_error, code: :option_admin_mail_required } if defined? admin_mail_ and admin_mail_.nil?
         end
 
         # lib
@@ -194,7 +194,7 @@ module Superhosting
       end
 
       def not_running_validation(name:)
-        @docker_api.container_running?(name) ? { error: :logical_error, code: :container_is_already_running, data: { name: name } } : {}
+        @docker_api.container_running?(name) ? { error: :logical_error, code: :container_is_running, data: { name: name } } : {}
       end
 
       def existing_validation(name:)
@@ -202,7 +202,7 @@ module Superhosting
       end
 
       def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_already_exists, data: { name: name }  } : {}
+        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_exists, data: { name: name }  } : {}
       end
     end
   end

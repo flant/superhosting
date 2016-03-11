@@ -10,9 +10,8 @@ module Superhosting
         end
 
         def add(name:)
-          if self.existing_validation(name: name).net_status_ok?
-            self.debug("Alias '#{name}' already exists")
-          elsif (resp = @site.adding_validation(name: name)).net_status_ok?
+          if (resp = self.not_existing_validation(name: name)).net_status_ok? and
+            (resp = @site.adding_validation(name: name)).net_status_ok?
             file_append(@site_descriptor[:site].aliases.path, name)
           else
             resp
@@ -25,8 +24,6 @@ module Superhosting
           else
             aliases_mapper = @site_descriptor[:site].aliases
             pretty_remove(aliases_mapper.path, name)
-            aliases_mapper.delete! if aliases_mapper.empty?
-            {}
           end
         end
 
@@ -35,7 +32,7 @@ module Superhosting
         end
 
         def not_existing_validation(name:)
-          self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :alias_already_exists, data: { name: name } } : {}
+          self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :alias_exists, data: { name: name } } : {}
         end
       end
     end

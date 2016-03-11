@@ -1,7 +1,7 @@
 module Superhosting
   module Controller
     class Site < Base
-      DOMAIN_NAME_FORMAT = /^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/
+      DOMAIN_NAME_FORMAT = /^((?!-)[A-Za-z0-9-]{3,63}(?<!-)\.)+[A-Za-z]{2,6}$/
 
       def initialize(**kwargs)
         super(**kwargs)
@@ -9,24 +9,20 @@ module Superhosting
       end
 
       def site_index
-        def generate
-          site_index = {}
-          @config.containers.grep_dirs.each do |container_dir|
-            container_dir.sites.grep_dirs.each do |site_dir|
-              names = []
-              names << site_dir.name
-              site_dir.aliases.lines {|n| names << n.strip } unless site_dir.aliases.nil?
-              raise NetStatus::Exception, {
-                  code: :site_container_name_conflict,
-                  data: { site1: site_index[site_dir.name][:site].path, site2: site_dir.path }
-              } if site_index.key? site_dir.name
-              names.each {|n| site_index[n] = { container: container_dir, site: site_dir } }
-            end
+        site_index = {}
+        @config.containers.grep_dirs.each do |container_dir|
+          container_dir.sites.grep_dirs.each do |site_dir|
+            names = []
+            names << site_dir.name
+            site_dir.aliases.lines {|n| names << n.strip } unless site_dir.aliases.nil?
+            raise NetStatus::Exception, {
+                code: :container_site_name_conflict,
+                data: { site1: site_index[site_dir.name][:site].path, site2: site_dir.path }
+            } if site_index.key? site_dir.name
+            names.each {|n| site_index[n] = { container: container_dir, site: site_dir } }
           end
-          site_index
         end
-
-        self.generate
+        site_index
       end
 
       def add(name:, container_name:)
@@ -137,7 +133,7 @@ module Superhosting
       end
 
       def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :site_already_exists, data: { name: name} } : {}
+        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :site_exists, data: { name: name} } : {}
       end
     end
   end

@@ -2,17 +2,13 @@ module Superhosting
   module Controller
     class Admin < Base
       def admin_index
-        def generate
-          admin_index = {}
-          @admins_mapper.grep_dirs.each do |dir_name|
-            admin_name = dir_name.name
-            @admin_container_controller = self.get_controller(Admin::Container, name: admin_name)
-            admin_index[admin_name] = @admin_container_controller._users_list.net_status_ok![:data]
-          end
-          admin_index
+        admin_index = {}
+        @admins_mapper.grep_dirs.each do |dir_name|
+          admin_name = dir_name.name
+          @admin_container_controller = self.get_controller(Admin::Container, name: admin_name)
+          admin_index[admin_name] = @admin_container_controller._users_list.net_status_ok![:data]
         end
-
-        self.generate
+        admin_index
       end
 
       def initialize(**kwargs)
@@ -52,7 +48,7 @@ module Superhosting
       def delete(name:)
         if self.existing_validation(name: name).net_status_ok?
           admin_dir = @admins_mapper.f(name)
-          admin_dir.delete! unless admin_dir.nil?
+          admin_dir.delete!
           {}
         else
           self.debug("Admin '#{name}' has already been deleted")
@@ -82,11 +78,11 @@ module Superhosting
       end
 
       def existing_validation(name:)
-        (@config.admins.f(name)).nil? ? { error: :logical_error, code: :admin_does_not_exists, data: { name: name } } : {}
+        (@admins_mapper.f(name)).nil? ? { error: :logical_error, code: :admin_does_not_exists, data: { name: name } } : {}
       end
 
       def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :admin_already_exists, data: { name: name } } : {}
+        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :admin_exists, data: { name: name } } : {}
       end
     end
   end
