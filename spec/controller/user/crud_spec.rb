@@ -4,6 +4,8 @@ describe Superhosting::Controller::User do
   include SpecHelpers::Controller::Container
   include SpecHelpers::Controller::User
 
+  # positive
+
   it 'add' do
     with_container do |container_name|
       user_add_with_exps(name: @user_name, container_name: container_name)
@@ -39,5 +41,41 @@ describe Superhosting::Controller::User do
         user_change_with_exps(name: user_name, container_name: container_name)
       end
     end
+  end
+
+  # negative
+
+  it 'add:invalid_user_name' do
+    invalid_user_names = ["l#{?o*25}ngname", "name!"]
+    with_container do |container_name|
+      invalid_user_names.each {|name| user_add_with_exps(name: name, container_name: container_name, code: :invalid_user_name) }
+    end
+  end
+
+  it 'add:container_does_not_exists' do
+    user_add_with_exps(name: @user_name, container_name: @container_name, code: :container_does_not_exists)
+  end
+
+  it 'add:user_exists' do
+    with_container do |container_name|
+      user_add_with_exps(name: @user_name, container_name: container_name)
+      user_add_with_exps(name: @user_name, container_name: container_name, code: :user_exists)
+    end
+  end
+
+  it 'add:option_ftp_only_is_required' do
+    with_container do |container_name|
+      user_add_with_exps(name: @user_name, container_name: container_name, ftp_dir: 'site', code: :option_ftp_only_is_required)
+    end
+  end
+
+  it 'add:incorrect_ftp_dir' do
+    with_container do |container_name|
+      user_add_with_exps(name: @user_name, container_name: container_name, ftp_dir: 'site', ftp_only: true, code: :incorrect_ftp_dir)
+    end
+  end
+
+  it 'delete:container_does_not_exists' do
+    user_delete_with_exps(name: @user_name, container_name: @container_name, code: :container_does_not_exists)
   end
 end

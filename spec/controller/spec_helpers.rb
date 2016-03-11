@@ -29,8 +29,16 @@ module SpecHelpers
 
       resp = self.send(controller_method.to_sym, *args, **kwargs)
       expect_net_status(resp, code: code)
-      self.send(expectation_method, **kwargs) if self.respond_to? expectation_method
+      if code
+        self.expect_translation(resp)
+      else
+        self.send(expectation_method, **kwargs) if self.respond_to? expectation_method
+      end
       resp
+    end
+
+    def expect_translation(resp)
+      expect(resp.net_status_normalize).to include(:message)
     end
 
     def expect_dir(path_mapper)
