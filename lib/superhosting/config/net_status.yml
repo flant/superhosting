@@ -32,3 +32,5 @@ en:
     model_does_not_exists: "Model '%{name}' doesn't exists."
     model_should_not_be_abstract: "Model '%{name}' should not be abstract."
     mapper_type_not_supported: "Mapper type '%{name}' not supported."
+
+    erb_error: "Erb has executed with error: '%{error}'."

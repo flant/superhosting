@@ -18,7 +18,7 @@ module Superhosting
           raise NetStatus::Exception.new(error: :error, message: 'File does not exist') if script_mapper.nil?
           opts = instance_variables_to_hash(self).merge(options)
           FileUtils.mkdir_p File.dirname(save_to)
-          File.open(save_to, 'w') {|f| f.write(erb(script_mapper, **opts)) }
+          File.open(save_to, 'w') {|f| f.write(script_mapper.erb(**opts)) }
           pretty_write(self.registry_path, save_to)
         end
       end

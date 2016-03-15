@@ -4,6 +4,7 @@ module Superhosting
       @mapper = mapper.create!
       @model_mapper = model_mapper
       @models_mapper = model_mapper.parent
+      @inheritors = {}
 
       @type = case type = mapper.parent.name
         when 'containers' then 'container'
@@ -13,22 +14,30 @@ module Superhosting
     end
 
     def get
-      def add_pathes(m)
+      def set_inheritors(m, depth=0)
+        depth += 1
         m.inherit.lines do |line|
           model_name = line.strip
           inherit_mapper = @models_mapper.f(model_name)
           raise NetStatus::Exception, { error: :logical_error, code: :model_does_not_exists, data: { name: model_name } } unless inherit_mapper.dir?
 
-          if (type_dir_mapper = inherit_mapper.f(@type)).dir?
-            @mapper << type_dir_mapper
-          end
+          set_inheritors(inherit_mapper, depth)
 
-          add_pathes(inherit_mapper)
+          if (type_dir_mapper = inherit_mapper.f(@type)).dir?
+            (@inheritors[depth] ||= []) << type_dir_mapper
+          end
+        end
+      end
+
+      def set_inheritance
+        @inheritors.sort.each do |k, inheritors|
+          inheritors.each {|inheritor| @mapper << inheritor }
         end
       end
 
       raise NetStatus::Exception, { error: :input_error, code: :model_should_not_be_abstract, data: { name: @model_mapper.name } } if @model_mapper.abstract?
-      add_pathes(@model_mapper)
+      set_inheritors(@model_mapper)
+      set_inheritance
       @mapper
     end
   end
