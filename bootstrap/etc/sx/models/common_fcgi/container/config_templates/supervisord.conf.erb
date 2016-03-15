@@ -1,16 +1,16 @@
 [unix_http_server]
-file=/web/<%= @container.name %>/supervisor.sock
+file=/web/<%= container.name %>/supervisor.sock
 chmod=0770
 
 [supervisord]
-logfile=/web/<%= @container.name %>/logs/supervisord.log
-childlogdir=/web/<%= @container.name %>/supervisor
+logfile=/web/<%= container.name %>/logs/supervisord.log
+childlogdir=/web/<%= container.name %>/supervisor
 
 [rpcinterface:supervisor]
 supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
 [supervisorctl]
-serverurl=unix:///web/<%= @container.name %>/supervisor.sock
+serverurl=unix:///web/<%= container.name %>/supervisor.sock
 
 [include]
-files = /etc/supervisor/conf.d/*.conf /web/<%= @container.name %>/supervisor/*.conf
+files = /etc/supervisor/conf.d/*.conf /web/<%= container.name %>/supervisor/*.conf

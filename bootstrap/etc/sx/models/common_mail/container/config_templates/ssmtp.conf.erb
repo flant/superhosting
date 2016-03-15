@@ -1,6 +1,6 @@
 Root=postmaster
 Mailhub=172.17.42.1
 FromLineOverride=Yes
-Hostname=<%= @config.smtp_hostname %>
-AuthUser=<%= @container.name %>@<%= @config.smtp_hostname %>
-AuthPass=<%= @container.mail.password %>
+Hostname=<%= config.smtp_hostname %>
+AuthUser=<%= container.name %>@<%= config.smtp_hostname %>
+AuthPass=<%= container.mail.password %>
