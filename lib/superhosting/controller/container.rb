@@ -20,16 +20,17 @@ module Superhosting
 
         FileUtils.mkdir_p '/web'
 
+        # model
+        model_mapper = @config.models.f(:"#{model_}")
+        return { error: :input_error, code: :model_does_not_exists, data: { name: model_ } } unless @config.models.f(:"#{model_}").dir?
+
         # config
         container_mapper = @config.containers.f(name)
-        container_mapper.create!
-
-        # model
+        container_mapper = ModelInheritance.new(container_mapper, model_mapper).get
         container_mapper.model.put!(model) unless model.nil?
-        model_mapper = @config.models.f(:"#{model_}")
 
         # image
-        return { error: :input_error, code: :no_docker_image_specified_in_model, data: { model: model_} } unless (image = model_mapper.docker_image.value)
+        return { error: :input_error, code: :no_docker_image_specified, data: { model: model_} } unless (image = container_mapper.docker.image.value)
 
         # mail
         unless mail != 'no'

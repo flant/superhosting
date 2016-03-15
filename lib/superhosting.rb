@@ -18,13 +18,15 @@ require 'net_status'
 
 require 'superhosting/version'
 
-require 'superhosting/patch/path_mapper_node'
-
 require 'superhosting/helper/file'
 require 'superhosting/helper/erb'
 require 'superhosting/helper/cmd'
 require 'superhosting/helper/i18n'
 require 'superhosting/helpers'
+
+require 'superhosting/patch/path_mapper/dir_node'
+require 'superhosting/patch/path_mapper/file_node'
+require 'superhosting/patch/path_mapper/node'
 
 require 'superhosting/base'
 require 'superhosting/controller/admin'
@@ -43,6 +45,7 @@ require 'superhosting/script_executor/container'
 require 'superhosting/script_executor/site'
 
 require 'superhosting/docker_api'
+require 'superhosting/model_inheritance'
 
 require 'superhosting/cli/error/base'
 Dir["#{File.dirname(__FILE__)}/superhosting/cli/error/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}

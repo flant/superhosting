@@ -11,17 +11,17 @@ module SpecHelpers
         method = m[/(?<=not_)(.*)/]
         return reverse_expect(method, *args, &block) if respond_to? method
       elsif m.to_s.include? '_with_exps'
-        return method_with_expectation(m, *args, &block)
+        method = m[/(.*)(?=_with_exps)/]
+        return method_with_expectation(method, *args, &block) if respond_to? method
       end
       super
     end
 
-    def reverse_expect(m, *args, &block)
-      expect { send(:"#{m}", *args, &block) }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
+    def reverse_expect(expect_method, *args, &block)
+      expect { send(:"#{expect_method}", *args, &block) }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
     end
 
-    def method_with_expectation(m, *args, &block)
-      controller_method = m[/(.*)(?=_with_exps)/]
+    def method_with_expectation(controller_method, *args, &block)
       expectation_method = "#{controller_method}_exps"
 
       kwargs = args.extract_options!

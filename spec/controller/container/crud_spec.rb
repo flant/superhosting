@@ -56,8 +56,8 @@ describe Superhosting::Controller::Container do
     container_add_with_exps(name: @container_name, code: :container_is_running)
   end
 
-  it 'add:no_docker_image_specified_in_model' do
-    container_add_with_exps(name: @container_name, model: :incorrect_model_name, code: :no_docker_image_specified_in_model)
+  it 'add:model_does_not_exists' do
+    container_add_with_exps(name: @container_name, model: :incorrect_model_name, code: :model_does_not_exists)
   end
 
   it 'admin_add:admin_does_not_exists' do

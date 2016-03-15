@@ -55,7 +55,6 @@ module SpecHelpers
         model = config_mapper.default_model.value
         model_mapper = models_mapper.f(model)
         expect_dir(model_mapper)
-        expect_file(model_mapper.docker_image)
 
         # /var/lib/sx
         expect_dir(container_lib_mapper)
