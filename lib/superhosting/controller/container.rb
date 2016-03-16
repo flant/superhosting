@@ -14,11 +14,9 @@ module Superhosting
       def add(name:, mail: 'model', admin_mail: nil, model: nil)
         if !(resp = self.adding_validation(name: name)).net_status_ok?
           return resp
-        elsif (model_ = model || @config.default_model.value).nil?
+        elsif (model_ = model || @config.default_model).nil?
           return { error: :input_error, code: :no_model_given }
         end
-
-        FileUtils.mkdir_p '/web'
 
         # model
         model_mapper = @config.models.f(:"#{model_}")
@@ -29,8 +27,12 @@ module Superhosting
         container_mapper = ModelInheritance.new(container_mapper, model_mapper).get
         container_mapper.model.put!(model) unless model.nil?
 
+        # web
+        web_mapper = PathMapper.new('/web').create!
+        container_web_mapper = web_mapper.f(name)
+
         # image
-        return { error: :input_error, code: :no_docker_image_specified, data: { model: model_} } unless (image = container_mapper.docker.image.value)
+        return { error: :input_error, code: :no_docker_image_specified, data: { model: model_} } unless (image = container_mapper.docker.image)
 
         # mail
         unless mail != 'no'
@@ -41,7 +43,7 @@ module Superhosting
             end
           elsif mail == 'model'
             if model_mapper.default_mail == 'yes'
-              admin_mail_ = admin_mail || model_mapper.default_admin_mail.value
+              admin_mail_ = admin_mail || model_mapper.default_admin_mail
             end
           end
           return { error: :input_error, code: :option_admin_mail_required } if defined? admin_mail_ and admin_mail_.nil?
@@ -52,7 +54,7 @@ module Superhosting
         container_lib_mapper.configs.delete!
         container_lib_mapper.configs.create!
         container_lib_mapper.web.create!
-        self.command("ln -fs #{container_lib_mapper.web.path} /web/#{name}")
+        self.command("ln -fs #{container_lib_mapper.web.path} #{container_web_mapper.path}")
 
         # user / group
         user_controller = self.get_controller(User)
@@ -64,7 +66,7 @@ module Superhosting
         pretty_write(container_lib_mapper.configs.f('etc-group').path, "#{name}:x:#{user.gid}:")
 
         # system users
-        users = [container_mapper.system_users, model_mapper.system_users].find {|f| f.file? }
+        users = container_mapper.system_users
         users.lines.each do |u|
           unless (resp = user_controller._add(name: u.strip, container_name: name)).net_status_ok?
             return resp
@@ -75,26 +77,27 @@ module Superhosting
         FileUtils.chown_R name, name, container_lib_mapper.web.path
 
         # services
-        # cserv = @config.containers.f(name).services.grep(/.*\.erb/).map {|n| [n.name, n]}.to_h
-        mserv = model_mapper.services.grep(/.*\.erb/).map {|n| [n.name, n]}.to_h
-        # services = mserv.merge!(cserv)
-        services = mserv
+        services = container_mapper.services.grep(/.*\.erb/).map {|n| [n.name, n]}.to_h
 
-        supervisor_path = container_lib_mapper.supervisor
-        supervisor_path.create!
+        supervisor_mapper = container_lib_mapper.supervisor
+        supervisor_mapper.create!
         services.each do |_name, node|
-          text = erb(node, model: model_, container: container_mapper)
-          supervisor_path.f(_name[/.*[^\.erb]/]).put!(text)
+          supervisor_mapper.f(_name[/.*[^\.erb]/]).put!(node) # TODO: FileNode.erb_options
         end
 
-        # container
-        unless model_mapper.f('container.rb').nil?
-          registry_path = container_lib_mapper.registry.f('container').path
+        # config.rb
+        container_mapper.f('config.rb', overlay: false).reverse.each do |config|
+          registry_mapper = container_lib_mapper.registry.f('container')
           ex = ScriptExecutor::Container.new(
-              container: container_mapper, container_name: name, container_lib: container_lib_mapper, registry_path: registry_path,
-              model: model_mapper, config: @config, lib: @lib
+              container_name: container_mapper.name,
+              container: container_mapper,
+              container_lib: container_lib_mapper,
+              container_web: container_web_mapper,
+              model: model_mapper,
+              registry_mapper: registry_mapper,
+              config: @config, lib: @lib
           )
-          ex.execute(model_mapper.f('container.rb'))
+          ex.execute(config)
           ex.commands.each {|c| self.command c }
         end
 
@@ -105,18 +108,20 @@ module Superhosting
         self.command "docker run --detach --name #{name} --entrypoint /usr/bin/supervisord -v #{container_lib_mapper.configs.path}/:/.configs:ro
                       -v #{container_lib_mapper.web.path}:/web/#{name} #{image} -nc /etc/supervisor/supervisord.conf".split
 
-        unless (resp = self.running_validation(name: name)).net_status_ok?
-          return resp
+        if (resp = self.running_validation(name: name)).net_status_ok?
+          {}
+        else
+          resp
         end
-
-        {}
       end
 
       def delete(name:)
         container_mapper = @config.containers.f(name)
-        container_lib_mapper = @lib.containers.f(name)
-        model = container_mapper.model(default: @config.default_model).value
+        model = container_mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
+        container_mapper = ModelInheritance.new(container_mapper, model_mapper).get
+        container_lib_mapper = @lib.containers.f(name)
+        container_web_mapper = PathMapper.new('/web').f(name)
 
         if self.existing_validation(name: name).net_status_ok? and self.running_validation(name: name).net_status_ok?
           site_controller = self.get_controller(Site)
@@ -132,14 +137,19 @@ module Superhosting
             container.delete!
           end
 
-          unless model_mapper.f('container.rb').nil?
-            registry_path = container_lib_mapper.registry.f('container').path
+          container_mapper.f('config.rb', overlay: false).reverse.each do |config|
+            registry_mapper = container_lib_mapper.registry.f('container')
             ex = ScriptExecutor::Container.new(
-                container: container_mapper, container_name: name, container_lib: container_lib_mapper,
-                registry_path: registry_path, on_reconfig_only: true,
-                model: model_mapper, config: @config, lib: @lib
+                container_name: container_mapper.name,
+                container: container_mapper,
+                container_lib: container_lib_mapper,
+                container_web: container_web_mapper,
+                model: model_mapper,
+                registry_mapper: registry_mapper,
+                on_reconfig_only: true,
+                config: @config, lib: @lib,
             )
-            ex.execute(model_mapper.f('container.rb'))
+            ex.execute(config)
             ex.commands.each {|c| self.command c }
           end
 

@@ -34,3 +34,5 @@ en:
     mapper_type_not_supported: "Mapper type '%{name}' not supported."
 
     erb_error: "Erb has executed with error: '%{error}'."
+    file_does_not_exists: "File '%{path}' does not exist."
+    can_not_pass_an_absolute_path: "Can't pass an absolute path '%{path}'."

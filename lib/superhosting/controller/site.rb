@@ -10,16 +10,16 @@ module Superhosting
 
       def site_index
         site_index = {}
-        @config.containers.grep_dirs.each do |container_dir|
-          container_dir.sites.grep_dirs.each do |site_dir|
+        @config.containers.grep_dirs.each do |container_mapper|
+          container_mapper.sites.grep_dirs.each do |site_mapper|
             names = []
-            names << site_dir.name
-            site_dir.aliases.lines {|n| names << n.strip } unless site_dir.aliases.nil?
+            names << site_mapper.name
+            site_mapper.aliases.lines {|n| names << n.strip } unless site_mapper.aliases.nil?
             raise NetStatus::Exception, {
                 code: :container_site_name_conflict,
-                data: { site1: site_index[site_dir.name][:site].path, site2: site_dir.path }
-            } if site_index.key? site_dir.name
-            names.each {|n| site_index[n] = { container: container_dir, site: site_dir } }
+                data: { site1: site_index[site_mapper.name][:site].path, site2: site_mapper.path }
+            } if site_index.key? site_mapper.name
+            names.each {|n| site_index[n] = { container: container_mapper, site: site_mapper } }
           end
         end
         site_index
@@ -30,24 +30,31 @@ module Superhosting
             (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
           container_mapper = @config.containers.f(container_name)
           container_lib_mapper = @lib.containers.f(container_name)
-          site_mapper = container_mapper.sites.f(name)
-          model = container_mapper.model(default: @config.default_model).value
+          container_web_mapper = PathMapper.new('/web').f(name)
+          model = container_mapper.model(default: @config.default_model)
           model_mapper = @config.models.f(:"#{model}")
-
-          site_mapper.create!
-          container_lib_mapper.web.f(name).create!
+          site_mapper = ModelInheritance.new(container_mapper.sites.f(name), model_mapper).get
+          site_web_mapper = container_web_mapper.f(name)
+          site_lib_mapper = container_lib_mapper.web.f(name).create!
           FileUtils.chown_R container_name, container_name, container_lib_mapper.web.f(name).path
 
           registry_sites_mapper = container_lib_mapper.registry.sites
-          unless model_mapper.f('site.rb').nil?
-            registry_path = registry_sites_mapper.f(name).path
-            registry_sites_mapper.create!
+          site_mapper.f('config.rb', overlay: false).reverse.each do |config|
+            registry_mapper = registry_sites_mapper.f(name)
             ex = ScriptExecutor::Site.new(
-                site: site_mapper, site_name: name,
-                container: container_mapper, container_name: name, container_lib: container_lib_mapper, registry_path: registry_path,
-                model: model_mapper, config: @config, lib: @lib
+                container_name: container_mapper.container_name,
+                container: container_mapper,
+                container_lib: container_lib_mapper,
+                container_web: container_web_mapper,
+                site_name: site_mapper.name,
+                site: site_mapper,
+                site_web: site_web_mapper,
+                site_lib: site_lib_mapper,
+                registry_mapper: registry_mapper,
+                model: model_mapper,
+                config: @config, lib: @lib
             )
-            ex.execute(model_mapper.f('site.rb'))
+            ex.execute(config)
             ex.commands.each {|c| self.command c }
           end
 
@@ -59,28 +66,38 @@ module Superhosting
 
       def delete(name:)
         if self.existing_validation(name: name).net_status_ok?
-          site = self.site_index[name]
-          container_sites = site[:container].sites
-          container_mapper = site[:container]
-          container_lib_mapper = @lib.containers.f(container_mapper.name)
-          lib_web_site_mapper = container_lib_mapper.web.f(name)
-          model = container_mapper.model(default: @config.default_model).value
+          site_info = self.site_index[name]
+          container_mapper = site_info[:container]
+          model = container_mapper.model(default: @config.default_model)
           model_mapper = @config.models.f(:"#{model}")
+          container_lib_mapper = @lib.containers.f(container_mapper.name)
+          container_web_mapper = PathMapper.new('/web').f(name)
+          site_mapper = ModelInheritance.new(site_info[:site], model_mapper).get
+          site_lib_mapper = container_lib_mapper.web.f(name)
+          site_web_mapper = container_web_mapper.f(name)
 
-          site[:site].delete!(full: true)
-          lib_web_site_mapper.delete!(full: true)
+          site_mapper.delete!(full: true)
+          site_lib_mapper.delete!(full: true)
 
           registry_sites_mapper = container_lib_mapper.registry.sites
-          unless model_mapper.f('site.rb').nil?
-            registry_path = registry_sites_mapper.f(name).path
-            registry_sites_mapper.create!
+          site_mapper.f('config.rb', overlay: false).reverse.each do |config|
+            registry_mapper = registry_sites_mapper.f(name)
             ex = ScriptExecutor::Site.new(
-                site: site[:site], site_name: name,
-                container: container_mapper, container_name: name, container_lib: container_lib_mapper,
-                registry_path: registry_path, on_reconfig_only: true,
-                model: model_mapper, config: @config, lib: @lib
+                container_name: container_mapper.name,
+                container: container_mapper,
+                container_lib: container_lib_mapper,
+                container_web: container_web_mapper,
+                site_name: site_mapper.name,
+                site: site_mapper,
+                site_web: site_web_mapper,
+                site_lib: site_lib_mapper,
+                registry_mapper: registry_mapper,
+                model: model_mapper,
+                config: @config,
+                lib: @lib,
+                on_reconfig_only: true
             )
-            ex.execute(model_mapper.f('site.rb'))
+            ex.execute(config)
             ex.commands.each {|c| self.command c }
           end
 
@@ -98,16 +115,16 @@ module Superhosting
       def rename(name:, new_name:)
         if (resp = self.existing_validation(name: name)).net_status_ok? and
             (resp = self.adding_validation(name: new_name)).net_status_ok?
-          site = self.site_index[name]
-          container_mapper = @config.containers.f(site[:container].name)
+          site_info = self.site_index[name]
+          container_mapper = site_info[:container]
           container_lib_mapper = @lib.containers.f(container_mapper.name)
-          container_site_mapper = site[:container].sites.f(name)
-          container_lib_site_mapper = container_lib_mapper.web.f(name)
-          container_site_mapper_new = site[:container].sites.f(new_name)
-          container_lib_site_mapper_new = container_lib_mapper.web.f(new_name)
+          site_mapper = container_mapper.sites.f(name)
+          site_lib_mapper = container_lib_mapper.web.f(name)
+          site_new_mapper = container_mapper.sites.f(new_name)
+          site_lib_new_mapper = container_lib_mapper.web.f(new_name)
 
-          FileUtils.mv container_site_mapper.path, container_site_mapper_new.path
-          FileUtils.mv container_lib_site_mapper.path, container_lib_site_mapper_new.path
+          FileUtils.mv site_mapper.path, site_new_mapper.path
+          FileUtils.mv site_lib_mapper.path, site_lib_new_mapper.path
 
           unless (registry_sites_mapper = container_lib_mapper.registry.sites).nil?
             FileUtils.mv registry_sites_mapper.f(name).path, registry_sites_mapper.f(new_name).path unless registry_sites_mapper.f(name).nil?
