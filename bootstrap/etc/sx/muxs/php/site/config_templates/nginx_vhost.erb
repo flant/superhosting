@@ -7,7 +7,7 @@ server {
   error_log /web/<%= container.name %>/logs/<%= site.name %>_error_nginx.log error;
 <% if site.use_apache? %>
   location ~* ^\/.+\.(jpg|jpeg|gif|png|svg|ico|css|zip|tgz|gz|rar|bz2|pdf|txt|tar|wav|bmp|rtf|js|flv|swf|html|htm|ttf|eot|woff)$ {
-    root /web/<%= container.name %>/<%= [site.name, site.document_root].compact.join '/' %>/;
+    root <%= site.web.path.join(site.document_root) %>/;
     try_files $uri @backend;
   }
 
@@ -19,7 +19,7 @@ server {
     proxy_pass http://127.0.0.1:8080;
   }
 <% else %>
-  root /web/<%= container.name %>/<%= [site.name, site.document_root].compact.join '/' %>/;
+  root <%= site.web.path.join(site.document_root) %>/;
   index index.php index.html index.htm;
 
   location / {
@@ -29,7 +29,7 @@ server {
   location ~ \.php$ {
     try_files $uri =404;
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
-    fastcgi_pass unix:/web/<%= container.name %>/<%= site.name %>.sock;
+    fastcgi_pass unix:<%= site.web.path %>.sock;
     fastcgi_index index.php;
     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
     include fastcgi_params;

@@ -3,7 +3,7 @@ ServerName <%= punicode site.name %>
 <% site.aliases.each do |site_alias| %>
 ServerAlias <%= punicode site_alias %>
 <% end %>
-  DocumentRoot /web/<%= container.name %>/<%= [site.name, site.document_root].join '/' %>/
+  DocumentRoot <%= site.web.path.join(site.document_root) %>/
   CustomLog /web/<%= container.name %>/logs/<%= site.name %>_access_apache.log vhost_log_format
   ErrorLog /web/<%= container.name %>/logs/<%= site.name %>_error_apache.log
 
@@ -11,13 +11,13 @@ ServerAlias <%= punicode site_alias %>
     AddType application/x-httpd-fastphp5 .php
     Action application/x-httpd-fastphp5 /php5-fcgi
     Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
-    FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -socket /web/<%= container.name %>/<%= site.name %>.sock -pass-header Authorization
+    FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -socket <%= site.web.path %>.sock -pass-header Authorization
     <Directory /usr/lib/cgi-bin>
       Require all granted
     </Directory>
   </IfModule>
 
-  <Directory "/web/<%= container.name %>/<%= [site.name, site.document_root].join '/' %>/">
+  <Directory "<%= site.web.path.join(site.document_root) %>/">
     Options FollowSymLinks
     Order allow,deny
     Allow from all

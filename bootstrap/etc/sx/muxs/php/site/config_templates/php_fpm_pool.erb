@@ -1,20 +1,22 @@
-[<%= container.name %>_<%= site.name >]
+[<%= container.name %>_<%= site.name %>]
 
 user = <%= [container.name, site.php.user].compact.join '_' %>
 group = <%= container.name %>
-listen = /web/<%= container.name %>/<%= site.name %>.sock
+listen = <%= site.web.path %>.sock
 listen.owner = www-data
 listen.group = www-data
-chdir = /web/<%= container.name %>/<%= [site.name, site.document_root].join '_' %>
+
+chdir = <%= site.web.path.join(site.document_root) %>
 
 pm = <% site.php.pm %>
 pm.max_children = <%= site.php.pm_max_children %>
 <% if site.php.pm == 'dynamic' %>pm.start_servers = <%= site.php.pm_start_servers %>
 pm.min_spare_servers = <%= site.php.pm_min_spare_servers %>
-pm.max_spare_servers = <%= site.php.pm_max_spare_servers %><% end %>
+pm.max_spare_servers = <%= site.php.pm_max_spare_servers %>
+<% end %>
 
-<% %w{admin_value admin_flag value flag}.select{|p| site.php.send(p) }.each do |param_type|
-  site.php.send(param_type).each_line{|l| l.split /\s*=\s*/, 2 }.each do |param_name, param_value| %>
+<% %w{admin_value admin_flag value flag}.select{|p| site.php.f(p) }.each do |param_type|
+  site.php.f(param_type).lines {|l| l.split /\s*=\s*/, 2 }.each do |param_name, param_value| %>
 php_<%= param_type %>[<%= param_name %>] = <%= param_value %>
 <% end
 end %>
