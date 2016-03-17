@@ -35,7 +35,7 @@ module Superhosting
 
       def on_reconfig(cmd)
         if cmd == :container_restart
-          self.commands << "docker restart #{self.container_name}" if self.on_reconfig_only
+          self.commands << "docker restart #{self.container_name}" if self.docker_api.container_exists? self.container_name
         else
           self.commands << cmd
         end

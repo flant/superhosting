@@ -97,7 +97,7 @@ module Superhosting
               container_web: container_web_mapper,
               model: model_mapper,
               registry_mapper: registry_mapper,
-              config: @config, lib: @lib
+              config: @config, lib: @lib, docker_api: @docker_api
           )
           ex.execute(config)
           ex.commands.each {|c| self.command c }
@@ -149,7 +149,7 @@ module Superhosting
                 model: model_mapper,
                 registry_mapper: registry_mapper,
                 on_reconfig_only: true,
-                config: @config, lib: @lib,
+                config: @config, lib: @lib, docker_api: @docker_api
             )
             ex.execute(config)
             ex.commands.each {|c| self.command c }

@@ -52,7 +52,7 @@ module Superhosting
                 site_lib: site_lib_mapper,
                 registry_mapper: registry_mapper,
                 model: model_mapper,
-                config: @config, lib: @lib
+                config: @config, lib: @lib, docker_api: @docker_api
             )
             ex.execute(config)
             ex.commands.each {|c| self.command c }
@@ -93,9 +93,8 @@ module Superhosting
                 site_lib: site_lib_mapper,
                 registry_mapper: registry_mapper,
                 model: model_mapper,
-                config: @config,
-                lib: @lib,
-                on_reconfig_only: true
+                on_reconfig_only: true,
+                config: @config, lib: @lib, docker_api: @docker_api
             )
             ex.execute(config)
             ex.commands.each {|c| self.command c }
