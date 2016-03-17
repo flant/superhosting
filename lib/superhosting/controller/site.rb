@@ -1,7 +1,7 @@
 module Superhosting
   module Controller
     class Site < Base
-      DOMAIN_NAME_FORMAT = /^((?!-)[A-Za-z0-9-]{3,63}(?<!-)\.)+[A-Za-z]{2,6}$/
+      DOMAIN_NAME_FORMAT = /^((?!-)[А-Яа-яA-Za-z0-9-]{3,63}(?<!-)\.)+[А-Яа-яA-Za-z]{2,6}$/
 
       def initialize(**kwargs)
         super(**kwargs)

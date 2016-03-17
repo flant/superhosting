@@ -115,4 +115,14 @@ describe Superhosting::Controller::Site do
       site_add_with_exps(name: @site_name, container_name: container_name, code: :site_exists)
     end
   end
+
+  # other
+
+  it 'add#punycode' do
+    with_container do |container_name|
+      site_add_with_exps(name: 'домен.рф', container_name: container_name)
+      conf_mapper = PathMapper.new('/etc').nginx.sites.f("#{container_name}-домен.рф.conf")
+      expect_in_file(conf_mapper, 'xn--d1acufc.xn--p1ai')
+    end
+  end
 end

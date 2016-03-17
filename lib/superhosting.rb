@@ -10,11 +10,15 @@ require 'securerandom'
 require 'unix_crypt'
 require 'highline/import'
 require 'i18n'
+require 'unicode'
+require 'punycode'
 
 require 'path_mapper'
 require 'net_status'
 
 require 'superhosting/version'
+
+require 'superhosting/patches/string/punycode'
 
 require 'superhosting/helper/file'
 require 'superhosting/helper/cmd'

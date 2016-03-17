@@ -1,7 +1,7 @@
 server {
   listen 0.0.0.0:80;
 
-  server_name <%= ([site.name] + site.aliases).compact.map(&:punicode).join ' ' %>;
+  server_name <%= ([site.name] + site.aliases).compact.map(&:punycode).join ' ' %>;
   set $sx_container "<%= container.name %>";
   access_log /web/<%= container.name %>/logs/<%= site.name %>_access_nginx.log main;
   error_log /web/<%= container.name %>/logs/<%= site.name %>_error_nginx.log error;

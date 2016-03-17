@@ -120,7 +120,6 @@ module SpecHelpers
         expect_file(nginx_sites_mapper.f(config_name))
         expect_in_file(nginx_sites_mapper.f(config_name), "access_log /web/#{container_name}/logs/#{site_name}_access_nginx.log main")
         expect_in_file(nginx_sites_mapper.f(config_name), "root #{site_web_mapper.path}/;")
-        # TODO: expect_in_file(nginx_sites_mapper.f(conf), "PUNICODE")
       end
 
       def site_delete_fcgi_m_exps(**kwargs)
