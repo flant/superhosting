@@ -46,6 +46,10 @@ module SpecHelpers
         expect_dir(container_mapper.sites)
         expect_dir(site_mapper)
 
+        # model
+        model_name = container_mapper.f('model', default: config_mapper.default_model)
+        self.model_exps(:"site_add_#{model_name}_exps", **kwargs)
+
         # /var/lib/sx
         expect_dir(container_lib_mapper.web.f(site_name))
 
@@ -66,6 +70,10 @@ module SpecHelpers
 
         # /etc/sx
         not_expect_dir(site_mapper)
+
+        # model
+        model_name = container_mapper.f('model', default: config_mapper.default_model)
+        self.model_exps(:"site_delete_#{model_name}_exps", **kwargs)
 
         # /var/lib/sx
         not_expect_dir(container_lib_mapper.web.f(site_name))
@@ -102,6 +110,27 @@ module SpecHelpers
         not_expect_in_file(site_mapper.aliases, /^#{alias_name}$/)
       end
 
+      def site_add_fcgi_m_exps(**kwargs)
+        container_name = kwargs[:container_name] || @container_name
+        site_name = kwargs[:name] || @site_name
+        site_web_mapper = PathMapper.new('/web').f(container_name).f(site_name)
+        nginx_sites_mapper = PathMapper.new('/etc').nginx.sites
+
+        config_name = "#{container_name}-#{site_name}.conf"
+        expect_file(nginx_sites_mapper.f(config_name))
+        expect_in_file(nginx_sites_mapper.f(config_name), "access_log /web/#{container_name}/logs/#{site_name}_access_nginx.log main")
+        expect_in_file(nginx_sites_mapper.f(config_name), "root #{site_web_mapper.path}/;")
+        # TODO: expect_in_file(nginx_sites_mapper.f(conf), "PUNICODE")
+      end
+
+      def site_delete_fcgi_m_exps(**kwargs)
+        container_name = kwargs[:container_name] || @container_name
+        site_name = kwargs[:name] || @site_name
+        nginx_sites_mapper = PathMapper.new('/etc').nginx.sites
+
+        not_expect_file(nginx_sites_mapper.f("#{container_name}-#{site_name}.conf"))
+      end
+
       # other
 
       def with_site
@@ -113,6 +142,10 @@ module SpecHelpers
       included do
         before :each do
           @site_name = "testS#{SecureRandom.hex[0..5]}.com"
+        end
+
+        after :all do
+          run_command(["rm -rf /etc/nginx/sites/test*"])
         end
       end
     end

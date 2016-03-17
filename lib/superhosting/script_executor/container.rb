@@ -39,8 +39,11 @@ module Superhosting
       # end
 
       def on_reconfig(cmd)
-        cmd = "docker restart #{self.container_name}" if cmd == :container_restart
-        self.commands << cmd
+        if cmd == :container_restart
+          self.commands << "docker restart #{self.container_name}" if self.on_reconfig_only
+        else
+          self.commands << cmd
+        end
       end
     end
   end

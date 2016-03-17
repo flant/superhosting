@@ -16,8 +16,7 @@ module Superhosting
     def get
       def set_inheritors(m, depth=0)
         depth += 1
-        m.inherit.lines do |line|
-          model_name = line.strip
+        m.inherit.lines.each do |model_name|
           inherit_mapper = @models_mapper.f(model_name)
           raise NetStatus::Exception, { error: :logical_error, code: :model_does_not_exists, data: { name: model_name } } unless inherit_mapper.dir?
 

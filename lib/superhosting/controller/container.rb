@@ -14,16 +14,17 @@ module Superhosting
       def add(name:, mail: 'model', admin_mail: nil, model: nil)
         if !(resp = self.adding_validation(name: name)).net_status_ok?
           return resp
-        elsif (model_ = model || @config.default_model).nil?
+        elsif (model_ = model || @config.containers.f(name, default: @config.default_model)).nil?
           return { error: :input_error, code: :no_model_given }
         end
 
         # model
         model_mapper = @config.models.f(:"#{model_}")
         return { error: :input_error, code: :model_does_not_exists, data: { name: model_ } } unless @config.models.f(:"#{model_}").dir?
+        container_mapper = @config.containers.f(name)
+        container_mapper.model.puts!(model) unless model.nil?
 
         # config
-        container_mapper = @config.containers.f(name)
         container_mapper = ModelInheritance.new(container_mapper, model_mapper).get
         container_mapper.model.put!(model) unless model.nil?
 
@@ -32,7 +33,7 @@ module Superhosting
         container_web_mapper = web_mapper.f(name)
 
         # image
-        return { error: :input_error, code: :no_docker_image_specified, data: { model: model_} } unless (image = container_mapper.docker.image)
+        return { error: :input_error, code: :no_docker_image_specified_in_model, data: { model: model_} } if (image = container_mapper.docker.image).nil?
 
         # mail
         unless mail != 'no'
@@ -132,9 +133,9 @@ module Superhosting
             end
           end
 
-          unless (container = container_lib_mapper.registry.f('container')).nil?
-            FileUtils.rm container.lines
-            container.delete!
+          unless (registry_container_mapper = container_lib_mapper.registry.f('container')).nil?
+            FileUtils.rm_rf registry_container_mapper.lines
+            registry_container_mapper.delete!
           end
 
           container_mapper.f('config.rb', overlay: false).reverse.each do |config|

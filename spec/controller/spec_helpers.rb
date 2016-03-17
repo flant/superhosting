@@ -37,6 +37,10 @@ module SpecHelpers
       resp
     end
 
+    def model_exps(m, **kwargs)
+      self.send(m, kwargs) if self.respond_to? m
+    end
+
     def expect_translation(resp)
       expect(resp.net_status_normalize).to include(:message)
     end

@@ -30,7 +30,7 @@ module Superhosting
             (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
           container_mapper = @config.containers.f(container_name)
           container_lib_mapper = @lib.containers.f(container_name)
-          container_web_mapper = PathMapper.new('/web').f(name)
+          container_web_mapper = PathMapper.new('/web').f(container_name)
           model = container_mapper.model(default: @config.default_model)
           model_mapper = @config.models.f(:"#{model}")
           site_mapper = ModelInheritance.new(container_mapper.sites.f(name), model_mapper).get
@@ -71,7 +71,7 @@ module Superhosting
           model = container_mapper.model(default: @config.default_model)
           model_mapper = @config.models.f(:"#{model}")
           container_lib_mapper = @lib.containers.f(container_mapper.name)
-          container_web_mapper = PathMapper.new('/web').f(name)
+          container_web_mapper = PathMapper.new('/web').f(container_mapper.name)
           site_mapper = ModelInheritance.new(site_info[:site], model_mapper).get
           site_lib_mapper = container_lib_mapper.web.f(name)
           site_web_mapper = container_web_mapper.f(name)
@@ -116,24 +116,28 @@ module Superhosting
         if (resp = self.existing_validation(name: name)).net_status_ok? and
             (resp = self.adding_validation(name: new_name)).net_status_ok?
           site_info = self.site_index[name]
-          container_mapper = site_info[:container]
-          container_lib_mapper = @lib.containers.f(container_mapper.name)
-          site_mapper = container_mapper.sites.f(name)
-          site_lib_mapper = container_lib_mapper.web.f(name)
-          site_new_mapper = container_mapper.sites.f(new_name)
-          site_lib_new_mapper = container_lib_mapper.web.f(new_name)
+          container_name = site_info[:container].name
+          sites_mapper = site_info[:container].sites
+          container_lib_web_mapper = @lib.containers.f(container_name).web
+          site_mapper = sites_mapper.f(name)
+          site_new_mapper = sites_mapper.f(new_name)
+          renaming_mapper = sites_mapper.f("renaming_#{site_mapper.name}")
+          site_lib_mapper = container_lib_web_mapper.f(name)
+          site_lib_new_mapper = container_lib_web_mapper.f(new_name)
+          renaming_lib_mapper = container_lib_web_mapper.f("renaming_#{site_lib_mapper.name}")
 
-          FileUtils.mv site_mapper.path, site_new_mapper.path
-          FileUtils.mv site_lib_mapper.path, site_lib_new_mapper.path
+          self.command("cp -rp #{site_mapper.path} #{renaming_mapper.path}")
+          self.command("cp -rp #{site_lib_mapper.path} #{renaming_lib_mapper.path}")
 
-          unless (registry_sites_mapper = container_lib_mapper.registry.sites).nil?
-            FileUtils.mv registry_sites_mapper.f(name).path, registry_sites_mapper.f(new_name).path unless registry_sites_mapper.f(name).nil?
+          if (resp = self.add(name: new_name, container_name: container_name)).net_status_ok?
+            FileUtils.rm_rf site_new_mapper.path
+            FileUtils.rm_rf site_lib_new_mapper.path
+            FileUtils.mv renaming_mapper.path, site_new_mapper.path
+            FileUtils.mv renaming_lib_mapper.path, site_lib_new_mapper.path
+            resp = self.delete(name: name)
           end
-
-          {}
-        else
-          resp
         end
+        resp
       end
 
       def alias(name:)
