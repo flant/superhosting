@@ -82,8 +82,9 @@ module Superhosting
 
         supervisor_mapper = container_lib_mapper.supervisor
         supervisor_mapper.create!
+        supervisor_mapper.erb_options = { container: container_mapper }
         services.each do |_name, node|
-          supervisor_mapper.f(_name[/.*[^\.erb]/]).put!(node) # TODO: FileNode.erb_options
+          supervisor_mapper.f(_name[/.*[^\.erb]/]).put!(node)
         end
 
         # config.rb
