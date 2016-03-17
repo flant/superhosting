@@ -3,7 +3,7 @@ module Superhosting
     module ConfigMapper
       class Site < Base
         def aliases
-          self.f('aliases', default: [])
+          self.f('aliases').lines
         end
       end
     end

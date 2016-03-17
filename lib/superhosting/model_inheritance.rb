@@ -1,7 +1,7 @@
 module Superhosting
   class ModelInheritance
     def initialize(mapper, model_mapper)
-      @mapper = mapper.create!
+      @mapper = mapper
       @model_mapper = model_mapper
       @models_mapper = model_mapper.parent
       @inheritors = {}

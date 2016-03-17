@@ -10,12 +10,13 @@ module Superhosting
         end
 
         def add(name:)
+          resp = {}
           if (resp = self.not_existing_validation(name: name)).net_status_ok? and
             (resp = @site.adding_validation(name: name)).net_status_ok?
-            file_append(@site_descriptor[:site].aliases.path, name)
-          else
-            resp
+            @site_descriptor[:site].aliases.append!(name)
+            @site._reconfig(@site_descriptor[:site].name, @site_descriptor[:container].name)
           end
+          resp
         end
 
         def delete(name:)
@@ -24,6 +25,8 @@ module Superhosting
           else
             aliases_mapper = @site_descriptor[:site].aliases
             pretty_remove(aliases_mapper.path, name)
+            @site._reconfig(@site_descriptor[:site].name, @site_descriptor[:container].name)
+            {}
           end
         end
 

@@ -21,7 +21,7 @@ module Superhosting
         # model
         model_mapper = @config.models.f(:"#{model_}")
         return { error: :input_error, code: :model_does_not_exists, data: { name: model_ } } unless @config.models.f(:"#{model_}").dir?
-        container_mapper = @config.containers.f(name)
+        container_mapper = @config.containers.f(name).create!
         container_mapper.model.puts!(model) unless model.nil?
 
         # config
@@ -88,20 +88,7 @@ module Superhosting
         end
 
         # config.rb
-        container_mapper.f('config.rb', overlay: false).reverse.each do |config|
-          registry_mapper = container_lib_mapper.registry.f('container')
-          ex = ScriptExecutor::Container.new(
-              container_name: container_mapper.name,
-              container: container_mapper,
-              container_lib: container_lib_mapper,
-              container_web: container_web_mapper,
-              model: model_mapper,
-              registry_mapper: registry_mapper,
-              config: @config, lib: @lib, docker_api: @docker_api
-          )
-          ex.execute(config)
-          ex.commands.each {|c| self.command c }
-        end
+        self._config(name)
 
         # docker
         pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
@@ -121,9 +108,7 @@ module Superhosting
         container_mapper = @config.containers.f(name)
         model = container_mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
-        container_mapper = ModelInheritance.new(container_mapper, model_mapper).get
         container_lib_mapper = @lib.containers.f(name)
-        container_web_mapper = PathMapper.new('/web').f(name)
 
         if self.existing_validation(name: name).net_status_ok? and self.running_validation(name: name).net_status_ok?
           site_controller = self.get_controller(Site)
@@ -134,25 +119,11 @@ module Superhosting
             end
           end
 
+          self._config_rollback(name)
+
           unless (registry_container_mapper = container_lib_mapper.registry.f('container')).nil?
             FileUtils.rm_rf registry_container_mapper.lines
             registry_container_mapper.delete!
-          end
-
-          container_mapper.f('config.rb', overlay: false).reverse.each do |config|
-            registry_mapper = container_lib_mapper.registry.f('container')
-            ex = ScriptExecutor::Container.new(
-                container_name: container_mapper.name,
-                container: container_mapper,
-                container_lib: container_lib_mapper,
-                container_web: container_web_mapper,
-                model: model_mapper,
-                registry_mapper: registry_mapper,
-                on_reconfig_only: true,
-                config: @config, lib: @lib, docker_api: @docker_api
-            )
-            ex.execute(config)
-            ex.commands.each {|c| self.command c }
           end
 
           @docker_api.container_kill!(name)
@@ -194,6 +165,51 @@ module Superhosting
 
       def admin(name:)
         self.get_controller(Admin, name: name)
+      end
+
+      def _config(container_name, on_reconfig_only: false)
+        container_mapper = @config.containers.f(container_name)
+        model = container_mapper.model(default: @config.default_model)
+        model_mapper = @config.models.f(:"#{model}")
+        container_mapper = ModelInheritance.new(container_mapper, model_mapper).get
+
+        container_mapper.f('config.rb', overlay: false).reverse.each do |config|
+          ex = ScriptExecutor::Container.new(self._config_options(container_name, on_reconfig_only: on_reconfig_only))
+          ex.execute(config)
+          ex.commands.each {|c| self.command c }
+        end
+      end
+
+      def _config_rollback(container_name)
+        _config(container_name, on_reconfig_only: true)
+      end
+
+      def _reconfig(container_name)
+        _config_rollback(container_name)
+        _config(container_name, on_reconfig_only: true)
+      end
+
+      def _config_options(container_name,on_reconfig_only:)
+        container_mapper = @config.containers.f(container_name)
+        model = container_mapper.model(default: @config.default_model)
+        model_mapper = @config.models.f(:"#{model}")
+        container_mapper = ModelInheritance.new(container_mapper, model_mapper).get
+        container_lib_mapper = @lib.containers.f(container_name)
+        container_web_mapper = PathMapper.new('/web').f(container_name)
+        registry_mapper = container_lib_mapper.registry.f('container')
+
+        {
+          container_name: container_mapper.name,
+          container: container_mapper,
+          container_lib: container_lib_mapper,
+          container_web: container_web_mapper,
+          model: model_mapper,
+          registry_mapper: registry_mapper,
+          on_reconfig_only: on_reconfig_only,
+          config: @config,
+          lib: @lib,
+          docker_api: @docker_api
+        }
       end
 
       def adding_validation(name:)

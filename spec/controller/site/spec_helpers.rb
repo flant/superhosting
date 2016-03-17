@@ -97,6 +97,9 @@ module SpecHelpers
 
         expect_file(site_mapper.aliases)
         expect_in_file(site_mapper.aliases, /^#{alias_name}$/)
+
+        model_name = container_mapper.f('model', default: config_mapper.default_model)
+        self.model_exps(:"site_alias_#{model_name}_exps", **kwargs)
       end
 
       def site_alias_delete_exps(**kwargs)
@@ -105,6 +108,9 @@ module SpecHelpers
         container_name = @container_name
         container_mapper = config_mapper.containers.f(container_name)
         site_mapper = container_mapper.sites.f(@site_name)
+
+        model_name = container_mapper.f('model', default: config_mapper.default_model)
+        self.model_exps(:"site_alias_#{model_name}_exps", **kwargs)
 
         not_expect_file(site_mapper.aliases)
         not_expect_in_file(site_mapper.aliases, /^#{alias_name}$/)
@@ -128,6 +134,18 @@ module SpecHelpers
         nginx_sites_mapper = PathMapper.new('/etc').nginx.sites
 
         not_expect_file(nginx_sites_mapper.f("#{container_name}-#{site_name}.conf"))
+      end
+
+      def site_alias_fcgi_m_exps(**kwargs)
+        container_name = kwargs[:container_name] || @container_name
+        site_name = kwargs[:name] || @site_name
+        config_mapper = site_controller.config
+        container_mapper = config_mapper.containers.f(container_name)
+        site_mapper = container_mapper.sites.f(site_name)
+        nginx_sites_mapper = PathMapper.new('/etc').nginx.sites
+
+        config_name = "#{container_name}-#{site_name}.conf"
+        expect_in_file(nginx_sites_mapper.f(config_name), "server_name #{([site_name] + site_mapper.aliases.lines).map(&:punycode).join(' ')};")
       end
 
       # other

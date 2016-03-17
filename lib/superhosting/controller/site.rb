@@ -30,33 +30,11 @@ module Superhosting
             (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
           container_mapper = @config.containers.f(container_name)
           container_lib_mapper = @lib.containers.f(container_name)
-          container_web_mapper = PathMapper.new('/web').f(container_name)
-          model = container_mapper.model(default: @config.default_model)
-          model_mapper = @config.models.f(:"#{model}")
-          site_mapper = ModelInheritance.new(container_mapper.sites.f(name), model_mapper).get
-          site_web_mapper = container_web_mapper.f(name)
+          site_mapper = container_mapper.sites.f(name).create!
           site_lib_mapper = container_lib_mapper.web.f(name).create!
-          FileUtils.chown_R container_name, container_name, container_lib_mapper.web.f(name).path
+          FileUtils.chown_R container_name, container_name, site_lib_mapper.path
 
-          registry_sites_mapper = container_lib_mapper.registry.sites
-          site_mapper.f('config.rb', overlay: false).reverse.each do |config|
-            registry_mapper = registry_sites_mapper.f(name)
-            ex = ScriptExecutor::Site.new(
-                container_name: container_mapper.container_name,
-                container: container_mapper,
-                container_lib: container_lib_mapper,
-                container_web: container_web_mapper,
-                site_name: site_mapper.name,
-                site: site_mapper,
-                site_web: site_web_mapper,
-                site_lib: site_lib_mapper,
-                registry_mapper: registry_mapper,
-                model: model_mapper,
-                config: @config, lib: @lib, docker_api: @docker_api
-            )
-            ex.execute(config)
-            ex.commands.each {|c| self.command c }
-          end
+          self._config(name, container_name)
 
           {}
         else
@@ -68,40 +46,18 @@ module Superhosting
         if self.existing_validation(name: name).net_status_ok?
           site_info = self.site_index[name]
           container_mapper = site_info[:container]
-          model = container_mapper.model(default: @config.default_model)
-          model_mapper = @config.models.f(:"#{model}")
           container_lib_mapper = @lib.containers.f(container_mapper.name)
-          container_web_mapper = PathMapper.new('/web').f(container_mapper.name)
-          site_mapper = ModelInheritance.new(site_info[:site], model_mapper).get
+          site_mapper = site_info[:site]
           site_lib_mapper = container_lib_mapper.web.f(name)
-          site_web_mapper = container_web_mapper.f(name)
 
-          site_mapper.delete!(full: true)
+          self._config_rollback(name, container_mapper.name)
+
+          site_mapper.delete!
           site_lib_mapper.delete!(full: true)
 
           registry_sites_mapper = container_lib_mapper.registry.sites
-          site_mapper.f('config.rb', overlay: false).reverse.each do |config|
-            registry_mapper = registry_sites_mapper.f(name)
-            ex = ScriptExecutor::Site.new(
-                container_name: container_mapper.name,
-                container: container_mapper,
-                container_lib: container_lib_mapper,
-                container_web: container_web_mapper,
-                site_name: site_mapper.name,
-                site: site_mapper,
-                site_web: site_web_mapper,
-                site_lib: site_lib_mapper,
-                registry_mapper: registry_mapper,
-                model: model_mapper,
-                on_reconfig_only: true,
-                config: @config, lib: @lib, docker_api: @docker_api
-            )
-            ex.execute(config)
-            ex.commands.each {|c| self.command c }
-          end
-
           unless (registry_site = registry_sites_mapper.f(name)).nil?
-            FileUtils.rm registry_site.lines
+            FileUtils.rm_rf registry_site.lines
             registry_site.delete!(full: true)
           end
 
@@ -141,6 +97,60 @@ module Superhosting
 
       def alias(name:)
         self.get_controller(Alias, name: name)
+      end
+
+      def _config(site_name, container_name, on_reconfig_only: false)
+        if (site_info = self.site_index[site_name])
+          container_mapper = site_info[:container]
+          site_mapper = site_info[:site]
+        else
+          container_mapper = @config.containers.f(container_name)
+          site_mapper = container_mapper.sites.f(site_name)
+        end
+        model = container_mapper.model(default: @config.default_model)
+        model_mapper = @config.models.f(:"#{model}")
+        site_mapper = ModelInheritance.new(site_mapper, model_mapper).get
+
+        site_mapper.f('config.rb', overlay: false).reverse.each do |config|
+          ex = ScriptExecutor::Site.new(self._config_options(site_name, container_name, on_reconfig_only: false))
+          ex.execute(config)
+          ex.commands.each {|c| self.command c }
+        end
+      end
+
+      def _config_rollback(site_name, container_name)
+        _config(site_name, container_name, on_reconfig_only: true)
+      end
+
+      def _reconfig(site_name, container_name)
+        _config_rollback(site_name, container_name)
+        _config(site_name, container_name, on_reconfig_only: true)
+      end
+
+      def _config_options(site_name, container_name, on_reconfig_only:)
+        if (site_info = self.site_index[site_name])
+          container_mapper = site_info[:container]
+          site_mapper = site_info[:site]
+        else
+          container_mapper = @config.containers.f(container_name)
+          site_mapper = container_mapper.sites.f(site_name)
+        end
+        model = container_mapper.model(default: @config.default_model)
+        model_mapper = @config.models.f(:"#{model}")
+        container_lib_mapper = @lib.containers.f(container_mapper.name)
+        container_web_mapper = PathMapper.new('/web').f(container_mapper.name)
+        site_mapper = ModelInheritance.new(site_mapper, model_mapper).get
+        site_lib_mapper = container_lib_mapper.web.f(site_name)
+        site_web_mapper = container_web_mapper.f(site_name)
+        registry_mapper = container_lib_mapper.registry.sites.f(site_name)
+
+        @container_controller._config_options(container_name, on_reconfig_only: on_reconfig_only).merge! ({
+          site_name: site_mapper.name,
+          site: site_mapper,
+          site_web: site_web_mapper,
+          site_lib: site_lib_mapper,
+          registry_mapper: registry_mapper
+        })
       end
 
       def adding_validation(name:)
