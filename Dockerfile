@@ -1,6 +1,5 @@
 FROM ubuntu:14.04
 MAINTAINER flant <256@flant.com>
-ENTRYPOINT ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
 
 RUN apt-get update -q
 RUN apt-get install -y supervisor

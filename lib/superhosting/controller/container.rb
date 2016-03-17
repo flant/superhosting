@@ -78,24 +78,21 @@ module Superhosting
         FileUtils.chown_R name, name, container_lib_mapper.web.path
 
         # services
-        services = container_mapper.services.grep(/.*\.erb/).map {|n| [n.name, n]}.to_h
+        services = container_mapper.services.grep(/.*\.erb/)
 
         supervisor_mapper = container_lib_mapper.supervisor
         supervisor_mapper.create!
         supervisor_mapper.erb_options = { container: container_mapper }
-        services.each do |_name, node|
-          supervisor_mapper.f(_name[/.*[^\.erb]/]).put!(node)
-        end
+        services.each {|node| supervisor_mapper.f(node.name[/.*[^\.erb]/]).put!(node) }
 
         # config.rb
         self._config(name)
 
         # docker
+        container_mapper.erb_options = { container: container_mapper }
         pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
-
-        # run container
-        self.command "docker run --detach --name #{name} --entrypoint /usr/bin/supervisord -v #{container_lib_mapper.configs.path}/:/.configs:ro
-                      -v #{container_lib_mapper.web.path}:/web/#{name} #{image} -nc /etc/supervisor/supervisord.conf".split
+        available_docker_options = container_mapper.docker.grep_files.map {|n| [n.name[/.*[^\.erb]/].to_sym, n] }.to_h
+        self._run_docker(available_docker_options, lib_mapper: container_lib_mapper, image: image)
 
         if (resp = self.running_validation(name: name)).net_status_ok?
           {}
@@ -209,6 +206,39 @@ module Superhosting
           config: @config,
           lib: @lib,
           docker_api: @docker_api
+        }
+      end
+
+      def _run_docker(command_options, lib_mapper:, image:)
+        command = []
+        container_name = lib_mapper.name
+        
+        self._available_docker_options.map do |k,v|
+          if (command_options[k]).nil?
+            value = [v]
+          else
+            value = command_options[k].lines
+          end
+
+          value.each {|val| command << "--#{k.to_s.sub('_', '-')} #{val}" }
+        end
+        
+        volume_opts = command_options[:volume] ||
+            ["#{lib_mapper.configs.path}/:/.configs:ro", "#{lib_mapper.web.path}:/web/#{container_name}"]
+        volume_opts.each {|val| command << "--volume #{val}" }
+
+        self.command! "docker run --detach --name #{container_name} #{command.join(' ')} #{image} /bin/bash -lec 'while true ; do date ; sleep 1; done'"
+      end
+
+
+      def _available_docker_options
+        {
+            # blkio_weight: 2048,
+            cpu_period: 50000,
+            cpu_quota: 12500,
+            cpu_shares: 2048,
+            memory: '128M',
+            memory_swap: -1
         }
       end
 

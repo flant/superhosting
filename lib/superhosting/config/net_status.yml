@@ -36,3 +36,4 @@ en:
     erb_error: "Erb has executed with error: '%{error}'."
     file_does_not_exists: "File '%{path}' does not exist."
     can_not_pass_an_absolute_path: "Can't pass an absolute path '%{path}'."
+    command_with_error: "Command output:\n %{error}."
