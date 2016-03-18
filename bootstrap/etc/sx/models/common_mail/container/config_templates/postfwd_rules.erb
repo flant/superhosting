@@ -1,12 +1,12 @@
 id=<%= %>_0001
-  sasl_username=<%= "#{container.name}@#{config.smtp_hostname}" %>
+  sasl_username=<%= "#{container.name}@#{etc.smtp_hostname}" %>
   action=rate(sasl_username/<%= container.mail.limit_hourly %>/3600/REJECT only <%= container.mail.limit_hourly %> messages per hour for $$sasl_username)
 id=<%= %>_0002
-  sasl_username=<%= "#{container.name}@#{config.smtp_hostname}" %>
+  sasl_username=<%= "#{container.name}@#{etc.smtp_hostname}" %>
   action=rcpt(sasl_username/<%= container.mail.limit_hourly %>/3600/REJECT only <%= container.mail.limit_hourly %> recipients per hour for $$sasl_username)
 id=<%= %>_0003
-  sasl_username=<%= "#{container.name}@#{config.smtp_hostname}" %>
+  sasl_username=<%= "#{container.name}@#{etc.smtp_hostname}" %>
   action=rate(sasl_username/<%= container.mail.limit_daily %>/86400/REJECT only <%= container.mail.limit_daily %> messages per day for $$sasl_username)
 id=<%= %>_0004
-  sasl_username=<%= "#{container.name}@#{config.smtp_hostname}" %>
+  sasl_username=<%= "#{container.name}@#{etc.smtp_hostname}" %>
   action=rcpt(sasl_username/<%= container.mail.limit_daily %>/86400/REJECT only <%= container.mail.limit_daily %> recipients per day for $$sasl_username)
