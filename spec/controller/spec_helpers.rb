@@ -3,7 +3,13 @@ module SpecHelpers
     include Superhosting::Helpers
 
     def docker_api
-      @docker_api ||= Superhosting::Docker::Real.new
+      @docker_api ||= if @with_docker
+        Superhosting::Docker::Real.new
+      else
+        docker = instance_double('Superhosting::Docker::Real')
+        [:method_missing].each {|m| allow(docker).to receive(m) {|method, *args, &block| true } }
+        docker
+      end
     end
 
     def method_missing(m, *args, &block)

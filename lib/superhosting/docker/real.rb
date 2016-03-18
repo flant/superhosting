@@ -2,6 +2,7 @@ module Superhosting
   module Docker
     class Real
       include Base
+      include Helper::Cmd
 
       def initialize(**kwargs)
         @socket = kwargs[:socket] || '/var/run/docker.sock'
@@ -39,13 +40,25 @@ module Superhosting
         self.container_rm!(name) if self.container_exists?(name) and !self.container_running?(name)
       end
 
+      def container_not_running?(name)
+        !container_running?(name)
+      end
+
       def container_running?(name)
         resp = container_info(name)
         resp.nil? ? false : resp['State']['Status'] == 'running'
       end
 
+      def container_not_exists?(name)
+        !container_exists?(name)
+      end
+
       def container_exists?(name)
         container_info(name).nil? ? false : true
+      end
+
+      def container_run(command)
+        self.run_command(command) # TODO
       end
     end
   end

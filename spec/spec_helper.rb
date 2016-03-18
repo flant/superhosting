@@ -14,5 +14,5 @@ require 'controller/user/spec_helpers'
 require 'controller/admin/spec_helpers'
 
 RSpec.configure do |c|
-  c.filter_run_excluding :bootstrap unless File.read('/etc/sx/bootstrap').strip == 'yes'
+  c.before(:example, :docker) { @with_docker = true }
 end

@@ -5,7 +5,7 @@ module SpecHelpers
       include SpecHelpers::Base
 
       def container_controller
-        @container_controller ||= Superhosting::Controller::Container.new
+        @container_controller ||= Superhosting::Controller::Container.new(docker_api: docker_api)
       end
 
       # methods
@@ -87,7 +87,7 @@ module SpecHelpers
         expect_in_file(etc_mapper.security.f('docker.conf'), "@#{container_name} #{container_name}")
 
         # container
-        expect(docker_api.container_info(container_name)).not_to be_nil
+        expect(docker_api.container_exists?(container_name)).to be_truthy
       end
 
       def container_delete_exps(**kwargs)
@@ -115,13 +115,13 @@ module SpecHelpers
         # group / user
         not_expect_group(container_name)
         not_expect_user(container_name)
-        not_expect_in_file(etc_mapper.passwd, /#{container_name}.*\/usr\/sbin\/nologin/)
+        not_expect_in_file(etc_mapper.passwd, /#{container_name}:.*\/usr\/sbin\/nologin/)
 
         # docker
         not_expect_in_file(etc_mapper.security.f('docker.conf'), "@#{container_name} #{container_name}")
 
         # container
-        expect(docker_api.container_info(container_name)).to be_nil
+        expect(docker_api.container_not_exists?(container_name)).to be_truthy
       end
 
       def container_admin_add_exps(**kwargs)

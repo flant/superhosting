@@ -16,7 +16,7 @@ describe Superhosting::Controller::Container do
     container_delete_with_exps(name: @container_name)
   end
 
-  it 'list' do
+  it 'list', :docker do
     with_container do |container_name|
       expect(container_list_with_exps[:data]).to include(container_name)
     end
@@ -51,7 +51,7 @@ describe Superhosting::Controller::Container do
     invalid_names.each {|name| container_add_with_exps(name: name, code: :invalid_container_name) }
   end
 
-  it 'add:container_is_running' do
+  it 'add:container_is_running', :docker do
     container_add_with_exps(name: @container_name)
     container_add_with_exps(name: @container_name, code: :container_is_running)
   end
@@ -68,20 +68,19 @@ describe Superhosting::Controller::Container do
 
   # other
 
-  it 'add#recreate_inactive_container' do
+  it 'add#recreate_inactive_container', :docker do
     container_add_with_exps(name: @container_name)
-    @docker_api.container_stop!(@container_name)
+    docker_api.container_stop!(@container_name)
     container_add_with_exps(name: @container_name)
   end
 
-  it 'add#mux_add' do
-    with_container(model: 'bitrix_m') do
-      expect(@docker_api.container_running?('php-5.5')).to be true
-    end
-  end
-
-  it 'add#mux_delete' do
-    with_container(model: 'bitrix_m')
-    expect(@docker_api.container_running?('php-5.5')).to be false
+  it 'add#mux', :docker do
+    container_add_with_exps(name: @container_name, model: 'bitrix_m')
+    expect(docker_api.container_running?('php-5.5')).to be true
+    container_add_with_exps(name: "#{@container_name}2", model: 'bitrix_m')
+    container_delete_with_exps(name: @container_name)
+    expect(docker_api.container_running?('php-5.5')).to be true
+    container_delete_with_exps(name: "#{@container_name}2")
+    expect(docker_api.container_running?('php-5.5')).to be false
   end
 end

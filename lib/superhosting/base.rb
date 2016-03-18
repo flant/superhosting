@@ -20,8 +20,7 @@ module Superhosting
     end
 
     def command!(*command_args)
-      cmd = Mixlib::ShellOut.new(*command_args)
-      cmd.run_command
+      cmd = run_command(*command_args)
       if cmd.status.success?
         msg = [cmd.stdout, cmd.stderr].delete_if { |str| str.empty? }.join("\n")
         debug(msg) unless msg.empty?
@@ -32,8 +31,7 @@ module Superhosting
     end
 
     def command(*command_args)
-      cmd = Mixlib::ShellOut.new(*command_args)
-      cmd.run_command
+      cmd = run_command(*command_args)
       msg = [cmd.stdout, cmd.stderr].delete_if { |str| str.empty? }.join("\n")
       debug(msg) unless msg.empty?
       {} # net_status_ok

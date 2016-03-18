@@ -101,7 +101,7 @@ module Superhosting
         if (resp = self._run_docker(name: name, command_options: command_options, image: image)).net_status_ok?
           if (mux_mapper = container_mapper.mux).file?
             mux_name = mux_mapper.value
-            unless self.mux_index.include? mux_name
+            unless @docker_api.container_running?(mux_name)
               @mux_controller = self.get_controller(Mux)
               resp = @mux_controller.add(name: mux_name)
             end
@@ -243,7 +243,7 @@ module Superhosting
 
       def _run_docker(name:, command_options:, image:)
         pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
-        self.command! "docker run --detach --name #{name} #{command_options.join(' ')} #{image} /bin/bash -lec 'while true ; do date ; sleep 1; done'"
+        @docker_api.container_run("docker run --detach --name #{name} #{command_options.join(' ')} #{image} /bin/bash -lec 'while true ; do date ; sleep 1; done'")
         self.running_validation(name: name)
       end
 
@@ -258,11 +258,11 @@ module Superhosting
       end
 
       def running_validation(name:)
-        self.not_running_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_is_not_running, data: { name: name} } : {}
+        @docker_api.container_running?(name) ? {}: { error: :logical_error, code: :container_is_not_running, data: { name: name} }
       end
 
       def not_running_validation(name:)
-        @docker_api.container_running?(name) ? { error: :logical_error, code: :container_is_running, data: { name: name } } : {}
+        @docker_api.container_not_running?(name) ? {} : { error: :logical_error, code: :container_is_running, data: { name: name } }
       end
 
       def existing_validation(name:)
