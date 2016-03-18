@@ -93,12 +93,6 @@ module Superhosting
         pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
         available_docker_options = container_mapper.docker.grep_files.map {|n| [n.name[/.*[^\.erb]/].to_sym, n] }.to_h
         self._run_docker(available_docker_options, lib_mapper: container_lib_mapper, image: image)
-
-        if (resp = self.running_validation(name: name)).net_status_ok?
-          {}
-        else
-          resp
-        end
       end
 
       def delete(name:)
@@ -228,6 +222,7 @@ module Superhosting
         volume_opts.each {|val| command << "--volume #{val}" }
 
         self.command! "docker run --detach --name #{container_name} #{command.join(' ')} #{image} /bin/bash -lec 'while true ; do date ; sleep 1; done'"
+        self.running_validation(name: name)
       end
 
 
@@ -239,6 +234,7 @@ module Superhosting
             cpu_shares: 2048,
             memory: '128M',
             memory_swap: -1
+            # + volume
         }
       end
 
