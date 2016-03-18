@@ -165,9 +165,9 @@ module SpecHelpers
 
       # other
 
-      def with_container
-        container_add_with_exps(name: @container_name)
-        yield @container_name
+      def with_container(**kwargs)
+        container_add_with_exps(name: @container_name, **kwargs)
+        yield @container_name if block_given?
         container_delete_with_exps(name: @container_name)
       end
 

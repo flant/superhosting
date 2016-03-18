@@ -4,9 +4,9 @@ module Superhosting
       include Helpers
 
       attr_accessor :commands
-      attr_accessor :model, :lib, :config, :docker_api
+      attr_accessor :model, :lib, :etc, :docker_api
 
-      def initialize(model:, lib:, config:, docker_api:, **kwargs)
+      def initialize(model:, lib:, etc:, docker_api:, **kwargs)
         kwargs.each do |k, v|
           instance_variable_set("@#{k}", v)
           self.class.class_eval("attr_accessor :#{k}")
@@ -15,7 +15,7 @@ module Superhosting
         self.commands = []
         self.model = model
         self.lib = lib
-        self.config = config
+        self.etc = etc
         self.docker_api = docker_api
       end
 

@@ -73,4 +73,15 @@ describe Superhosting::Controller::Container do
     @docker_api.container_stop!(@container_name)
     container_add_with_exps(name: @container_name)
   end
+
+  it 'add#mux_add' do
+    with_container(model: 'bitrix_m') do
+      expect(@docker_api.container_running?('php-5.5')).to be true
+    end
+  end
+
+  it 'add#mux_delete' do
+    with_container(model: 'bitrix_m')
+    expect(@docker_api.container_running?('php-5.5')).to be false
+  end
 end

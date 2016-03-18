@@ -109,10 +109,11 @@ module Superhosting
         end
         model = container_mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
-        site_mapper = ModelInheritance.new(site_mapper, model_mapper).get
+        site_mapper = MapperInheritance::Model.new(site_mapper, model_mapper).get
+        container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
 
         site_mapper.f('config.rb', overlay: false).reverse.each do |config|
-          ex = ScriptExecutor::Site.new(self._config_options(site_name, container_name, on_reconfig_only: false))
+          ex = ScriptExecutor::Site.new(self._config_options(site_mapper, container_mapper, on_reconfig_only: false))
           ex.execute(config)
           ex.commands.each {|c| self.command c }
         end
@@ -127,25 +128,17 @@ module Superhosting
         _config(site_name, container_name, on_reconfig_only: true)
       end
 
-      def _config_options(site_name, container_name, on_reconfig_only:)
-        if (site_info = self.site_index[site_name])
-          container_mapper = site_info[:container]
-          site_mapper = site_info[:site]
-        else
-          container_mapper = @config.containers.f(container_name)
-          site_mapper = container_mapper.sites.f(site_name)
-        end
-        model = container_mapper.model(default: @config.default_model)
-        model_mapper = @config.models.f(:"#{model}")
-        container_lib_mapper = @lib.containers.f(container_mapper.name)
-        container_web_mapper = PathMapper.new('/web').f(container_mapper.name)
-        site_mapper = ModelInheritance.new(site_mapper, model_mapper).get
+      def _config_options(site_mapper, container_mapper, on_reconfig_only:)
+        site_name = site_mapper.name
+        container_name = container_mapper.name
+        container_lib_mapper = @lib.containers.f(container_name)
+        container_web_mapper = PathMapper.new('/web').f(container_name)
         site_lib_mapper = container_lib_mapper.web.f(site_name)
         site_web_mapper = container_web_mapper.f(site_name)
         registry_mapper = container_lib_mapper.registry.sites.f(site_name)
 
-        @container_controller._config_options(container_name, on_reconfig_only: on_reconfig_only).merge! ({
-          site_name: site_mapper.name,
+        @container_controller._config_options(container_mapper, on_reconfig_only: on_reconfig_only).merge! ({
+          site_name: site_name,
           site: site_mapper,
           site_web: site_web_mapper,
           site_lib: site_lib_mapper,

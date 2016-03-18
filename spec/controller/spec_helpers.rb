@@ -3,7 +3,7 @@ module SpecHelpers
     include Superhosting::Helpers
 
     def docker_api
-      @docker_api ||= Superhosting::DockerApi.new
+      @docker_api ||= Superhosting::Docker::Real.new
     end
 
     def method_missing(m, *args, &block)

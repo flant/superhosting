@@ -3,6 +3,8 @@ module Superhosting
     class Container < Base
       CONTAINER_NAME_FORMAT = /^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/
 
+      attr_writer :mux_index
+
       def list
         docker = @docker_api.container_list.map {|c| c['Names'].first.slice(1..-1) }.to_set
         sx = @config.containers.grep_dirs.map {|n| n.name }.to_set
@@ -14,25 +16,24 @@ module Superhosting
       def add(name:, mail: 'model', admin_mail: nil, model: nil)
         if !(resp = self.adding_validation(name: name)).net_status_ok?
           return resp
-        elsif (model_ = model || @config.containers.f(name, default: @config.default_model)).nil?
+        elsif (model_ = model || @config.containers.f(name).f('model', default: @config.default_model)).nil?
           return { error: :input_error, code: :no_model_given }
         end
 
         # model
-        model_mapper = @config.models.f(:"#{model_}")
-        return { error: :input_error, code: :model_does_not_exists, data: { name: model_ } } unless @config.models.f(:"#{model_}").dir?
+        model_mapper = @config.models.f(model_)
+        return { error: :input_error, code: :model_does_not_exists, data: { name: model_ } } unless @config.models.f(model_).dir?
         container_mapper = @config.containers.f(name).create!
-        container_mapper.model.puts!(model) unless model.nil?
+        container_mapper.model.put!(model) unless model.nil?
 
         # config
-        container_mapper = ModelInheritance.new(container_mapper, model_mapper).get
-        container_mapper.model.put!(model) unless model.nil?
+        container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
 
         # web
         web_mapper = PathMapper.new('/web').create!
         container_web_mapper = web_mapper.f(name)
 
-        # image
+
         return { error: :input_error, code: :no_docker_image_specified_in_model, data: { model: model_} } if (image = container_mapper.docker.image).nil?
 
         # mail
@@ -90,18 +91,41 @@ module Superhosting
 
         # docker
         container_mapper.erb_options = { container: container_mapper }
-        pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
-        available_docker_options = container_mapper.docker.grep_files.map {|n| [n.name[/.*[^\.erb]/].to_sym, n] }.to_h
-        self._run_docker(available_docker_options, lib_mapper: container_lib_mapper, image: image)
+        all_options = container_mapper.docker.grep_files.map {|n| [n.name[/.*[^\.erb]/].to_sym, n] }.to_h
+        command_options = self._grab_options(command_options: all_options)
+
+        volume_opts = ["#{container_lib_mapper.configs.path}/:/.configs:ro", "#{container_lib_mapper.web.path}:/web/#{name}"]
+        volume_opts << all_options[:volume].lines unless all_options[:volume].nil?
+        volume_opts.each {|val| command_options << "--volume #{val}" }
+
+        if (resp = self._run_docker(name: name, command_options: command_options, image: image)).net_status_ok?
+          if (mux_mapper = container_mapper.mux).file?
+            mux_name = mux_mapper.value
+            unless self.mux_index.include? mux_name
+              @mux_controller = self.get_controller(Mux)
+              resp = @mux_controller.add(name: mux_name)
+            end
+            self.mux_index_push(mux_name, name)
+          end
+        end
+        resp
       end
 
       def delete(name:)
-        container_mapper = @config.containers.f(name)
-        model = container_mapper.model(default: @config.default_model)
-        model_mapper = @config.models.f(:"#{model}")
-        container_lib_mapper = @lib.containers.f(name)
+        def rm_docker_container(name)
+          @docker_api.container_kill!(name)
+          @docker_api.container_rm!(name)
+
+          pretty_remove('/etc/security/docker.conf', "@#{name} #{name}")
+        end
 
         if self.existing_validation(name: name).net_status_ok? and self.running_validation(name: name).net_status_ok?
+          container_mapper = @config.containers.f(name)
+          model = container_mapper.model(default: @config.default_model)
+          model_mapper = @config.models.f(:"#{model}")
+          container_lib_mapper = @lib.containers.f(name)
+          container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
+
           site_controller = self.get_controller(Site)
           sites = container_mapper.sites.grep_dirs.map { |n| n.name }
           sites.each do |s|
@@ -117,9 +141,12 @@ module Superhosting
             registry_container_mapper.delete!
           end
 
-          @docker_api.container_kill!(name)
-          @docker_api.container_rm!(name)
-          pretty_remove('/etc/security/docker.conf', "@#{name} #{name}")
+          rm_docker_container(name)
+          if (mux_mapper = container_mapper.mux).file?
+            mux_name = mux_mapper.value
+            self.mux_index_pop(mux_name, name)
+            rm_docker_container(mux_name) unless self.mux_index.include?(mux_name)
+          end
 
           user_controller = self.get_controller(User)
           user_controller._group_del_users(name: name)
@@ -162,10 +189,10 @@ module Superhosting
         container_mapper = @config.containers.f(container_name)
         model = container_mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
-        container_mapper = ModelInheritance.new(container_mapper, model_mapper).get
+        container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
 
         container_mapper.f('config.rb', overlay: false).reverse.each do |config|
-          ex = ScriptExecutor::Container.new(self._config_options(container_name, on_reconfig_only: on_reconfig_only))
+          ex = ScriptExecutor::Container.new(self._config_options(container_mapper, on_reconfig_only: on_reconfig_only))
           ex.execute(config)
           ex.commands.each {|c| self.command c }
         end
@@ -180,66 +207,52 @@ module Superhosting
         _config(container_name, on_reconfig_only: true)
       end
 
-      def _config_options(container_name,on_reconfig_only:)
-        container_mapper = @config.containers.f(container_name)
+      def _config_options(container_mapper, on_reconfig_only:)
+        container_name = container_mapper.name
         model = container_mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
-        container_mapper = ModelInheritance.new(container_mapper, model_mapper).get
         container_lib_mapper = @lib.containers.f(container_name)
         container_web_mapper = PathMapper.new('/web').f(container_name)
         registry_mapper = container_lib_mapper.registry.f('container')
 
         {
-          container_name: container_mapper.name,
-          container: container_mapper,
-          container_lib: container_lib_mapper,
-          container_web: container_web_mapper,
-          model: model_mapper,
-          registry_mapper: registry_mapper,
-          on_reconfig_only: on_reconfig_only,
-          config: @config,
-          lib: @lib,
-          docker_api: @docker_api
+            container_name: container_name,
+            container: container_mapper,
+            container_lib: container_lib_mapper,
+            container_web: container_web_mapper,
+            model: model_mapper,
+            registry_mapper: registry_mapper,
+            on_reconfig_only: on_reconfig_only,
+            etc: @config,
+            lib: @lib,
+            docker_api: @docker_api
         }
       end
 
-      def _run_docker(command_options, lib_mapper:, image:)
-        command = []
-        container_name = lib_mapper.name
-        
-        self._available_docker_options.map do |k,v|
-          if (command_options[k]).nil?
-            value = [v]
-          else
-            value = command_options[k].lines
+      def _grab_options(command_options:)
+        options = []
+
+        self._available_docker_options.map do |k|
+          unless (value = command_options[k]).nil?
+            value.lines.each {|val| options << "--#{k.to_s.sub('_', '-')} #{val}" }
           end
-
-          value.each {|val| command << "--#{k.to_s.sub('_', '-')} #{val}" }
         end
-        
-        volume_opts = command_options[:volume] ||
-            ["#{lib_mapper.configs.path}/:/.configs:ro", "#{lib_mapper.web.path}:/web/#{container_name}"]
-        volume_opts.each {|val| command << "--volume #{val}" }
 
-        self.command! "docker run --detach --name #{container_name} #{command.join(' ')} #{image} /bin/bash -lec 'while true ; do date ; sleep 1; done'"
+        options
+      end
+
+      def _run_docker(name:, command_options:, image:)
+        pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
+        self.command! "docker run --detach --name #{name} #{command_options.join(' ')} #{image} /bin/bash -lec 'while true ; do date ; sleep 1; done'"
         self.running_validation(name: name)
       end
 
-
       def _available_docker_options
-        {
-            # blkio_weight: 2048,
-            cpu_period: 50000,
-            cpu_quota: 12500,
-            cpu_shares: 2048,
-            memory: '128M',
-            memory_swap: -1
-            # + volume
-        }
+        [:cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap]
       end
 
       def adding_validation(name:)
-        @docker_api.remove_inactive_container!(name)
+        @docker_api.container_rm_inactive!(name)
         return { error: :input_error, code: :invalid_container_name, data: { name: name, regex: CONTAINER_NAME_FORMAT } } if name !~ CONTAINER_NAME_FORMAT
         self.not_running_validation(name: name)
       end
@@ -258,6 +271,38 @@ module Superhosting
 
       def not_existing_validation(name:)
         self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_exists, data: { name: name }  } : {}
+      end
+
+      def mux_index
+        def generate
+          @mux_index = {}
+          self.list[:data].each do |container_name|
+            container_mapper = @config.containers.f(container_name)
+            model = container_mapper.f('model', default: @config.default_model)
+            model_mapper = @config.models.f(model)
+            container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
+            if (mux_mapper = container_mapper.mux).file?
+              mux_name = mux_mapper.value
+              (@mux_index[mux_name] ||= []) << container_name
+            end
+          end
+
+          @mux_index
+        end
+
+        @mux_index || generate
+      end
+
+      def mux_index_pop(mux_name, container_name)
+        if self.mux_index.key? mux_name
+          self.mux_index[mux_name].delete(container_name)
+          self.mux_index.delete(mux_name) if self.mux_index[mux_name].empty?
+        end
+      end
+
+      def mux_index_push(mux_name, container_name)
+        self.mux_index[mux_name] ||= []
+        self.mux_index[mux_name] << container_name
       end
     end
   end

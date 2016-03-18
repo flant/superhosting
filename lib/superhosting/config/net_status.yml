@@ -26,12 +26,18 @@ en:
     admin_does_not_exists: "Admin '%{name}' doesn't exists."
     admin_exists: "Admin '%{name}' already exists."
 
+    mux_is_running: "Mux '%{name}' is already running."
+
     option_ftp_only_is_required: "Option 'ftp-only' is required if specified 'ftp-dir'."
     incorrect_ftp_dir: "Incorrect ftp-dir '%{dir}'."
 
     model_does_not_exists: "Model '%{name}' doesn't exists."
-    model_should_not_be_abstract: "Model '%{name}' should not be abstract."
+    base_model_should_not_be_abstract: "Base model '%{name}' should not be abstract."
+    mux_does_not_exists: "Mux '%{name}' doesn't exists."
+    base_mux_should_not_be_abstract: "Base mux '%{name}' should not be abstract."
     mapper_type_not_supported: "Mapper type '%{name}' not supported."
+
+    no_docker_image_specified_in_mux: "No docker_image specified in mux '%{mux}'."
 
     erb_error: "Erb has executed with error: '%{error}'."
     file_does_not_exists: "File '%{path}' does not exist."
