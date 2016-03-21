@@ -11,7 +11,7 @@ module Superhosting
       @lib = PathMapper.new(lib_path)
       @logger = logger
 
-      @docker_api = docker_api || Docker::Real.new(socket: docker_socket)
+      @docker_api = docker_api || DockerApi.new(socket: docker_socket)
     end
 
     def debug(*a, &b)

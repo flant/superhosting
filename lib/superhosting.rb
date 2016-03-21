@@ -49,8 +49,7 @@ require 'superhosting/mapper_inheritance/base'
 require 'superhosting/mapper_inheritance/model'
 require 'superhosting/mapper_inheritance/mux'
 
-require 'superhosting/docker/base'
-require 'superhosting/docker/real'
+require 'superhosting/docker_api'
 
 require 'superhosting/cli/error/base'
 Dir["#{File.dirname(__FILE__)}/superhosting/cli/error/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}

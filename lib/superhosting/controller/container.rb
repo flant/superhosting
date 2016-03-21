@@ -92,7 +92,7 @@ module Superhosting
         # docker
         container_mapper.erb_options = { container: container_mapper }
         all_options = container_mapper.docker.grep_files.map {|n| [n.name[/.*[^\.erb]/].to_sym, n] }.to_h
-        command_options = self._grab_options(command_options: all_options)
+        command_options = @docker_api.grab_container_options(all_options)
 
         volume_opts = ["#{container_lib_mapper.configs.path}/:/.configs:ro", "#{container_lib_mapper.web.path}:/web/#{name}"]
         volume_opts << all_options[:volume].lines unless all_options[:volume].nil?
@@ -229,26 +229,10 @@ module Superhosting
         }
       end
 
-      def _grab_options(command_options:)
-        options = []
-
-        self._available_docker_options.map do |k|
-          unless (value = command_options[k]).nil?
-            value.lines.each {|val| options << "--#{k.to_s.sub('_', '-')} #{val}" }
-          end
-        end
-
-        options
-      end
-
       def _run_docker(name:, command_options:, image:)
         pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
         @docker_api.container_run("docker run --detach --name #{name} #{command_options.join(' ')} #{image} /bin/bash -lec 'while true ; do date ; sleep 1; done'")
         self.running_validation(name: name)
-      end
-
-      def _available_docker_options
-        [:cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap]
       end
 
       def adding_validation(name:)

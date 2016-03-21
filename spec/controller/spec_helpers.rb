@@ -4,11 +4,12 @@ module SpecHelpers
 
     def docker_api
       @docker_api ||= if @with_docker
-        Superhosting::Docker::Real.new
+        Superhosting::DockerApi.new
       else
-        docker = instance_double('Superhosting::Docker::Real')
-        [:method_missing].each {|m| allow(docker).to receive(m) {|method, *args, &block| true } }
-        docker
+        docker_instance = instance_double('Superhosting::DockerApi')
+        allow(docker_instance).to receive(:grab_container_options) {|options| [] }
+        [:method_missing].each {|m| allow(docker_instance).to receive(m) {|method, *args, &block| true } }
+        docker_instance
       end
     end
 
