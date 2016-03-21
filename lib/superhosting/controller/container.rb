@@ -69,7 +69,7 @@ module Superhosting
         # system users
         users = container_mapper.system_users
         users.lines.each do |u|
-          unless (resp = user_controller._add(name: u.strip, container_name: name)).net_status_ok?
+          unless (resp = user_controller._add_system_user(name: u.strip, container_name: name)).net_status_ok?
             return resp
           end
         end unless users.nil?
@@ -215,7 +215,7 @@ module Superhosting
 
       def _reconfig(container_name)
         _config_rollback(container_name)
-        _config(container_name, on_reconfig_only: true)
+        _config(container_name)
       end
 
       def _config_options(container_mapper, on_reconfig_only:)
