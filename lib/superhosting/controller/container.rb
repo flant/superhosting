@@ -79,9 +79,7 @@ module Superhosting
 
         # services
         services = container_mapper.services.grep(/.*\.erb/)
-
-        supervisor_mapper = container_lib_mapper.supervisor
-        supervisor_mapper.create!
+        supervisor_mapper = container_lib_mapper.supervisor.create!
         services.each {|node| supervisor_mapper.f(node.name[/.*[^\.erb]/]).put!(node) }
 
         # config.rb
