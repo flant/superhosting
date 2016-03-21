@@ -35,7 +35,7 @@ module Superhosting
               (resp = @user_controller.not_existing_validation(name: admin_name, container_name: name)).net_status_ok?
             user, encrypted_password = @admin_passwd.split(':')
             if (resp = @user_controller._add(name: admin_name, container_name: name, shell: '/bin/bash')).net_status_ok?
-              resp = encrypted_password.empty? ? {} : @user_controller._update_password(name: "#{name}_#{admin_name}", encrypted_password: encrypted_password)
+              resp = encrypted_password.nil? ? {} : @user_controller._update_password(name: "#{name}_#{admin_name}", encrypted_password: encrypted_password)
             end
           end
           resp
