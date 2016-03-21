@@ -21,8 +21,9 @@ module Superhosting
           raise NetStatus::Exception, { error: :logical_error, code: :mux_does_not_exists, data: { name: name } } unless inherit_mapper.dir?
 
           set_inheritors(inherit_mapper, depth)
-          set_inheritor(inherit_mapper, depth)
         end
+
+        set_inheritor(m, depth) unless m == @mapper
       end
 
       def set_inheritor(mapper, depth)

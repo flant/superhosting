@@ -93,7 +93,9 @@ module Superhosting
 
           useradd_command = "useradd #{name} -g #{group} -d #{home_dir} -s #{shell}".split
           useradd_command += "-u #{uid} -o".split unless uid.nil?
-          self.command(useradd_command)
+
+          self._del(name: name) unless self._get(name: name).nil?
+          self.command!(useradd_command)
 
           user = self._get(name: name)
           pretty_override(passwd_path, "#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")

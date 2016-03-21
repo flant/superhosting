@@ -39,10 +39,10 @@ module Superhosting
 
           # mixed
           set_inheritors(inherit_mapper, depth, mux)
-
-          # model
-          set_inheritor(inherit_mapper, depth)
         end
+
+        # model
+        set_inheritor(m, depth)
 
         depth
       end
