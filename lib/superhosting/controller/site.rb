@@ -8,23 +8,6 @@ module Superhosting
         @container_controller = self.get_controller(Container)
       end
 
-      def site_index
-        site_index = {}
-        @config.containers.grep_dirs.each do |container_mapper|
-          container_mapper.sites.grep_dirs.each do |site_mapper|
-            names = []
-            names << site_mapper.name
-            site_mapper.aliases.lines {|n| names << n.strip } unless site_mapper.aliases.nil?
-            raise NetStatus::Exception, {
-                code: :container_site_name_conflict,
-                data: { site1: site_index[site_mapper.name][:site].path, site2: site_mapper.path }
-            } if site_index.key? site_mapper.name
-            names.each {|n| site_index[n] = { container: container_mapper, site: site_mapper } }
-          end
-        end
-        site_index
-      end
-
       def add(name:, container_name:)
         if (resp = self.adding_validation(name: name)).net_status_ok? and
             (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
@@ -95,25 +78,31 @@ module Superhosting
         resp
       end
 
+      def reconfig(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          site_info = self.site_index[name]
+          self._reconfig(name, site_info[:container].name)
+        end
+        resp
+      end
+
       def alias(name:)
         self.get_controller(Alias, name: name)
       end
 
       def _config(site_name, container_name, on_reconfig_only: false)
+        container_mapper = @container_controller.container_index[container_name][:mapper]
         if (site_info = self.site_index[site_name])
-          container_mapper = site_info[:container]
           site_mapper = site_info[:site]
         else
-          container_mapper = @config.containers.f(container_name)
           site_mapper = container_mapper.sites.f(site_name)
         end
         model = container_mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
         site_mapper = MapperInheritance::Model.new(site_mapper, model_mapper).get
-        container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
 
         site_mapper.f('config.rb', overlay: false).reverse.each do |config|
-          ex = ScriptExecutor::Site.new(self._config_options(site_mapper, container_mapper, on_reconfig_only: false))
+          ex = ScriptExecutor::Site.new(self._config_options(site_mapper, container_mapper, on_reconfig_only: on_reconfig_only))
           ex.execute(config)
           ex.commands.each {|c| self.command c }
         end
@@ -157,6 +146,23 @@ module Superhosting
 
       def not_existing_validation(name:)
         self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :site_exists, data: { name: name} } : {}
+      end
+
+      def site_index
+        site_index = {}
+        @config.containers.grep_dirs.each do |container_mapper|
+          container_mapper.sites.grep_dirs.each do |site_mapper|
+            names = []
+            names << site_mapper.name
+            site_mapper.aliases.lines {|n| names << n.strip } unless site_mapper.aliases.nil?
+            raise NetStatus::Exception, {
+                code: :container_site_name_conflict,
+                data: { site1: site_index[site_mapper.name][:site].path, site2: site_mapper.path }
+            } if site_index.key? site_mapper.name
+            names.each {|n| site_index[n] = { container: container_mapper, site: site_mapper } }
+          end
+        end
+        site_index
       end
     end
   end

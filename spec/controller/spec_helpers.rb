@@ -7,8 +7,8 @@ module SpecHelpers
         Superhosting::DockerApi.new
       else
         docker_instance = instance_double('Superhosting::DockerApi')
-        allow(docker_instance).to receive(:grab_container_options) {|options| [] }
-        [:method_missing].each {|m| allow(docker_instance).to receive(m) {|method, *args, &block| true } }
+        allow(docker_instance).to receive(:method_missing) {|method, *args, &block| true }
+        [:container_list,:grab_container_options].each {|m| allow(docker_instance).to receive(m) {|options| [] } }
         docker_instance
       end
     end

@@ -22,6 +22,10 @@ module SpecHelpers
         site_controller.rename(**kwargs)
       end
 
+      def site_reconfig(**kwargs)
+        site_controller.reconfig(**kwargs)
+      end
+
       def site_alias_add(**kwargs)
         site_controller.alias(name: @site_name).add(**kwargs)
       end
@@ -150,8 +154,8 @@ module SpecHelpers
 
       # other
 
-      def with_site
-        site_add_with_exps(name: @site_name, container_name: @container_name)
+      def with_site(**kwargs)
+        site_add_with_exps(name: @site_name, container_name: @container_name, **kwargs)
         yield @site_name
         site_delete_with_exps(name: @site_name)
       end

@@ -35,25 +35,23 @@ module Superhosting
               (resp = @user_controller.not_existing_validation(name: admin_name, container_name: name)).net_status_ok?
             user, encrypted_password = @admin_passwd.split(':')
             if (resp = @user_controller._add(name: admin_name, container_name: name, shell: '/bin/bash')).net_status_ok?
-              encrypted_password.empty? ? {} : @user_controller._update_password(name: "#{name}_#{admin_name}", encrypted_password: encrypted_password)
-            else
-              return resp
+              resp = encrypted_password.empty? ? {} : @user_controller._update_password(name: "#{name}_#{admin_name}", encrypted_password: encrypted_password)
             end
-          else
-            resp
           end
+          resp
         end
 
         def delete(name:)
           admin_name = "admin_#{@admin_name}"
 
-          if !(resp = @container_controller.existing_validation(name: name)).net_status_ok?
-            resp
-          elsif @user_controller.existing_validation(name: admin_name, container_name: name).net_status_ok?
-            @user_controller.delete(name: admin_name, container_name: name)
-          else
-            self.debug("Admin '#{"#{name}_admin_#{@admin_name}"}' has already been deleted")
+          if (resp = @container_controller.existing_validation(name: name)).net_status_ok?
+            if @user_controller.existing_validation(name: admin_name, container_name: name).net_status_ok?
+              resp = @user_controller.delete(name: admin_name, container_name: name)
+            else
+              self.debug("Admin '#{"#{name}_admin_#{@admin_name}"}' has already been deleted")
+            end
           end
+          resp
         end
 
         def _containers_list

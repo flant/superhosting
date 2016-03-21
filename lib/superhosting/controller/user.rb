@@ -22,27 +22,22 @@ module Superhosting
         web_mapper = PathMapper.new("/web/#{container_name}")
         home_dir = ftp_dir.nil? ? web_mapper.path : web_mapper.f(ftp_dir).path
 
-        if !(resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
-          resp
-        elsif !File.exists? home_dir
-          { error: :logical_error, code: :incorrect_ftp_dir, data: { dir: home_dir.to_s } }
-        elsif (resp = self.not_existing_validation(name: name, container_name: container_name)).net_status_ok?
-          shell = ftp_only ? '/usr/sbin/nologin' : '/bin/bash'
-
-          if (resp = self._add(name: name, container_name: container_name, home_dir: home_dir, shell: shell)).net_status_ok?
-            if generate
-              if (resp = self.passwd(name: user_name, generate: generate)).net_status_ok?
-                return { data: resp[:data] }
+        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+          if !File.exists? home_dir
+            resp = { error: :logical_error, code: :incorrect_ftp_dir, data: { dir: home_dir.to_s } }
+          elsif (resp = self.not_existing_validation(name: name, container_name: container_name)).net_status_ok?
+            shell = ftp_only ? '/usr/sbin/nologin' : '/bin/bash'
+            if (resp = self._add(name: name, container_name: container_name, home_dir: home_dir, shell: shell)).net_status_ok?
+              if generate
+                if (resp = self.passwd(name: user_name, generate: generate)).net_status_ok?
+                  resp = { data: resp[:data] }
+                end
               end
-            else
-              {}
+              resp
             end
-          else
-            resp
           end
-        else
-          resp
         end
+        resp
       end
 
       def passwd(name:, generate: false)
@@ -52,17 +47,18 @@ module Superhosting
       end
 
       def delete(name:, container_name:)
-        if !(resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
-          resp
-        elsif self.not_existing_validation(name: name, container_name: container_name).net_status_ok?
-          self.debug("User '#{name}' has already been deleted")
-        else
-          container_lib_mapper = @lib.containers.f(container_name)
-          passwd_path = container_lib_mapper.configs.f('etc-passwd').path
-          user_name = "#{container_name}_#{name}"
-          self._del(name: user_name)
-          pretty_remove(passwd_path, /#{user_name}.*/)
+        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+          if self.not_existing_validation(name: name, container_name: container_name).net_status_ok?
+            self.debug("User '#{name}' has already been deleted")
+          else
+            container_lib_mapper = @lib.containers.f(container_name)
+            passwd_path = container_lib_mapper.configs.f('etc-passwd').path
+            user_name = "#{container_name}_#{name}"
+            self._del(name: user_name)
+            pretty_remove(passwd_path, /#{user_name}.*/)
+          end
         end
+        resp
       end
 
       def change(name:, container_name:, ftp_dir: nil, ftp_only: false, generate: false)

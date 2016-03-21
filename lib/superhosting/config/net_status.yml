@@ -27,6 +27,8 @@ en:
     admin_exists: "Admin '%{name}' already exists."
 
     mux_is_running: "Mux '%{name}' is already running."
+    mux_is_not_running: "Mux '%{name}' isn\'t running."
+    mux_does_not_exists: "Mux '%{name}' doesn't exists."
 
     option_ftp_only_is_required: "Option 'ftp-only' is required if specified 'ftp-dir'."
     incorrect_ftp_dir: "Incorrect ftp-dir '%{dir}'."

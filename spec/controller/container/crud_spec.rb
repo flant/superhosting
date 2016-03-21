@@ -4,11 +4,28 @@ describe Superhosting::Controller::Container do
   include SpecHelpers::Controller::Admin
   include SpecHelpers::Controller::User
   include SpecHelpers::Controller::Container
+  include SpecHelpers::Controller::Site
 
   # positive
 
   it 'add' do
     container_add_with_exps(name: @container_name)
+  end
+
+  it 'reconfig', :docker do
+    with_container(model: 'bitrix_m') do |container_name|
+      with_site do |site_name|
+        container_registry_path = @container_controller.lib.containers.f(container_name).registry.container.path
+        site_registry_path = @container_controller.lib.containers.f(container_name).registry.sites.f(site_name).path
+        time_container = File.mtime(container_registry_path)
+        time_site = File.mtime(site_registry_path)
+
+        container_reconfig_with_exps(name: container_name)
+
+        expect(container_registry_path).not_to eq time_container
+        expect(site_registry_path).not_to eq time_site
+      end
+    end
   end
 
   it 'delete' do
@@ -44,6 +61,22 @@ describe Superhosting::Controller::Container do
     end
   end
 
+  it 'model_reconfig', :docker do
+    with_container(model: 'bitrix_m') do |container_name|
+      with_site do |site_name|
+        container_registry_path = @container_controller.lib.containers.f(container_name).registry.container.path
+        site_registry_path = @container_controller.lib.containers.f(container_name).registry.sites.f(site_name).path
+        time_container = File.mtime(container_registry_path)
+        time_site = File.mtime(site_registry_path)
+
+        container_model_reconfig_with_exps(name: 'bitrix_m')
+
+        expect(container_registry_path).not_to eq time_container
+        expect(site_registry_path).not_to eq time_site
+      end
+    end
+  end
+
   # negative
 
   it 'add:invalid_container_name' do
@@ -56,6 +89,10 @@ describe Superhosting::Controller::Container do
     container_add_with_exps(name: @container_name, code: :container_is_running)
   end
 
+  it 'reconfig:container_does_not_exists' do
+    container_reconfig_with_exps(name: @container_name, code: :container_does_not_exists)
+  end
+
   it 'add:model_does_not_exists' do
     container_add_with_exps(name: @container_name, model: :incorrect_model_name, code: :model_does_not_exists)
   end
@@ -64,6 +101,10 @@ describe Superhosting::Controller::Container do
     with_container do |container_name|
       container_admin_add_with_exps(name: @admin_name, code: :admin_does_not_exists)
     end
+  end
+
+  it 'model_reconfig:model_does_not_exists' do
+    container_model_reconfig_with_exps(name: 'bitrix_m', code: :model_does_not_exists)
   end
 
   # other

@@ -1,11 +1,12 @@
 module Superhosting
   module ScriptExecutor
     class Container < Base
-      attr_accessor :container_name, :container, :registry_mapper, :on_reconfig_only
+      attr_accessor :container_name, :container, :registry_mapper, :mux, :on_reconfig_only
 
-      def initialize(container_name:, container:, container_lib:, container_web:, registry_mapper:, on_reconfig_only: false, **kwargs)
+      def initialize(container_name:, container:, container_lib:, container_web:, registry_mapper:, mux: nil, on_reconfig_only: false, **kwargs)
         self.container_name = container_name
         self.container = ConfigMapper::Container.new(etc_mapper: container, lib_mapper: container_lib, web_mapper: container_web)
+        self.mux = mux
         self.registry_mapper = registry_mapper
         self.on_reconfig_only = on_reconfig_only
         super(**kwargs)

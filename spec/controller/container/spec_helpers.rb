@@ -18,6 +18,10 @@ module SpecHelpers
         container_controller.delete(**kwargs)
       end
 
+      def container_reconfig(**kwargs)
+        container_controller.reconfig(**kwargs)
+      end
+
       def container_list(**kwargs)
         container_controller.list
       end
@@ -32,6 +36,10 @@ module SpecHelpers
 
       def container_admin_list(**kwargs)
         container_controller.admin(name: @container_name).list
+      end
+
+      def container_model_reconfig(**kwargs)
+        container_controller.model.reconfig(**kwargs)
       end
 
       # expectations

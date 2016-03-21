@@ -1,9 +1,8 @@
 module Superhosting
   module Controller
     class Container < Base
+      attr_writer :contianer_index
       CONTAINER_NAME_FORMAT = /^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/
-
-      attr_writer :mux_index
 
       def list
         docker = @docker_api.container_list.map {|c| c['Names'].first.slice(1..-1) }.to_set
@@ -27,12 +26,12 @@ module Superhosting
         container_mapper.model.put!(model) unless model.nil?
 
         # config
-        container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
+        self.reindex_container(name)
+        container_mapper = self.container_index[name][:mapper]
 
         # web
         web_mapper = PathMapper.new('/web').create!
         container_web_mapper = web_mapper.f(name)
-
 
         return { error: :input_error, code: :no_docker_image_specified_in_model, data: { model: model_} } if (image = container_mapper.docker.image).nil?
 
@@ -101,11 +100,11 @@ module Superhosting
         if (resp = self._run_docker(name: name, command_options: command_options, image: image)).net_status_ok?
           if (mux_mapper = container_mapper.mux).file?
             mux_name = mux_mapper.value
+            @mux_controller = self.get_controller(Mux)
             unless @docker_api.container_running?(mux_name)
-              @mux_controller = self.get_controller(Mux)
               resp = @mux_controller.add(name: mux_name)
             end
-            self.mux_index_push(mux_name, name)
+            @mux_controller.mux_index_push(mux_name, name)
           end
         end
         resp
@@ -120,11 +119,8 @@ module Superhosting
         end
 
         if self.existing_validation(name: name).net_status_ok? and self.running_validation(name: name).net_status_ok?
-          container_mapper = @config.containers.f(name)
-          model = container_mapper.model(default: @config.default_model)
-          model_mapper = @config.models.f(:"#{model}")
           container_lib_mapper = @lib.containers.f(name)
-          container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
+          container_mapper = self.container_index[name][:mapper]
 
           site_controller = self.get_controller(Site)
           sites = container_mapper.sites.grep_dirs.map { |n| n.name }
@@ -144,8 +140,9 @@ module Superhosting
           rm_docker_container(name)
           if (mux_mapper = container_mapper.mux).file?
             mux_name = mux_mapper.value
-            self.mux_index_pop(mux_name, name)
-            rm_docker_container(mux_name) unless self.mux_index.include?(mux_name)
+            @mux_controller = self.get_controller(Mux)
+            @mux_controller.mux_index_pop(mux_name, name)
+            rm_docker_container(mux_name) unless @mux_controller.mux_index.include?(mux_name)
           end
 
           user_controller = self.get_controller(User)
@@ -154,6 +151,7 @@ module Superhosting
 
           container_lib_mapper.delete!(full: true)
           container_mapper.delete!(full: true)
+          self.reindex_container(name)
 
           {}
         else
@@ -170,7 +168,20 @@ module Superhosting
       end
 
       def reconfig(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok? and (resp = self.running_validation(name: name)).net_status_ok?
+          container_mapper = self.container_index[name][:mapper]
 
+          self._reconfig(name)
+
+          site_controller = self.get_controller(Site)
+          sites = container_mapper.sites.grep_dirs.map { |n| n.name }
+          sites.each do |s|
+            unless (resp = site_controller.reconfig(name: s)).net_status_ok?
+              return resp
+            end
+          end
+        end
+        resp
       end
 
       def save(name:, to:)
@@ -185,12 +196,12 @@ module Superhosting
         self.get_controller(Admin, name: name)
       end
 
-      def _config(container_name, on_reconfig_only: false)
-        container_mapper = @config.containers.f(container_name)
-        model = container_mapper.model(default: @config.default_model)
-        model_mapper = @config.models.f(:"#{model}")
-        container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
+      def model
+        self.get_controller(Model)
+      end
 
+      def _config(container_name, on_reconfig_only: false)
+        container_mapper = self.container_index[container_name][:mapper]
         container_mapper.f('config.rb', overlay: false).reverse.each do |config|
           ex = ScriptExecutor::Container.new(self._config_options(container_mapper, on_reconfig_only: on_reconfig_only))
           ex.execute(config)
@@ -214,12 +225,14 @@ module Superhosting
         container_lib_mapper = @lib.containers.f(container_name)
         container_web_mapper = PathMapper.new('/web').f(container_name)
         registry_mapper = container_lib_mapper.registry.f('container')
+        mux_mapper = self.container_index[container_name][:mux_mapper]
 
         {
             container_name: container_name,
             container: container_mapper,
             container_lib: container_lib_mapper,
             container_web: container_web_mapper,
+            mux: mux_mapper,
             model: model_mapper,
             registry_mapper: registry_mapper,
             on_reconfig_only: on_reconfig_only,
@@ -235,14 +248,20 @@ module Superhosting
         self.running_validation(name: name)
       end
 
-      def adding_validation(name:)
+      def base_validation(name:)
         @docker_api.container_rm_inactive!(name)
-        return { error: :input_error, code: :invalid_container_name, data: { name: name, regex: CONTAINER_NAME_FORMAT } } if name !~ CONTAINER_NAME_FORMAT
-        self.not_running_validation(name: name)
+        (name !~ CONTAINER_NAME_FORMAT) ? { error: :input_error, code: :invalid_container_name, data: { name: name, regex: CONTAINER_NAME_FORMAT } } : {}
+      end
+
+      def adding_validation(name:)
+        if (resp = self.base_validation(name: name)).net_status_ok?
+          resp = self.not_running_validation(name: name)
+        end
+        resp
       end
 
       def running_validation(name:)
-        @docker_api.container_running?(name) ? {}: { error: :logical_error, code: :container_is_not_running, data: { name: name} }
+        @docker_api.container_running?(name) ? {}: { error: :logical_error, code: :container_is_not_running, data: { name: name } }
       end
 
       def not_running_validation(name:)
@@ -250,43 +269,42 @@ module Superhosting
       end
 
       def existing_validation(name:)
-        (@lib.containers.f(name)).nil? ? { error: :logical_error, code: :container_does_not_exists, data: { name: name }  } : {}
+        self.container_index.include?(name) ? {} : { error: :logical_error, code: :container_does_not_exists, data: { name: name }  }
       end
 
       def not_existing_validation(name:)
         self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_exists, data: { name: name }  } : {}
       end
 
-      def mux_index
+      def container_index
         def generate
-          @mux_index = {}
-          self.list[:data].each do |container_name|
-            container_mapper = @config.containers.f(container_name)
-            model = container_mapper.f('model', default: @config.default_model)
-            model_mapper = @config.models.f(model)
-            container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
-            if (mux_mapper = container_mapper.mux).file?
-              mux_name = mux_mapper.value
-              (@mux_index[mux_name] ||= []) << container_name
-            end
-          end
-
-          @mux_index
+          @config.containers.grep_dirs.each {|mapper| self.reindex_container(mapper.name) }
+          @container_index ||= {}
         end
 
-        @mux_index || generate
+        @container_index || generate
       end
 
-      def mux_index_pop(mux_name, container_name)
-        if self.mux_index.key? mux_name
-          self.mux_index[mux_name].delete(container_name)
-          self.mux_index.delete(mux_name) if self.mux_index[mux_name].empty?
+      def reindex_container(container_name)
+        @container_index ||= {}
+        container_mapper = @config.containers.f(container_name)
+
+        if container_mapper.nil?
+          @container_index.delete(container_name)
+          return
         end
-      end
 
-      def mux_index_push(mux_name, container_name)
-        self.mux_index[mux_name] ||= []
-        self.mux_index[mux_name] << container_name
+        model = container_mapper.f('model', default: @config.default_model)
+        model_mapper = @config.models.f(model)
+        container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
+        mux_mapper = if (mux_file_mapper = container_mapper.mux).file?
+          MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).get
+        end
+
+        @container_index[container_name] = {
+            mapper: container_mapper,
+            mux_mapper: mux_mapper,
+        }
       end
     end
   end
