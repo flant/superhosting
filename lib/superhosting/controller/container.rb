@@ -122,6 +122,8 @@ module Superhosting
           container_lib_mapper = @lib.containers.f(name)
           container_mapper = self.container_index[name][:mapper]
 
+          self._config_rollback(name)
+
           site_controller = self.get_controller(Site)
           sites = container_mapper.sites.grep_dirs.map { |n| n.name }
           sites.each do |s|
@@ -129,8 +131,7 @@ module Superhosting
               return resp
             end
           end
-
-          self._config_rollback(name)
+          container_lib_mapper.web.delete!
 
           unless (registry_container_mapper = container_lib_mapper.registry.f('container')).nil?
             FileUtils.rm_rf registry_container_mapper.lines
