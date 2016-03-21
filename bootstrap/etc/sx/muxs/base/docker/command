@@ -1,0 +1,1 @@
+/bin/bash -lec 'while true ; do date ; sleep 1; done'
