@@ -4,17 +4,16 @@ module Superhosting
       class Alias < Base
         def initialize(name:, **kwargs)
           super(kwargs)
-          @site = self.get_controller(Site)
-          @site.existing_validation(name: name).net_status_ok!
-          @site_descriptor = @site.site_index[name]
+          @site_controller = self.get_controller(Site)
+          @site_controller.existing_validation(name: name).net_status_ok!
+          @site_descriptor = @site_controller.site_index[name]
         end
 
         def add(name:)
-          resp = {}
           if (resp = self.not_existing_validation(name: name)).net_status_ok? and
-            (resp = @site.adding_validation(name: name)).net_status_ok?
+            (resp = @site_controller.adding_validation(name: name)).net_status_ok?
             @site_descriptor[:site].aliases.append!(name)
-            @site._reconfig(@site_descriptor[:site].name, @site_descriptor[:container].name)
+            @site_controller._reconfig(@site_descriptor[:site].name, @site_descriptor[:container].name)
           end
           resp
         end
@@ -25,7 +24,7 @@ module Superhosting
           else
             aliases_mapper = @site_descriptor[:site].aliases
             pretty_remove(aliases_mapper.path, name)
-            @site._reconfig(@site_descriptor[:site].name, @site_descriptor[:container].name)
+            @site_controller._reconfig(@site_descriptor[:site].name, @site_descriptor[:container].name)
             {}
           end
         end

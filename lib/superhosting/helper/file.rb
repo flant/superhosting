@@ -20,7 +20,7 @@ module Superhosting
       def pretty_remove(path, line)
         if ::File.exists? path
           lines = ::File.readlines(path).select {|l| l !~ Regexp.new(line) }
-          ::File.open(path, 'w') {|f| f.write lines.join('') }
+          ::File.open(path, 'w') {|f| f.puts lines.join('') }
         end
         ::File.delete(path) if ::File.zero?(path)
         {} # net_status_ok

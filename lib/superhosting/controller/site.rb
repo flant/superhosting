@@ -114,7 +114,7 @@ module Superhosting
 
       def _reconfig(site_name, container_name)
         _config_rollback(site_name, container_name)
-        _config(site_name, container_name, on_reconfig_only: true)
+        _config(site_name, container_name)
       end
 
       def _config_options(site_mapper, container_mapper, on_reconfig_only:)

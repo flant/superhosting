@@ -78,14 +78,23 @@ module Superhosting
       end
 
       def _add(name:, container_name:, shell: '/usr/sbin/nologin', home_dir: "/web/#{container_name}")
+        user = self._get(name: container_name)
+        self._add_custom(name: "#{container_name}_#{name}", group: container_name, shell: shell, home_dir: home_dir, uid: user.uid)
+      end
+
+      def _add_system_user(name:, container_name:, shell: '/usr/sbin/nologin', home_dir: "/web/#{container_name}")
         self._add_custom(name: "#{container_name}_#{name}", group: container_name, shell: shell, home_dir: home_dir)
       end
 
-      def _add_custom(name:, group:, shell: '/usr/sbin/nologin', home_dir: "/web/#{group}")
+      def _add_custom(name:, group:, shell: '/usr/sbin/nologin', home_dir: "/web/#{group}", uid: nil)
         if (resp = self.adding_validation(name: name, container_name: group)).net_status_ok?
           container_lib_mapper = @lib.containers.f(group)
           passwd_path = container_lib_mapper.configs.f('etc-passwd').path
-          self.command("useradd #{name} -g #{group} -d #{home_dir} -s #{shell}")
+
+          useradd_command = "useradd #{name} -g #{group} -d #{home_dir} -s #{shell}".split
+          useradd_command += "-u #{uid} -o".split unless uid.nil?
+          self.command(useradd_command)
+
           user = self._get(name: name)
           pretty_override(passwd_path, "#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
         else
