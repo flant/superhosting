@@ -8,6 +8,19 @@ module Superhosting
         @container_controller = self.get_controller(Container)
       end
 
+      def list(container_name:)
+        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+          container_mapper = @container_controller.container_index[container_name][:mapper]
+          sites = []
+          container_mapper.sites.grep_dirs.each do |site_mapper|
+            sites << site_mapper.name
+          end
+          { data: sites }
+        else
+          resp
+        end
+      end
+
       def add(name:, container_name:)
         if (resp = self.adding_validation(name: name)).net_status_ok? and
             (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?

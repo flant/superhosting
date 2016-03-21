@@ -30,7 +30,7 @@ describe Superhosting::Controller::User do
   it 'passwd' do
     with_container do |container_name|
       with_user do |user_name|
-        user_passwd_with_exps(name: "#{container_name}_#{user_name}", generate: true)
+        user_passwd_with_exps(name: user_name, container_name: container_name, generate: true)
       end
     end
   end

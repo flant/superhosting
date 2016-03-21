@@ -2,6 +2,7 @@ en:
   net_status:
     no_model_given: 'No model given.'
     no_docker_image_specified_in_model: "No container/docker/image specified in model '%{model}'."
+    docker_command_not_found: "No container/docker/command specified in model."
     unable_to_run_docker_container: 'Unable to run docker container.'
     option_admin_mail_required: 'Admin mail required.'
 
@@ -44,4 +45,7 @@ en:
     erb_error: "Erb has executed with error: '%{error}'."
     file_does_not_exists: "File '%{path}' does not exist."
     can_not_pass_an_absolute_path: "Can't pass an absolute path '%{path}'."
+
     command_with_error: "Command output:\n %{error}."
+
+    invalid_cli_option: "%{message}"

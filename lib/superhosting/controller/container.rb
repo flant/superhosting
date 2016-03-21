@@ -82,7 +82,6 @@ module Superhosting
 
         supervisor_mapper = container_lib_mapper.supervisor
         supervisor_mapper.create!
-        supervisor_mapper.erb_options = { container: container_mapper }
         services.each {|node| supervisor_mapper.f(node.name[/.*[^\.erb]/]).put!(node) }
 
         # config.rb
@@ -97,7 +96,7 @@ module Superhosting
         volume_opts << all_options[:volume].lines unless all_options[:volume].nil?
         volume_opts.each {|val| command_options << "--volume #{val}" }
 
-        if (resp = self._run_docker(name: name, command_options: command_options, image: image)).net_status_ok?
+        if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command])).net_status_ok?
           if (mux_mapper = container_mapper.mux).file?
             mux_name = mux_mapper.value
             @mux_controller = self.get_controller(Mux)
@@ -121,6 +120,7 @@ module Superhosting
         if self.existing_validation(name: name).net_status_ok? and self.running_validation(name: name).net_status_ok?
           container_lib_mapper = @lib.containers.f(name)
           container_mapper = self.container_index[name][:mapper]
+          web_mapper = PathMapper.new("/web").f(name)
 
           self._config_rollback(name)
 
@@ -132,6 +132,7 @@ module Superhosting
             end
           end
           container_lib_mapper.web.delete!
+          self.command("unlink #{web_mapper.path}")
 
           unless (registry_container_mapper = container_lib_mapper.registry.f('container')).nil?
             FileUtils.rm_rf registry_container_mapper.lines
@@ -243,9 +244,10 @@ module Superhosting
         }
       end
 
-      def _run_docker(name:, command_options:, image:)
+      def _run_docker(name:, options:, image:, command:)
         pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
-        @docker_api.container_run("docker run --detach --name #{name} #{command_options.join(' ')} #{image} /bin/bash -lec 'while true ; do date ; sleep 1; done'")
+        raise NetStatus::Exception, { error: :logical_error, code: :docker_command_not_found } if command.nil?
+        @docker_api.container_run("docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}")
         self.running_validation(name: name)
       end
 
@@ -298,6 +300,7 @@ module Superhosting
         model = container_mapper.f('model', default: @config.default_model)
         model_mapper = @config.models.f(model)
         container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
+        container_mapper.erb_options = { container: container_mapper }
         mux_mapper = if (mux_file_mapper = container_mapper.mux).file?
           MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).get
         end

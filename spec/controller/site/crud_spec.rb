@@ -41,6 +41,14 @@ describe Superhosting::Controller::Site do
     end
   end
 
+  it 'list' do
+    with_container do |container_name|
+      with_site do |site_name|
+        expect(site_list_with_exps(container_name: container_name)[:data]).to include(site_name)
+      end
+    end
+  end
+
   it 'alias_add' do
     with_container do |container_name|
       with_site do |site_name|

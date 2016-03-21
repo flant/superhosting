@@ -7,6 +7,11 @@ module Superhosting
                :long  => '--generate',
                :boolean => true
 
+        option :container_name,
+               :short => '-c NAME',
+               :long  => '--container NAME',
+               :required => true
+
         def self.has_required_param?
           true
         end

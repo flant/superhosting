@@ -40,10 +40,15 @@ module Superhosting
         resp
       end
 
-      def passwd(name:, generate: false)
-        passwords = self._create_password(generate: generate)
-        self._update_password(name: name, encrypted_password: passwords[:encrypted_password])
-        generate ? { data: { password: passwords[:password], encrypted_password: passwords[:encrypted_password] } } : {}
+      def passwd(name:, container_name:, generate: false)
+        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+          user_name = "#{container_name}_#{name}"
+          passwords = self._create_password(generate: generate)
+          self._update_password(name: user_name, encrypted_password: passwords[:encrypted_password])
+          generate ? { data: { password: passwords[:password], encrypted_password: passwords[:encrypted_password] } } : {}
+        else
+          resp
+        end
       end
 
       def delete(name:, container_name:)

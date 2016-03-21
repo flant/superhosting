@@ -37,7 +37,12 @@ module Superhosting
         self.class.options.merge!(Base::options)
         super()
 
-        @pos_args = parse_options(argv)
+        begin
+          @pos_args = parse_options(argv)
+        rescue OptionParser::InvalidOption => e
+          raise NetStatus::Exception, error: :input_error, code: :invalid_cli_option, data: { message: e.message }
+        end
+
         @node = node
 
         @logger = Logger.new(STDOUT)
