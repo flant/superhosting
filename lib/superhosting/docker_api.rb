@@ -58,7 +58,7 @@ module Superhosting
     end
 
     def container_run(command)
-      self.run_command!(command) # TODO
+      self.run_command!(p command) # TODO # FIXME debug print
     end
 
     def grab_container_options(command_options)
