@@ -17,8 +17,13 @@ module Superhosting
 
           # docker
           mux_mapper.erb_options = { mux: mux_mapper }
-          all_options = mux_mapper.docker.grep_files.map {|n| [n.name[/.*[^\.erb]/].to_sym, n] }.to_h
+          all_options = mux_mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n] }.to_h
           command_options = @docker_api.grab_container_options(command_options: all_options)
+
+          volume_opts = []
+          mux_mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
+          volume_opts.each {|val| command_options << "--volume #{val}" }
+
           @container_controller._run_docker(name: name, options: command_options, image: image, command: all_options[:command])
         else
           resp
