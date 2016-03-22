@@ -80,17 +80,17 @@ module Superhosting
         # services
         services = container_mapper.services.grep(/.*\.erb/)
         supervisor_mapper = container_lib_mapper.supervisor.create!
-        services.each {|node| supervisor_mapper.f(node.name[/.*[^\.erb]/]).put!(node) }
+        services.each {|node| supervisor_mapper.f(node.name[/(.*(?=\.erb))|(.*)/]).put!(node) }
 
         # config.rb
         self._config(name)
 
         # docker
-        all_options = container_mapper.docker.grep_files.map {|n| [n.name[/.*[^\.erb]/].to_sym, n] }.to_h
+        all_options = container_mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n] }.to_h
         command_options = @docker_api.grab_container_options(all_options)
 
-        volume_opts = ["#{container_lib_mapper.configs.path}/:/.configs:ro", "#{container_lib_mapper.web.path}:/web/#{name}"]
-        volume_opts << all_options[:volume].lines unless all_options[:volume].nil?
+        volume_opts = []
+        container_mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
         volume_opts.each {|val| command_options << "--volume #{val}" }
 
         if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command])).net_status_ok?
@@ -288,6 +288,8 @@ module Superhosting
       def reindex_container(container_name)
         @container_index ||= {}
         container_mapper = @config.containers.f(container_name)
+        container_web_mapper = PathMapper.new('/web').f(container_name)
+        container_lib_mapper = @lib.containers.f(container_name)
 
         if container_mapper.nil?
           @container_index.delete(container_name)
@@ -297,7 +299,12 @@ module Superhosting
         model = container_mapper.f('model', default: @config.default_model)
         model_mapper = @config.models.f(model)
         container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
-        container_mapper.erb_options = { container: container_mapper }
+
+        config_mapper = ScriptExecutor::ConfigMapper::Container.new(etc_mapper: container_mapper,
+                                                                    lib_mapper: container_lib_mapper,
+                                                                    web_mapper: container_web_mapper)
+
+        container_mapper.erb_options = { container: config_mapper }
         mux_mapper = if (mux_file_mapper = container_mapper.mux).file?
           MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).get
         end
