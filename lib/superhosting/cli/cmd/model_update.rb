@@ -1,7 +1,7 @@
 module Superhosting
   module Cli
     module Cmd
-      class ContainerModelReconfig < Base
+      class ModelUpdate < Base
         def self.has_required_param?
           true
         end

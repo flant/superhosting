@@ -58,7 +58,7 @@ module SpecHelpers
         model_name = container_mapper.f('model', default: config_mapper.default_model)
         self.model_exps(:"site_add_#{model_name}_exps", **kwargs)
 
-        # /var/lib/sx
+        # /var/sx
         expect_dir(container_lib_mapper.web.f(site_name))
 
         # /web
@@ -83,7 +83,7 @@ module SpecHelpers
         model_name = container_mapper.f('model', default: config_mapper.default_model)
         self.model_exps(:"site_delete_#{model_name}_exps", **kwargs)
 
-        # /var/lib/sx
+        # /var/sx
         not_expect_dir(container_lib_mapper.web.f(site_name))
         not_expect_dir(container_lib_mapper.registry.sites.f(site_name))
 

@@ -52,8 +52,8 @@ module Superhosting
 
         # lib
         container_lib_mapper = @lib.containers.f(name)
-        container_lib_mapper.configs.delete!
-        container_lib_mapper.configs.create!
+        container_lib_mapper.config.delete!
+        container_lib_mapper.config.create!
         container_lib_mapper.web.create!
         self.command("ln -fs #{container_lib_mapper.web.path} #{container_web_mapper.path}")
 
@@ -64,7 +64,7 @@ module Superhosting
           return resp
         end
         user = user_controller._get(name: name)
-        pretty_write(container_lib_mapper.configs.f('etc-group').path, "#{name}:x:#{user.gid}:")
+        pretty_write(container_lib_mapper.config.f('etc-group').path, "#{name}:x:#{user.gid}:")
 
         # system users
         users = container_mapper.system_users
@@ -76,11 +76,6 @@ module Superhosting
 
         # chown
         FileUtils.chown_R name, name, container_lib_mapper.web.path
-
-        # services
-        services = container_mapper.services.grep(/.*\.erb/)
-        supervisor_mapper = container_lib_mapper.supervisor.create!
-        services.each {|node| supervisor_mapper.f(node.name[/.*(?=\.erb)/]).put!(node) }
 
         # config.rb
         self._config(name)
@@ -193,10 +188,6 @@ module Superhosting
 
       def admin(name:)
         self.get_controller(Admin, name: name)
-      end
-
-      def model
-        self.get_controller(Model)
       end
 
       def _config(container_name, on_reconfig_only: false)

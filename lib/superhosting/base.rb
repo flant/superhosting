@@ -4,7 +4,7 @@ module Superhosting
 
     attr_reader :config, :lib
 
-    def initialize(config_path: '/etc/sx', lib_path: '/var/lib/sx', logger: nil, docker_socket: nil, docker_api: nil, **kwargs)
+    def initialize(config_path: '/etc/sx', lib_path: '/var/sx', logger: nil, docker_socket: nil, docker_api: nil, **kwargs)
       @config_path = Pathname.new(config_path)
       @lib_path = Pathname.new(lib_path)
       @config = PathMapper.new(config_path)

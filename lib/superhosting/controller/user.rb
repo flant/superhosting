@@ -57,7 +57,7 @@ module Superhosting
             self.debug("User '#{name}' has already been deleted")
           else
             container_lib_mapper = @lib.containers.f(container_name)
-            passwd_path = container_lib_mapper.configs.f('etc-passwd').path
+            passwd_path = container_lib_mapper.config.f('etc-passwd').path
             user_name = "#{container_name}_#{name}"
             self._del(name: user_name)
             pretty_remove(passwd_path, /#{user_name}.*/)
@@ -94,7 +94,7 @@ module Superhosting
       def _add_custom(name:, group:, shell: '/usr/sbin/nologin', home_dir: "/web/#{group}", uid: nil)
         if (resp = self.adding_validation(name: name, container_name: group)).net_status_ok?
           container_lib_mapper = @lib.containers.f(group)
-          passwd_path = container_lib_mapper.configs.f('etc-passwd').path
+          passwd_path = container_lib_mapper.config.f('etc-passwd').path
 
           useradd_command = "useradd #{name} -g #{group} -d #{home_dir} -s #{shell}".split
           useradd_command += "-u #{uid} -o".split unless uid.nil?

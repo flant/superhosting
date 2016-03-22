@@ -38,10 +38,6 @@ module SpecHelpers
         container_controller.admin(name: @container_name).list
       end
 
-      def container_model_reconfig(**kwargs)
-        container_controller.model.reconfig(**kwargs)
-      end
-
       # expectations
 
       def container_add_exps(**kwargs)
@@ -70,12 +66,11 @@ module SpecHelpers
         expect_dir(model_mapper)
         self.model_exps(:"container_add_#{model_name}_exps", **kwargs)
 
-        # /var/lib/sx
+        # /var/sx
         expect_dir(container_lib_mapper)
-        expect_dir(container_lib_mapper.configs)
-        expect_file(container_lib_mapper.configs.f('etc-group'))
-        expect_file(container_lib_mapper.configs.f('etc-passwd'))
-        expect_dir(container_lib_mapper.supervisor)
+        expect_dir(container_lib_mapper.config)
+        expect_file(container_lib_mapper.config.f('etc-group'))
+        expect_file(container_lib_mapper.config.f('etc-passwd'))
         expect_dir(container_lib_mapper.web)
 
         # /web/
@@ -87,8 +82,8 @@ module SpecHelpers
         expect_group(container_name)
         expect_user(container_name)
         expect_in_file(etc_mapper.passwd, /#{container_name}.*\/usr\/sbin\/nologin/)
-        expect_in_file(container_lib_mapper.configs.f('etc-passwd'), /#{container_name}.*\/usr\/sbin\/nologin/)
-        expect_in_file(container_lib_mapper.configs.f('etc-group'), /#{container_name}.*/)
+        expect_in_file(container_lib_mapper.config.f('etc-passwd'), /#{container_name}.*\/usr\/sbin\/nologin/)
+        expect_in_file(container_lib_mapper.config.f('etc-group'), /#{container_name}.*/)
 
         # docker.conf
         expect_file(etc_mapper.security.f('docker.conf'))
@@ -114,7 +109,7 @@ module SpecHelpers
         model_name = container_mapper.f('model', default: config_mapper.default_model)
         self.model_exps(:"container_delete_#{model_name}_exps", **kwargs)
 
-        # /var/lib/sx
+        # /var/sx
         not_expect_dir(container_lib_mapper)
 
         # /web
@@ -146,8 +141,8 @@ module SpecHelpers
         container_lib_mapper = lib_mapper.containers.f(container_name)
         container_web_mapper = PathMapper.new('/web').f(container_name)
 
-        # /var/lib/sx
-        config_supervisord = container_lib_mapper.supervisor.f('supervisord.conf')
+        # /var/sx
+        config_supervisord = container_lib_mapper.config.supervisor.f('supervisord.conf')
         expect_file(config_supervisord)
         expect_in_file(config_supervisord, "file=/web/#{container_name}/supervisor.sock")
 
@@ -162,7 +157,7 @@ module SpecHelpers
         container_lib_mapper = lib_mapper.containers.f(container_name)
         container_web_mapper = PathMapper.new('/web').f(container_name)
 
-        # /var/lib/sx
+        # /var/sx
         config_supervisord = container_lib_mapper.supervisor.f('supervisord.conf')
         not_expect_file(config_supervisord)
 
@@ -203,7 +198,7 @@ module SpecHelpers
           end
 
           run_command(["rm -rf /etc/sx/containers/test*"])
-          run_command(["rm -rf /var/lib/sx/containers/test*"])
+          run_command(["rm -rf /var/sx/containers/test*"])
           run_command(["rm -rf /web/test*"])
         end
       end

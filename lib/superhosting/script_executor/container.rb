@@ -29,11 +29,6 @@ module Superhosting
         end
       end
 
-      # def container_config(save_to, script, **options)
-      #   raise NetStatus::Exception.new(error: :error, message: "File '#{save_to}' has incorrect name format") if save_to.include? File::SEPARATOR
-      #   config(File.join(self.lib_configs.path, save_to), script, options)
-      # end
-
       def on_reconfig(cmd)
         if cmd == :container_restart
           self.commands << "docker restart #{self.container_name}" if self.docker_api.container_exists? self.container_name

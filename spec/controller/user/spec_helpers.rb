@@ -44,7 +44,7 @@ module SpecHelpers
         # group / user
         expect_user(user_name)
         expect_in_file(etc_mapper.passwd, /#{user_name}.*#{shell}/)
-        expect_in_file(container_lib_mapper.configs.f('etc-passwd'), /#{user_name}.*#{shell}/)
+        expect_in_file(container_lib_mapper.config.f('etc-passwd'), /#{user_name}.*#{shell}/)
       end
 
       def user_delete_exps(**kwargs)
@@ -57,7 +57,7 @@ module SpecHelpers
         # group / user
         not_expect_user(user_name)
         not_expect_in_file(etc_mapper.passwd, /#{user_name}/)
-        not_expect_in_file(container_lib_mapper.configs.f('etc-passwd'), /#{user_name}.*/)
+        not_expect_in_file(container_lib_mapper.config.f('etc-passwd'), /#{user_name}.*/)
       end
 
       def user_passwd_exps(**kwargs)
