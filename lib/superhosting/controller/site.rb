@@ -77,8 +77,8 @@ module Superhosting
           site_lib_new_mapper = container_lib_web_mapper.f(new_name)
           renaming_lib_mapper = container_lib_web_mapper.f("renaming_#{site_lib_mapper.name}")
 
-          self.command("cp -rp #{site_mapper.path} #{renaming_mapper.path}")
-          self.command("cp -rp #{site_lib_mapper.path} #{renaming_lib_mapper.path}")
+          self.command!("cp -rp #{site_mapper.path} #{renaming_mapper.path}")
+          self.command!("cp -rp #{site_lib_mapper.path} #{renaming_lib_mapper.path}")
 
           if (resp = self.add(name: new_name, container_name: container_name)).net_status_ok?
             FileUtils.rm_rf site_new_mapper.path

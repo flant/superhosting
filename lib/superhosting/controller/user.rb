@@ -99,7 +99,7 @@ module Superhosting
           useradd_command = "useradd #{name} -g #{group} -d #{home_dir} -s #{shell}".split
           useradd_command += "-u #{uid} -o".split unless uid.nil?
 
-          self._pretty_delete(name: name, group: group) unless self._get(name: name).nil?
+          self._pretty_del(name: name, group: group) unless self._get(name: name).nil?
           self.command!(useradd_command)
 
           user = self._get(name: name)
@@ -109,14 +109,14 @@ module Superhosting
         end
       end
 
-      def _pretty_delete(name:, group:)
+      def _pretty_del(name:, group:)
         with_adding_group = self._group_get_users(name: group).one? ? true : false
         self._del(name: name)
         self._group_add(name: group) if with_adding_group
       end
 
       def _del(name:)
-        self.command("userdel #{name}")
+        self.command!("userdel #{name}")
       end
 
       def _create_password(generate: false)
@@ -134,7 +134,7 @@ module Superhosting
       end
 
       def _update_password(name:, encrypted_password:)
-        self.command("usermod -p '#{encrypted_password}' #{name}")
+        self.command!("usermod -p '#{encrypted_password}' #{name}")
       end
 
       def _group_get(name:)
@@ -146,11 +146,19 @@ module Superhosting
       end
 
       def _group_add(name:)
-        self.command("groupadd #{name}")
+        self.command!("groupadd #{name}")
+      end
+
+      def _group_pretty_add(name:)
+        self._group_add(name: name) if self._group_get(name: name).nil?
       end
 
       def _group_del(name:)
-        self.command("groupdel #{name}")
+        self.command!("groupdel #{name}")
+      end
+
+      def _group_pretty_del(name:)
+        self._group_del(name: name) unless self._group_get(name: name).nil?
       end
 
       def _group_get_users(name:)
@@ -169,7 +177,6 @@ module Superhosting
 
       def _group_del_users(name:)
         self._group_get_users(name: name).each {|user| self._del(name: user) }
-        self._group_del(name: name)
       end
 
       def adding_validation(name:, container_name:)

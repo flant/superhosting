@@ -55,11 +55,11 @@ module Superhosting
         container_lib_mapper.config.delete!
         container_lib_mapper.config.create!
         container_lib_mapper.web.create!
-        self.command("ln -fs #{container_lib_mapper.web.path} #{container_web_mapper.path}")
+        self.command!("ln -fs #{container_lib_mapper.web.path} #{container_web_mapper.path}")
 
         # user / group
         user_controller = self.get_controller(User)
-        user_controller._group_add(name: name)
+        user_controller._group_pretty_add(name: name)
         unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?
           return resp
         end
@@ -124,7 +124,7 @@ module Superhosting
             end
           end
           container_lib_mapper.web.delete!
-          self.command("unlink #{web_mapper.path}")
+          self.command!("unlink #{web_mapper.path}")
 
           unless (registry_container_mapper = container_lib_mapper.registry.f('container')).nil?
             FileUtils.rm_rf registry_container_mapper.lines
@@ -141,7 +141,7 @@ module Superhosting
 
           user_controller = self.get_controller(User)
           user_controller._group_del_users(name: name)
-          user_controller._group_del(name: name)
+          user_controller._group_pretty_del(name: name)
 
           container_lib_mapper.delete!(full: true)
           container_mapper.delete!(full: true)
@@ -200,12 +200,12 @@ module Superhosting
       end
 
       def _config_rollback(container_name)
-        _config(container_name, on_reconfig_only: true)
+        self._config(container_name, on_reconfig_only: true)
       end
 
       def _reconfig(container_name)
-        _config_rollback(container_name)
-        _config(container_name)
+        self._config_rollback(container_name)
+        self._config(container_name)
       end
 
       def _config_options(container_mapper, on_reconfig_only:)

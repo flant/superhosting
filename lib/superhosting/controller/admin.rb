@@ -37,7 +37,7 @@ module Superhosting
           admin_dir = @admins_mapper.f(name)
           admin_dir.create!
           admin_dir.passwd.put!(name)
-          self.command("chmod 640 #{admin_dir.path}")
+          self.command!("chmod 640 #{admin_dir.path}")
           self.passwd(name: name, generate: generate)
         else
           resp
