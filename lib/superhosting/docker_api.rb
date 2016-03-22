@@ -2,7 +2,7 @@ module Superhosting
   class DockerApi
     include Helper::Cmd
 
-    AVAILABLE_DOCKER_OPTIONS = [:cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap, :mount]
+    AVAILABLE_DOCKER_OPTIONS = [:cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap]
 
     def initialize(**kwargs)
       @socket = kwargs[:socket] || '/var/run/docker.sock'
@@ -62,13 +62,13 @@ module Superhosting
     end
 
     def grab_container_options(command_options)
+      options = []
       AVAILABLE_DOCKER_OPTIONS.map do |k|
         unless (value = command_options[k]).nil?
-          options = []
           value.lines.each {|val| options << "--#{k.to_s.sub('_', '-')} #{val}" }
-          options
         end
-      end.compact
+      end
+      options
     end
   end
 end

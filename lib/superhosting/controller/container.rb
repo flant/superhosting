@@ -86,7 +86,6 @@ module Superhosting
         self._config(name)
 
         # docker
-        container_mapper.erb_options = { container: container_mapper }
         all_options = container_mapper.docker.grep_files.map {|n| [n.name[/.*[^\.erb]/].to_sym, n] }.to_h
         command_options = @docker_api.grab_container_options(all_options)
 
