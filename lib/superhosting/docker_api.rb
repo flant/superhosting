@@ -2,7 +2,7 @@ module Superhosting
   class DockerApi
     include Helper::Cmd
 
-    AVAILABLE_DOCKER_OPTIONS = [:cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap, :user]
+    AVAILABLE_DOCKER_OPTIONS = [:user, :cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap]
 
     def initialize(**kwargs)
       @socket = kwargs[:socket] || '/var/run/docker.sock'
