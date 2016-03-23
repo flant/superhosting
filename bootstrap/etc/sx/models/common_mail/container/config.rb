@@ -9,4 +9,4 @@ else
   on_reconfig "/usr/sbin/saslpasswd2 -u #{etc.smtp_hostname} -a smtpauth #{container.name} -d"
 end
 
-on_reconfig 'cat $(ls -1 /etc/postfix/postfwd.cf.d/ | sort) > /etc/postfix/postfwd.cf && service postfwd reload'
+# TODO: on_reconfig 'cat $(ls -1 /etc/postfix/postfwd.cf.d/ | sort) > /etc/postfix/postfwd.cf && service postfwd reload'

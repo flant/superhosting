@@ -55,7 +55,7 @@ module Superhosting
         container_lib_mapper.config.delete!
         container_lib_mapper.config.create!
         container_lib_mapper.web.create!
-        self.command!("ln -fs #{container_lib_mapper.web.path} #{container_web_mapper.path}")
+        file_link(container_lib_mapper.web.path, container_web_mapper.path) # TODO
 
         # user / group
         user_controller = self.get_controller(User)
@@ -75,7 +75,7 @@ module Superhosting
         end unless users.nil?
 
         # chown
-        FileUtils.chown_R name, name, container_lib_mapper.web.path
+        chown_r(name, name, container_lib_mapper.web.path)
 
         # config.rb
         self._config(name)
@@ -124,10 +124,10 @@ module Superhosting
             end
           end
           container_lib_mapper.web.delete!
-          self.command!("unlink #{web_mapper.path}")
+          file_unlink(web_mapper.path)
 
           unless (registry_container_mapper = container_lib_mapper.registry.f('container')).nil?
-            FileUtils.rm_rf registry_container_mapper.lines
+            registry_container_mapper.lines.each {|path| PathMapper.new(path).delete! }
             registry_container_mapper.delete!
           end
 
@@ -195,7 +195,7 @@ module Superhosting
         container_mapper.f('config.rb', overlay: false).reverse.each do |config|
           ex = ScriptExecutor::Container.new(self._config_options(container_mapper, on_reconfig_only: on_reconfig_only))
           ex.execute(config)
-          ex.commands.each {|c| self.command c }
+          ex.commands.each {|c| self.command! c }
         end
       end
 
@@ -235,7 +235,7 @@ module Superhosting
       def _run_docker(name:, options:, image:, command:)
         pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
         raise NetStatus::Exception, { error: :logical_error, code: :docker_command_not_found } if command.nil?
-        @docker_api.container_run("docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}")
+        @docker_api.container_run(name, options, image, command)
         self.running_validation(name: name)
       end
 

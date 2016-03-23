@@ -1,5 +1,6 @@
 module Superhosting
   module Helpers
+    include Helper::Logger
     include Helper::File
     include Helper::Cmd
 

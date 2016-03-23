@@ -100,7 +100,7 @@ module Superhosting
           useradd_command += "-u #{uid} -o".split unless uid.nil?
 
           self._pretty_del(name: name, group: group) unless self._get(name: name).nil?
-          self.command!(useradd_command)
+          self.command!(useradd_command, desc: { code: :user_add, data: { name: name } })
 
           user = self._get(name: name)
           pretty_override(passwd_path, "#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
@@ -116,7 +116,7 @@ module Superhosting
       end
 
       def _del(name:)
-        self.command!("userdel #{name}")
+        self.command!("userdel #{name}", desc: { code: :user_del, data: { name: name } })
       end
 
       def _create_password(generate: false)
@@ -135,6 +135,7 @@ module Superhosting
 
       def _update_password(name:, encrypted_password:)
         self.command!("usermod -p '#{encrypted_password}' #{name}")
+        self.debug(desc: { code: :user_update, data: { name: name } })
       end
 
       def _group_get(name:)
@@ -146,7 +147,7 @@ module Superhosting
       end
 
       def _group_add(name:)
-        self.command!("groupadd #{name}")
+        self.command!("groupadd #{name}", desc: { code: :group_add, data: { name: name } })
       end
 
       def _group_pretty_add(name:)
@@ -154,7 +155,7 @@ module Superhosting
       end
 
       def _group_del(name:)
-        self.command!("groupdel #{name}")
+        self.command!("groupdel #{name}", desc: { code: :group_del, data: { name: name } })
       end
 
       def _group_pretty_del(name:)

@@ -107,7 +107,7 @@ module SpecHelpers
         end
 
         after :all do
-          run_command(["rm -rf /etc/sx/admins/test*"])
+          command(["rm -rf /etc/sx/admins/test*"])
         end
       end
     end

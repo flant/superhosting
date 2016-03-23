@@ -13,7 +13,7 @@ module Superhosting
       end
 
       def mkdir(arg)
-        self.commands << "mkdir -p #{arg}"
+        self.commands << "mkdir -p #{arg}" unless self.on_reconfig_only # TODO
       end
 
       def config(save_to, script=nil, **options)
@@ -31,7 +31,7 @@ module Superhosting
 
       def on_reconfig(cmd)
         if cmd == :container_restart
-          self.commands << "docker restart #{self.container_name}" if self.docker_api.container_exists? self.container_name
+          # self.commands << "docker restart #{self.container_name}" if self.docker_api.container_exists? self.container_name # TODO
         else
           self.commands << cmd
         end

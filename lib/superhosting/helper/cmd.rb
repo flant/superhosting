@@ -1,17 +1,23 @@
 module Superhosting
   module Helper
     module Cmd
-      def run_command(*command_args)
-        cmd = Mixlib::ShellOut.new(*command_args)
-        cmd.run_command
-        cmd
-      end
-
-      def run_command!(*command_args)
-        cmd = run_command(*command_args)
-        unless cmd.status.success?
+      def command!(*command_args, desc: {})
+        self._command(*command_args, desc: desc) do |cmd|
           raise NetStatus::Exception.new(error: :error, code: :command_with_error, data: { error: [cmd.stdout, cmd.stderr].join("\n") })
         end
+      end
+
+      def command(*command_args, desc: {})
+        self._command(command_args, desc)
+      end
+
+      def _command(*command_args, desc: nil)
+        cmd = Mixlib::ShellOut.new(*command_args)
+        cmd.run_command
+
+        yield cmd if block_given? and !cmd.status.success?
+        (desc[:data] ||= {})[:command] = command_args.join
+        self.debug(desc: desc)
       end
     end
   end

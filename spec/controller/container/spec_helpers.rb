@@ -190,16 +190,17 @@ module SpecHelpers
         end
 
         after :all do
-          run_command(["docker ps --filter 'name=test' -a | xargs docker stop"])
-          run_command(["docker ps --filter 'name=test' -a | xargs docker rm"])
+          command("docker ps --filter 'name=test' -a | xargs docker stop")
+          command("docker ps --filter 'name=test' -a | xargs docker rm")
 
           Etc.passwd do |user|
-            run_command(["userdel", user.name]) if user.name.start_with? 'test'
+            command(["userdel", user.name]) if user.name.start_with? 'test'
           end
 
-          run_command(["rm -rf /etc/sx/containers/test*"])
-          run_command(["rm -rf /var/sx/containers/test*"])
-          run_command(["rm -rf /web/test*"])
+          command("rm -rf /etc/sx/containers/test*")
+          command("rm -rf /var/sx/containers/test*")
+          command("rm -rf /web/test*")
+          command("rm -rf /etc/postfix/postfwd.cf.d/test*")
         end
       end
     end

@@ -170,7 +170,7 @@ module SpecHelpers
         end
 
         after :all do
-          run_command(["rm -rf /etc/nginx/sites/test*"])
+          command("rm -rf /etc/nginx/sites/test*")
         end
       end
     end

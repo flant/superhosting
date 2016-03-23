@@ -18,12 +18,16 @@ require 'net_status'
 
 require 'superhosting/version'
 
-require 'superhosting/patches/string/punycode'
-
 require 'superhosting/helper/file'
 require 'superhosting/helper/cmd'
 require 'superhosting/helper/i18n'
+require 'superhosting/helper/logger'
 require 'superhosting/helpers'
+
+require 'superhosting/patches/string/punycode'
+require 'superhosting/patches/path_mapper/debug/dir_node'
+require 'superhosting/patches/path_mapper/debug/file_node'
+require 'superhosting/patches/path_mapper/debug/null_node'
 
 require 'superhosting/base'
 require 'superhosting/controller/admin'

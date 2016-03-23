@@ -53,7 +53,7 @@ module Superhosting
 
           registry_sites_mapper = container_lib_mapper.registry.sites
           unless (registry_site = registry_sites_mapper.f(name)).nil?
-            FileUtils.rm_rf registry_site.lines
+            registry_site.lines.each {|path| PathMapper.new(path).delete! }
             registry_site.delete!(full: true)
           end
 
@@ -117,7 +117,7 @@ module Superhosting
         site_mapper.f('config.rb', overlay: false).reverse.each do |config|
           ex = ScriptExecutor::Site.new(self._config_options(site_mapper, container_mapper, on_reconfig_only: on_reconfig_only))
           ex.execute(config)
-          ex.commands.each {|c| self.command c }
+          ex.commands.each {|c| self.command! c }
         end
       end
 

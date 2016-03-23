@@ -49,3 +49,29 @@ en:
     command_with_error: "Command output:\n %{error}."
 
     invalid_cli_option: "%{message}"
+
+    missing_translation: "Missing translation for code: '%{code}'"
+
+  command:
+    user_add: "User '%{name}': added."
+    user_del: "User '%{name}': deleted."
+    user_update: "User '%{name}': updated."
+
+    group_add: "Group '%{name}': added."
+    group_del: "Group '%{name}': deleted."
+
+    file_create: "File '%{path}': created."
+    file_remove: "File '%{path}': removed."
+    directory_create: "Directory '%{path}': created."
+    directory_remove: "Directory '%{path}': removed."
+    directories_create: "Directory '%{path}': created with parents."
+
+    symlink_create: "Symlink '%{from}' to '%{to}': created."
+    symlink_remove: "Symlink '%{path}': removed."
+
+    container_add: "Container '%{name}': launched."
+    container_remove: "Container '%{name}': removed."
+    container_stop: "Container '%{name}': stopped."
+    container_kill: "Container '%{name}': killed."
+
+    default: "Command: '%{command}': launched."

@@ -1,6 +1,7 @@
 module Superhosting
   class DockerApi
     include Helper::Cmd
+    include Helper::Logger
 
     AVAILABLE_DOCKER_OPTIONS = [:user, :cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap]
 
@@ -26,14 +27,17 @@ module Superhosting
 
     def container_kill!(name)
       resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/kill")
+      self.debug(desc: { code: :container_kill, data: { name: name } })
     end
 
     def container_rm!(name)
       resp_if_success raw_connection.request(method: :delete, path: "/containers/#{name}")
+      self.debug(desc: { code: :container_remove, data: { name: name } })
     end
 
     def container_stop!(name)
       resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/stop")
+      self.debug(desc: { code: :container_stop, data: { name: name } })
     end
 
     def container_rm_inactive!(name)
@@ -57,8 +61,9 @@ module Superhosting
       container_info(name).nil? ? false : true
     end
 
-    def container_run(command)
-      self.run_command!(command) # TODO
+    def container_run(name, options, image, command)
+      cmd = "docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}"
+      self.command!(cmd, desc: { code: :container_add, data: { name: name } }) # TODO
     end
 
     def grab_container_options(command_options)
