@@ -31,10 +31,7 @@ module Superhosting
             configured: { action: :apply, undo: :unapply, next: :up }
         }
 
-        self.on_state(state_mapper: state_mapper, states: states, name: name, container_name: container_name) do
-          (resp = self.adding_validation(name: name)).net_status_ok? and (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
-          resp
-        end
+        self.on_state(state_mapper: state_mapper, states: states, name: name, container_name: container_name)
       end
 
       def delete(name:)

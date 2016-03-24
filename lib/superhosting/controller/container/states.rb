@@ -41,7 +41,8 @@ module Superhosting
         mapper.lib.web.create!
 
         # web
-        file_link(mapper.lib.web.path, mapper.web.path)
+        mapper.web.create!
+        file_safe_link(mapper.lib.web.path, mapper.web.path)
         {}
       end
 
@@ -50,7 +51,7 @@ module Superhosting
           mapper = self.index[name][:mapper]
 
           # lib
-          file_unlink(mapper.web.path)
+          file_safe_unlink(mapper.web.path)
           mapper.lib = mapper.lib
           mapper.lib.web.delete!
           mapper.lib.config.delete!
@@ -213,7 +214,7 @@ module Superhosting
 
       def _run_docker(name:, options:, image:, command:)
         pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
-        raise NetStatus::Exception, { error: :logical_error, code: :docker_command_not_found } if command.nil?
+        return { error: :logical_error, code: :docker_command_not_found } if command.nil?
         @docker_api.container_run(name, options, image, command)
         self.running_validation(name: name)
       end

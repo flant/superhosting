@@ -77,13 +77,6 @@ describe Superhosting::Controller::Site do
     end
   end
 
-  it 'add:site_exists' do
-    with_container do |container_name|
-      site_add_with_exps(name: @site_name, container_name: container_name)
-      site_add_with_exps(name: @site_name, container_name: container_name, code: :site_exists)
-    end
-  end
-
   it 'rename:invalid_site_name' do
     with_container do |container_name|
       with_site do |site_name|
