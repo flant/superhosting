@@ -41,8 +41,8 @@ module Superhosting
         mapper.lib.web.create!
 
         # web
-        mapper.web.create!
         file_safe_link(mapper.lib.web.path, mapper.web.path)
+        mapper.web.create!
         {}
       end
 

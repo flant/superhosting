@@ -90,7 +90,7 @@ module SpecHelpers
         expect_in_file(etc_mapper.security.f('docker.conf'), "@#{container_name} #{container_name}")
 
         # container
-        expect(docker_api.container_exists?(container_name)).to be_truthy
+        expect(docker_api.container_running?(container_name)).to be_truthy
       end
 
       def container_delete_exps(**kwargs)

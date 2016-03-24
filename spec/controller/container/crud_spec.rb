@@ -84,12 +84,6 @@ describe Superhosting::Controller::Container do
 
   # other
 
-  it 'add#recreate_inactive_container', :docker do
-    container_add_with_exps(name: @container_name)
-    docker_api.container_stop!(@container_name)
-    container_add_with_exps(name: @container_name)
-  end
-
   it 'add#mux', :docker do
     container_add_with_exps(name: @container_name, model: 'bitrix_m')
     expect(docker_api.container_running?('php-5.5')).to be true

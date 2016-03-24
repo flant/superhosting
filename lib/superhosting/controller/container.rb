@@ -3,7 +3,7 @@ module Superhosting
     class Container < Base
       CONTAINER_NAME_FORMAT = /^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/
 
-      def list
+      def list # TODO
         docker = @docker_api.container_list.map {|c| c['Names'].first.slice(1..-1) }.to_set
         sx = @config.containers.grep_dirs.map {|n| n.name }.to_set
         containers = (docker & sx)
