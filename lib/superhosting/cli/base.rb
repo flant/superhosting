@@ -21,14 +21,6 @@ module Superhosting
              :boolean      => true,
              :on           => :tail
 
-      option :config_path,
-             :long         => '--config-path PATH',
-             :on           => :tail
-
-      option :lib_path,
-             :long         => '--lib-path PATH',
-             :on           => :tail
-
       option :docker_socket,
              :long         => '--docker-socket PATH',
              :on           => :tail

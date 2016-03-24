@@ -3,12 +3,21 @@ module Superhosting
     class Container < Base
       CONTAINER_NAME_FORMAT = /^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/
 
-      def list # TODO
-        docker = @docker_api.container_list.map {|c| c['Names'].first.slice(1..-1) }.to_set
-        sx = @config.containers.grep_dirs.map {|n| n.name }.to_set
-        containers = (docker & sx)
+      def initialize(**kwargs)
+        super
+        self.index
+      end
 
-        { data: containers.to_a }
+      def list
+        # TODO
+        # docker = @docker_api.container_list.map {|c| c['Names'].first.slice(1..-1) }.to_set
+        # sx = @config.containers.grep_dirs.map {|n| n.name }.compact.to_set
+        # containers = (docker & sx)
+
+        containers = @config.containers.grep_dirs.map do |n|
+          n.name if self.index.key? n.name and self.index[n.name][:mapper].lib.state.file?
+        end.compact
+        { data: containers }
       end
 
       def add(name:, mail: 'model', admin_mail: nil, model: nil)
@@ -27,18 +36,23 @@ module Superhosting
       end
 
       def delete(name:)
-        lib_mapper = @lib.containers.f(name)
+        if self.existing_validation(name: name).net_status_ok?
+          lib_mapper = @lib.containers.f(name)
 
-        states = {
-            up: { action: :stop, undo: :run, next: :configured },
-            configured: { action: :unconfigure, undo: :configure, next: :configuration_applied },
-            configuration_applied: { action: :unapply, next: :users_installed },
-            users_installed: { action: :uninstall_users, next: :data_installed },
-            data_installed: { action: :uninstall_data }
-        }
+          states = {
+              up: { action: :stop, undo: :run, next: :configured },
+              configured: { action: :unconfigure, undo: :configure, next: :configuration_applied },
+              configuration_applied: { action: :unapply, next: :users_installed },
+              users_installed: { action: :uninstall_users, next: :data_installed },
+              data_installed: { action: :uninstall_data }
+          }
 
-        self.on_state(state_mapper: lib_mapper, states: states,
-                      name: name)
+          self.on_state(state_mapper: lib_mapper, states: states,
+                        name: name)
+        else
+          self.debug('Container has already deleted.')
+        end
+
       end
 
       def change(name:, mail: 'model', admin_mail: nil, model: nil)
@@ -97,22 +111,22 @@ module Superhosting
       end
 
       def index
-        def generate
-          @config.containers.grep_dirs.each {|mapper| self.reindex_container(name: mapper.name) }
-          @index ||= {}
-        end
+        @@index ||= self.reindex
+      end
 
-        @index || generate
+      def reindex
+        @config.containers.grep_dirs.each {|mapper| self.reindex_container(name: mapper.name) }
+        @@index ||= {}
       end
 
       def reindex_container(name:)
-        @index ||= {}
+        @@index ||= {}
         etc_mapper = @config.containers.f(name)
         web_mapper = PathMapper.new('/web').f(name)
         lib_mapper = @lib.containers.f(name)
 
         if etc_mapper.nil?
-          @index.delete(name)
+          @@index.delete(name)
           return
         end
 
@@ -129,7 +143,7 @@ module Superhosting
           MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).get
         end
 
-        @index[name] = {
+        @@index[name] = {
             mapper: mapper,
             mux_mapper: mux_mapper,
         }

@@ -95,8 +95,9 @@ module Superhosting
         mapper = self.index[name][:mapper]
 
         user_controller = self.get_controller(User)
-        user = user_controller._get(name: name)
-        pretty_remove(mapper.lib.config.f('etc-group').path, "#{name}:x:#{user.gid}:")
+        if (user = user_controller._get(name: name))
+          pretty_remove(mapper.lib.config.f('etc-group').path, "#{name}:x:#{user.gid}:")
+        end
 
         user_controller._group_del_users(name: name)
         user_controller._group_pretty_del(name: name)

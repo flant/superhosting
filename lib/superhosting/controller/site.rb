@@ -6,14 +6,15 @@ module Superhosting
       def initialize(**kwargs)
         super(**kwargs)
         @container_controller = self.get_controller(Container)
+        self.index
       end
 
-      def list(container_name:) # TODO
+      def list(container_name:)
         if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
           container_mapper = @container_controller.index[container_name][:mapper]
           sites = []
           container_mapper.sites.grep_dirs.each do |mapper|
-            sites << mapper.name
+            sites << mapper.name if container_mapper.lib.sites.f(mapper.name).state.file?
           end
           { data: sites }
         else
@@ -22,29 +23,36 @@ module Superhosting
       end
 
       def add(name:, container_name:)
-        lib_mapper = @container_controller.index[container_name][:mapper].lib
-        state_mapper = lib_mapper.web.f(name)
+        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+          lib_mapper = @container_controller.index[container_name][:mapper].lib
+          state_mapper = lib_mapper.sites.f(name)
 
-        states = {
-            none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-            data_installed: { action: :configure, undo: :unconfigured, next: :configured },
-            configured: { action: :apply, undo: :unapply, next: :up }
-        }
+          states = {
+              none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
+              data_installed: { action: :configure, undo: :unconfigured, next: :configured },
+              configured: { action: :apply, undo: :unapply, next: :up }
+          }
 
-        self.on_state(state_mapper: state_mapper, states: states, name: name, container_name: container_name)
+          resp = self.on_state(state_mapper: state_mapper, states: states, name: name, container_name: container_name)
+        end
+        resp
       end
 
       def delete(name:)
-        lib_mapper = self.index[name][:container_mapper].lib
-        state_mapper = lib_mapper.web.f(name)
+        if self.existing_validation(name: name).net_status_ok?
+          lib_mapper = self.index[name][:container_mapper].lib
+          state_mapper = lib_mapper.sites.f(name)
 
-        states = {
-            up: { action: :unapply, undo: :apply, next: :configured },
-            configured: { action: :unconfigure, next: :data_installed },
-            data_installed: { action: :uninstall_data },
-        }
+          states = {
+              up: { action: :unapply, undo: :apply, next: :configured },
+              configured: { action: :unconfigure, next: :data_installed },
+              data_installed: { action: :uninstall_data },
+          }
 
-        self.on_state(state_mapper: state_mapper, states: states, name: name)
+          self.on_state(state_mapper: state_mapper, states: states, name: name)
+        else
+          self.debug('Site has already deleted.')
+        end
       end
 
       def rename(name:, new_name:)
@@ -97,18 +105,19 @@ module Superhosting
       end
 
       def index
-        def generate
-          @config.containers.grep_dirs.each do |container_mapper|
-            container_mapper.sites.grep_dirs.each { |mapper| self.reindex_site(name: mapper.name, container_name: container_mapper.name) }
-          end
-          @index ||= {}
-        end
-
-        @index || generate
+        @@index ||= self.reindex
       end
 
+      def reindex
+        @config.containers.grep_dirs.each do |container_mapper|
+          container_mapper.sites.grep_dirs.each { |mapper| self.reindex_site(name: mapper.name, container_name: container_mapper.name) }
+        end
+        @@index ||= {}
+      end
+
+
       def reindex_site(name:, container_name:)
-        @index ||= {}
+        @@index ||= {}
 
         container_mapper = @container_controller.index[container_name][:mapper]
         etc_mapper = container_mapper.sites.f(name)
@@ -116,7 +125,7 @@ module Superhosting
         web_mapper = container_mapper.web.f(name)
 
         if etc_mapper.nil?
-          @index.delete(name)
+          @@index.delete(name)
           return
         end
 
@@ -129,12 +138,12 @@ module Superhosting
                                                         web_mapper: web_mapper)
         etc_mapper.erb_options = { site: mapper, container: mapper }
 
-        if @index.key? name and @index[name][:mapper].path != mapper.path
+        if @@index.key? name and @@index[name][:mapper].path != mapper.path
           raise NetStatus::Exception, { code: :container_site_name_conflict,
-                                        data: { site1: @index[name][:mapper].path, site2: mapper.path } }
+                                        data: { site1: @@index[name][:mapper].path, site2: mapper.path } }
         end
 
-        ([mapper.name] + mapper.aliases).each {|name| @index[name] = { mapper: mapper, container_mapper: container_mapper } }
+        ([mapper.name] + mapper.aliases).each {|name| @@index[name] = { mapper: mapper, container_mapper: container_mapper } }
       end
     end
   end
