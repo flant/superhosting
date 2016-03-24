@@ -40,6 +40,11 @@ module Superhosting
       self.debug(desc: { code: :container_stop, data: { name: name } })
     end
 
+    def container_restart!(name)
+      resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/restart")
+      self.debug(desc: { code: :container_restart, data: { name: name } })
+    end
+
     def container_rm_inactive!(name)
       self.container_rm!(name) if self.container_exists?(name) and !self.container_running?(name)
     end

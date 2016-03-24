@@ -5,7 +5,7 @@ module SpecHelpers
       include SpecHelpers::Base
 
       def site_controller
-        @site_controller ||= Superhosting::Controller::Site.new
+        @site_controller ||= Superhosting::Controller::Site.new(logger: logger)
       end
 
       # methods

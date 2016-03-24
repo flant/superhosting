@@ -10,10 +10,10 @@ module Superhosting
 
       def list(container_name:)
         if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
-          container_mapper = @container_controller.container_index[container_name][:mapper]
+          container_mapper = @container_controller.index[container_name][:mapper]
           sites = []
-          container_mapper.sites.grep_dirs.each do |site_mapper|
-            sites << site_mapper.name
+          container_mapper.sites.grep_dirs.each do |mapper|
+            sites << mapper.name
           end
           { data: sites }
         else
@@ -22,69 +22,53 @@ module Superhosting
       end
 
       def add(name:, container_name:)
-        if (resp = self.adding_validation(name: name)).net_status_ok? and
-            (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
-          container_mapper = @config.containers.f(container_name)
-          container_lib_mapper = @lib.containers.f(container_name)
-          site_mapper = container_mapper.sites.f(name).create!
-          site_lib_mapper = container_lib_mapper.web.f(name).create!
-          FileUtils.chown_R container_name, container_name, site_lib_mapper.path
+        lib_mapper = @container_controller.index[container_name][:mapper].lib
+        state_mapper = lib_mapper.web.f(name)
 
-          self._config(name, container_name)
+        states = {
+            none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
+            data_installed: { action: :configure, undo: :unconfigured, next: :configured },
+            configured: { action: :apply, undo: :unapply, next: :up }
+        }
 
-          {}
-        else
+        self.on_state(state_mapper: state_mapper, states: states, name: name, container_name: container_name) do
+          (resp = self.adding_validation(name: name)).net_status_ok? and (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
           resp
         end
       end
 
       def delete(name:)
-        if self.existing_validation(name: name).net_status_ok?
-          site_info = self.site_index[name]
-          container_mapper = site_info[:container]
-          container_lib_mapper = @lib.containers.f(container_mapper.name)
-          site_mapper = site_info[:site]
-          site_lib_mapper = container_lib_mapper.web.f(name)
+        lib_mapper = self.index[name][:container_mapper].lib
+        state_mapper = lib_mapper.web.f(name)
 
-          self._config_rollback(name, container_mapper.name)
+        states = {
+            up: { action: :unapply, undo: :apply, next: :configured },
+            configured: { action: :unconfigure, next: :data_installed },
+            data_installed: { action: :uninstall_data },
+        }
 
-          site_mapper.delete!
-          site_lib_mapper.delete!(full: true)
-
-          registry_sites_mapper = container_lib_mapper.registry.sites
-          unless (registry_site = registry_sites_mapper.f(name)).nil?
-            registry_site.lines.each {|path| PathMapper.new(path).delete! }
-            registry_site.delete!(full: true)
-          end
-
-          {}
-        else
-          self.debug("Site '#{name}' has already been deleted")
-        end
+        self.on_state(state_mapper: state_mapper, states: states, name: name)
       end
 
       def rename(name:, new_name:)
         if (resp = self.existing_validation(name: name)).net_status_ok? and
             (resp = self.adding_validation(name: new_name)).net_status_ok?
-          site_info = self.site_index[name]
-          container_name = site_info[:container].name
-          sites_mapper = site_info[:container].sites
-          container_lib_web_mapper = @lib.containers.f(container_name).web
-          site_mapper = sites_mapper.f(name)
-          site_new_mapper = sites_mapper.f(new_name)
-          renaming_mapper = sites_mapper.f("renaming_#{site_mapper.name}")
-          site_lib_mapper = container_lib_web_mapper.f(name)
-          site_lib_new_mapper = container_lib_web_mapper.f(new_name)
-          renaming_lib_mapper = container_lib_web_mapper.f("renaming_#{site_lib_mapper.name}")
+          mapper = self.index[name][:mapper]
+          container_mapper = self.index[name][:container_mapper]
+          sites_mapper = container_mapper.sites
+          new_site_mapper = sites_mapper.f(new_name)
+          renaming_mapper = sites_mapper.f("renaming_#{mapper.name}")
+          new_site_lib_mapper = container_mapper.lib.web.f(new_name)
+          renaming_lib_mapper = container_mapper.lib.web.f("renaming_#{name}")
 
-          self.command!("cp -rp #{site_mapper.path} #{renaming_mapper.path}")
-          self.command!("cp -rp #{site_lib_mapper.path} #{renaming_lib_mapper.path}")
+          self.command!("cp -rp #{mapper.path} #{renaming_mapper.path}")
+          self.command!("cp -rp #{mapper.lib.path} #{renaming_lib_mapper.path}")
 
-          if (resp = self.add(name: new_name, container_name: container_name)).net_status_ok?
-            FileUtils.rm_rf site_new_mapper.path
-            FileUtils.rm_rf site_lib_new_mapper.path
-            FileUtils.mv renaming_mapper.path, site_new_mapper.path
-            FileUtils.mv renaming_lib_mapper.path, site_lib_new_mapper.path
+          if (resp = self.add(name: new_name, container_name: container_mapper.name)).net_status_ok?
+            new_site_mapper.delete!
+            new_site_lib_mapper.delete!
+            FileUtils.mv renaming_mapper.path, new_site_mapper.path
+            FileUtils.mv renaming_lib_mapper.path, new_site_lib_mapper.path
             resp = self.delete(name: name)
           end
         end
@@ -93,8 +77,7 @@ module Superhosting
 
       def reconfig(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          site_info = self.site_index[name]
-          self._reconfig(name, site_info[:container].name)
+          self._reconfig(name: name)
         end
         resp
       end
@@ -103,79 +86,58 @@ module Superhosting
         self.get_controller(Alias, name: name)
       end
 
-      def _config(site_name, container_name, on_reconfig_only: false)
-        container_mapper = @container_controller.container_index[container_name][:mapper]
-        if (site_info = self.site_index[site_name])
-          site_mapper = site_info[:site]
-        else
-          site_mapper = container_mapper.sites.f(site_name)
-        end
-        model = container_mapper.model(default: @config.default_model)
-        model_mapper = @config.models.f(:"#{model}")
-        site_mapper = MapperInheritance::Model.new(site_mapper, model_mapper).get
-
-        site_mapper.f('config.rb', overlay: false).reverse.each do |config|
-          ex = ScriptExecutor::Site.new(self._config_options(site_mapper, container_mapper, on_reconfig_only: on_reconfig_only))
-          ex.execute(config)
-          ex.commands.each {|c| self.command! c }
-        end
-      end
-
-      def _config_rollback(site_name, container_name)
-        _config(site_name, container_name, on_reconfig_only: true)
-      end
-
-      def _reconfig(site_name, container_name)
-        _config_rollback(site_name, container_name)
-        _config(site_name, container_name)
-      end
-
-      def _config_options(site_mapper, container_mapper, on_reconfig_only:)
-        site_name = site_mapper.name
-        container_name = container_mapper.name
-        container_lib_mapper = @lib.containers.f(container_name)
-        container_web_mapper = PathMapper.new('/web').f(container_name)
-        site_lib_mapper = container_lib_mapper.web.f(site_name)
-        site_web_mapper = container_web_mapper.f(site_name)
-        registry_mapper = container_lib_mapper.registry.sites.f(site_name)
-
-        @container_controller._config_options(container_mapper, on_reconfig_only: on_reconfig_only).merge! ({
-          site_name: site_name,
-          site: site_mapper,
-          site_web: site_web_mapper,
-          site_lib: site_lib_mapper,
-          registry_mapper: registry_mapper
-        })
-      end
-
       def adding_validation(name:)
         return { error: :input_error, code: :invalid_site_name, data: { name: name, regex: DOMAIN_NAME_FORMAT } } if name !~ DOMAIN_NAME_FORMAT
         self.not_existing_validation(name: name)
       end
 
       def existing_validation(name:)
-        self.site_index[name].nil? ? { error: :logical_error, code: :site_does_not_exists, data: { name: name } } : {}
+        self.index[name].nil? ? { error: :logical_error, code: :site_does_not_exists, data: { name: name } } : {}
       end
 
       def not_existing_validation(name:)
         self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :site_exists, data: { name: name} } : {}
       end
 
-      def site_index
-        site_index = {}
-        @config.containers.grep_dirs.each do |container_mapper|
-          container_mapper.sites.grep_dirs.each do |site_mapper|
-            names = []
-            names << site_mapper.name
-            site_mapper.aliases.lines {|n| names << n.strip } unless site_mapper.aliases.nil?
-            raise NetStatus::Exception, {
-                code: :container_site_name_conflict,
-                data: { site1: site_index[site_mapper.name][:site].path, site2: site_mapper.path }
-            } if site_index.key? site_mapper.name
-            names.each {|n| site_index[n] = { container: container_mapper, site: site_mapper } }
+      def index
+        def generate
+          @config.containers.grep_dirs.each do |container_mapper|
+            container_mapper.sites.grep_dirs.each { |mapper| self.reindex_site(name: mapper.name, container_name: container_mapper.name) }
           end
+          @index ||= {}
         end
-        site_index
+
+        @index || generate
+      end
+
+      def reindex_site(name:, container_name:)
+        @index ||= {}
+
+        container_mapper = @container_controller.index[container_name][:mapper]
+        etc_mapper = container_mapper.sites.f(name)
+        lib_mapper = container_mapper.lib.web.f(name)
+        web_mapper = container_mapper.web.f(name)
+
+        if etc_mapper.nil?
+          @index.delete(name)
+          return
+        end
+
+        model_name = container_mapper.f('model', default: @config.default_model)
+        model_mapper = @config.models.f(model_name)
+        etc_mapper = MapperInheritance::Model.new(etc_mapper, model_mapper).get
+
+        mapper = ScriptExecutor::ConfigMapper::Site.new(etc_mapper: etc_mapper,
+                                                        lib_mapper: lib_mapper,
+                                                        web_mapper: web_mapper)
+        etc_mapper.erb_options = { site: mapper, container: mapper }
+
+        if @index.key? name and @index[name][:mapper].path != mapper.path
+          raise NetStatus::Exception, { code: :container_site_name_conflict,
+                                        data: { site1: @index[name][:mapper].path, site2: mapper.path } }
+        end
+
+        ([mapper.name] + mapper.aliases).each {|name| @index[name] = { mapper: mapper, container_mapper: container_mapper } }
       end
     end
   end

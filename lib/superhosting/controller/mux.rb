@@ -1,7 +1,7 @@
 module Superhosting
   module Controller
     class Mux < Base
-      attr_writer :mux_index
+      attr_writer :index
 
       def initialize(**kwargs)
         super
@@ -10,18 +10,18 @@ module Superhosting
 
       def add(name:)
         if (resp = self.adding_validation(name: name))
-          mux_mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).get
+          mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).get
 
           # image
-          return { error: :input_error, code: :no_docker_image_specified_in_mux, data: { mux: name } } if (image = mux_mapper.docker.image).nil?
+          return { error: :input_error, code: :no_docker_image_specified_in_mux, data: { mux: name } } if (image = mapper.docker.image).nil?
 
           # docker
-          mux_mapper.erb_options = { mux: mux_mapper }
-          all_options = mux_mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n] }.to_h
+          mapper.erb_options = { mux: mapper }
+          all_options = mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n] }.to_h
           command_options = @docker_api.grab_container_options(command_options: all_options)
 
           volume_opts = []
-          mux_mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
+          mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
           volume_opts.each {|val| command_options << "--volume #{val}" }
 
           @container_controller._run_docker(name: name, options: command_options, image: image, command: all_options[:command])
@@ -32,7 +32,11 @@ module Superhosting
 
       def reconfig(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          self.mux_index[name].each {|container_name| @container_controller._reconfig(container_name) }
+          self.index[name].each do |container_name|
+            unless (resp = @container_controller.reconfig(name: container_name)).net_status_ok?
+              return resp
+            end
+          end
         else
           resp
         end
@@ -46,7 +50,7 @@ module Superhosting
       end
 
       def existing_validation(name:)
-        self.mux_index.include?(name) ? self.running_validation(name: name) : { error: :logical_error, code: :mux_does_not_exists, data: { name: name } }
+        self.index.include?(name) ? self.running_validation(name: name) : { error: :logical_error, code: :mux_does_not_exists, data: { name: name } }
       end
 
       def not_running_validation(name:)
@@ -57,9 +61,9 @@ module Superhosting
         @container_controller.running_validation(name: name).net_status_ok? ? {} : { error: :logical_error, code: :mux_is_not_running, data: { name: name } }
       end
 
-      def mux_index
+      def index
         def generate
-          @mux_index = {}
+          @index = {}
           @container_controller.list[:data].each do |container_name|
             container_mapper = @config.containers.f(container_name)
             model = container_mapper.f('model', default: @config.default_model)
@@ -67,26 +71,26 @@ module Superhosting
             container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
             if (mux_mapper = container_mapper.mux).file?
               mux_name = mux_mapper.value
-              (@mux_index[mux_name] ||= []) << container_name
+              (@index[mux_name] ||= []) << container_name
             end
           end
 
-          @mux_index
+          @index
         end
 
-        @mux_index || generate
+        @index || generate
       end
 
-      def mux_index_pop(mux_name, container_name)
-        if self.mux_index.key? mux_name
-          self.mux_index[mux_name].delete(container_name)
-          self.mux_index.delete(mux_name) if self.mux_index[mux_name].empty?
+      def index_pop(mux_name, container_name)
+        if self.index.key? mux_name
+          self.index[mux_name].delete(container_name)
+          self.index.delete(mux_name) if self.index[mux_name].empty?
         end
       end
 
-      def mux_index_push(mux_name, container_name)
-        self.mux_index[mux_name] ||= []
-        self.mux_index[mux_name] << container_name
+      def index_push(mux_name, container_name)
+        self.index[mux_name] ||= []
+        self.index[mux_name] << container_name
       end
     end
   end

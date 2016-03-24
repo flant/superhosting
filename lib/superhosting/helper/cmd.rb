@@ -11,7 +11,7 @@ module Superhosting
         self._command(command_args, desc)
       end
 
-      def _command(*command_args, desc: nil)
+      def _command(*command_args, desc: {})
         cmd = Mixlib::ShellOut.new(*command_args)
         cmd.run_command
 

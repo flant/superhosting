@@ -19,7 +19,7 @@ module Superhosting
       def t(desc: {}, context: nil)
         code = desc[:code] || :default
         data = desc[:data]
-        ::I18n.t [:command, context, code].join('.'), [:command, code].join('.'), **data, raise: true
+        ::I18n.t [:debug, context, code].join('.'), [:debug, code].join('.'), **data, raise: true
       rescue ::I18n::MissingTranslationData => e
         raise NetStatus::Exception, { code: :missing_translation, data: { code: code } }
       end

@@ -21,14 +21,13 @@ describe Superhosting::Controller::Site do
 
   it 'rename' do
     with_container do |container_name|
-      with_site do |site_name|
-        new_name = "new.#{site_name}"
-        site_rename_with_exps(name: site_name, new_name: new_name)
-      end
+      site_add_with_exps(name: @site_name, container_name: container_name)
+      new_name = "new.#{@site_name}"
+      site_rename_with_exps(name: @site_name, new_name: new_name)
     end
   end
 
-  xit 'reconfig', :docker do
+  it 'reconfig', :docker do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
         site_registry_path = @site_controller.lib.containers.f(container_name).registry.sites.f(site_name).path
@@ -124,16 +123,6 @@ describe Superhosting::Controller::Site do
       with_site do |site_name|
         site_alias_add_with_exps(name: site_name, code: :site_exists)
       end
-    end
-  end
-
-  it '@site_index:container_site_name_conflict' do
-    config_mapper = container_controller.config
-    container_mapper = config_mapper.containers.test_container
-    container_mapper.sites.f(@site_name).create!
-
-    with_container do |container_name|
-      site_add_with_exps(name: @site_name, container_name: container_name, code: :site_exists)
     end
   end
 

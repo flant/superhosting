@@ -7,7 +7,7 @@ describe Superhosting::Controller::Mux do
 
   # positive
 
-  xit 'reconfig', :docker do
+  it 'reconfig', :docker do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
         container_registry_path = @container_controller.lib.containers.f(container_name).registry.container.path

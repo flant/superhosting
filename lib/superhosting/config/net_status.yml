@@ -52,7 +52,7 @@ en:
 
     missing_translation: "Missing translation for code: '%{code}'"
 
-  command:
+  debug:
     user_add: "User '%{name}': added."
     user_del: "User '%{name}': deleted."
     user_update: "User '%{name}': updated."
@@ -73,5 +73,6 @@ en:
     container_remove: "Container '%{name}': removed."
     container_stop: "Container '%{name}': stopped."
     container_kill: "Container '%{name}': killed."
+    container_restart: "Container '%{name}': restarted."
 
     default: "Command: '%{command}': launched."

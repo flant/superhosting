@@ -13,6 +13,10 @@ module SpecHelpers
       def model_list(**kwargs)
         model_controller.list
       end
+
+      def model_reconfig(**kwargs)
+        model_controller.reconfig(**kwargs)
+      end
     end
   end
 end

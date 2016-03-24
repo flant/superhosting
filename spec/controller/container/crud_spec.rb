@@ -68,7 +68,7 @@ describe Superhosting::Controller::Container do
     invalid_names.each {|name| container_add_with_exps(name: name, code: :invalid_container_name) }
   end
 
-  it 'add:container_is_running', :docker do
+  xit 'add:container_is_running', :docker do
     container_add_with_exps(name: @container_name)
     container_add_with_exps(name: @container_name, code: :container_is_running)
   end

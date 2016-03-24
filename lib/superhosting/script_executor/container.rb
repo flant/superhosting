@@ -1,23 +1,26 @@
 module Superhosting
   module ScriptExecutor
     class Container < Base
-      attr_accessor :container_name, :container, :registry_mapper, :mux, :on_reconfig_only
+      attr_accessor :container, :mux
 
-      def initialize(container_name:, container:, container_lib:, container_web:, registry_mapper:, mux: nil, on_reconfig_only: false, **kwargs)
-        self.container_name = container_name
-        self.container = ConfigMapper::Container.new(etc_mapper: container, lib_mapper: container_lib, web_mapper: container_web)
+      def initialize(container:, registry_mapper:, mux: nil, on_reconfig: true, on_config: true, **kwargs)
+        self.container = container
         self.mux = mux
-        self.registry_mapper = registry_mapper
-        self.on_reconfig_only = on_reconfig_only
+        @registry_mapper = registry_mapper
+        @on_config = on_config
+        @on_reconfig = on_reconfig
         super(**kwargs)
       end
 
-      def mkdir(arg)
-        self.commands << "mkdir -p #{arg}" unless self.on_reconfig_only # TODO
+      def mkdir(path)
+        if @on_config
+          PathMapper.new(path).create!
+          @registry_mapper.append!(path)
+        end
       end
 
       def config(save_to, script=nil, **options)
-        unless self.on_reconfig_only
+        if @on_config
           save_to_mapper = PathMapper.new(save_to)
           script = options.delete(:source) || save_to_mapper.name if script.nil?
           script = script.end_with?('.erb') ? script : "#{script}.erb"
@@ -25,15 +28,21 @@ module Superhosting
           script_mapper = self.config_mapper(options).config_templates.f(script)
           raise NetStatus::Exception.new(error: :error, code: :file_does_not_exists, data: { path: script_mapper.path.to_s }) if script_mapper.nil?
           save_to_mapper.put!(script_mapper)
-          self.registry_mapper.append!(save_to_mapper.path)
+          @registry_mapper.append!(save_to_mapper.path)
         end
       end
 
       def on_reconfig(cmd)
-        if cmd == :container_restart
-          # self.commands << "docker restart #{self.container_name}" if self.docker_api.container_exists? self.container_name # TODO
-        else
-          self.commands << cmd
+        self.commands << cmd if @on_reconfig
+      end
+
+      def run_commands
+        self.commands.each do |cmd|
+          if cmd == :container_restart
+            self.docker_api.container_restart!(self.container.name)
+          else
+            self.command! cmd
+          end
         end
       end
 

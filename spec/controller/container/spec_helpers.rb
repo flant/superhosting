@@ -5,7 +5,7 @@ module SpecHelpers
       include SpecHelpers::Base
 
       def container_controller
-        @container_controller ||= Superhosting::Controller::Container.new(docker_api: docker_api)
+        @container_controller ||= Superhosting::Controller::Container.new(docker_api: docker_api, logger: logger)
       end
 
       # methods
@@ -189,12 +189,12 @@ module SpecHelpers
           @container_name = "testC#{SecureRandom.hex[0..5]}"
         end
 
-        after :all do
+        after :each do
           command("docker ps --filter 'name=test' -a | xargs docker stop")
           command("docker ps --filter 'name=test' -a | xargs docker rm")
 
           Etc.passwd do |user|
-            command(["userdel", user.name]) if user.name.start_with? 'test'
+            command("userdel #{user.name}") if user.name.start_with? 'test'
           end
 
           command("rm -rf /etc/sx/containers/test*")

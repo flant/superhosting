@@ -88,5 +88,11 @@ module SpecHelpers
     def expect_net_status_ok(hash)
       expect(hash).to_not include(:error)
     end
+
+    def logger
+      Logger.new(STDOUT).tap do |logger|
+        logger.level = Logger::DEBUG
+      end
+    end
   end
 end
