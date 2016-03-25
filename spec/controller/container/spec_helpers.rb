@@ -72,6 +72,8 @@ module SpecHelpers
         expect_file(container_lib_mapper.config.f('etc-group'))
         expect_file(container_lib_mapper.config.f('etc-passwd'))
         expect_dir(container_lib_mapper.web)
+        expect_dir(container_lib_mapper.registry)
+        expect_file(container_lib_mapper.registry.container)
 
         # /web/
         expect_dir(web_mapper)

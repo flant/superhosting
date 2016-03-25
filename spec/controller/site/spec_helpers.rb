@@ -169,7 +169,7 @@ module SpecHelpers
           @site_name = "testS#{SecureRandom.hex[0..5]}.com"
         end
 
-        after :all do
+        after :each do
           command("rm -rf /etc/nginx/sites/test*")
         end
       end

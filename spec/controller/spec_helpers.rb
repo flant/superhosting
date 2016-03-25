@@ -61,7 +61,7 @@ module SpecHelpers
     end
 
     def expect_in_file(path_mapper, line)
-      expect(check_in_file(path_mapper.path, line)).to be_truthy
+      expect(path_mapper.check(line)).to be_truthy
     end
 
     def expect_group(name)

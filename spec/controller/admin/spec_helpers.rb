@@ -106,8 +106,8 @@ module SpecHelpers
           @admin_name = "testA#{SecureRandom.hex[0..5]}"
         end
 
-        after :all do
-          command(["rm -rf /etc/sx/admins/test*"])
+        after :each do
+          command("rm -rf /etc/sx/admins/test*")
         end
       end
     end
