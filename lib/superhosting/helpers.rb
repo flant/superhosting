@@ -3,6 +3,7 @@ module Superhosting
     include Helper::Logger
     include Helper::File
     include Helper::Cmd
+    include Helper::Config
 
     def instance_variables_to_hash(obj)
       obj.instance_variables.map do |name|

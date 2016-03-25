@@ -1,5 +1,5 @@
 module Superhosting
-  module ScriptExecutor
+  module ConfigExecutor
     class Container < Base
       attr_accessor :container, :mux
 

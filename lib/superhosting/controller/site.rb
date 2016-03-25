@@ -133,9 +133,7 @@ module Superhosting
         model_mapper = @config.models.f(model_name)
         etc_mapper = MapperInheritance::Model.new(etc_mapper, model_mapper).get
 
-        mapper = ScriptExecutor::ConfigMapper::Site.new(etc_mapper: etc_mapper,
-                                                        lib_mapper: lib_mapper,
-                                                        web_mapper: web_mapper)
+        mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
         etc_mapper.erb_options = { site: mapper, container: mapper }
 
         if @@index.key? name and @@index[name][:mapper].path != mapper.path

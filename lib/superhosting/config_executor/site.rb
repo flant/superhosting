@@ -1,5 +1,5 @@
 module Superhosting
-  module ScriptExecutor
+  module ConfigExecutor
     class Site < Container
       attr_accessor :site
 

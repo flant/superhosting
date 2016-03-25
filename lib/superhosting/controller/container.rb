@@ -134,9 +134,7 @@ module Superhosting
         model_mapper = @config.models.f(model_name)
         etc_mapper = MapperInheritance::Model.new(etc_mapper, model_mapper).get
 
-        mapper = ScriptExecutor::ConfigMapper::Container.new(etc_mapper: etc_mapper,
-                                                             lib_mapper: lib_mapper,
-                                                             web_mapper: web_mapper)
+        mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
 
         etc_mapper.erb_options = { container: mapper }
         mux_mapper = if (mux_file_mapper = etc_mapper.mux).file?
