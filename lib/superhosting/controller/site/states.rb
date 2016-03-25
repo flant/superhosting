@@ -29,34 +29,6 @@ module Superhosting
         {}
       end
 
-      def configure(name:)
-        self._config(name: name, on_reconfig: false, on_config: true)
-
-        {}
-      end
-
-      def unconfigure(name:)
-        container_mapper = self.index[name][:container_mapper]
-        unless (registry_container_mapper = container_mapper.lib.registry.sites.f(name)).nil?
-          registry_container_mapper.lines.each {|path| PathMapper.new(path).delete! }
-          registry_container_mapper.delete!
-        end
-
-        {}
-      end
-
-      def apply(name:)
-        self._config(name: name, on_reconfig: true, on_config: false)
-
-        {}
-      end
-
-      def unapply(name:)
-        apply(name: name)
-
-        {}
-      end
-
       def _config_options(name:, on_reconfig:, on_config:)
         mapper = self.index[name][:mapper]
         container_mapper = self.index[name][:container_mapper]

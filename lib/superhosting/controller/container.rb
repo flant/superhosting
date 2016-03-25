@@ -65,7 +65,7 @@ module Superhosting
 
       def reconfig(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok? and (resp = self.running_validation(name: name)).net_status_ok?
-          self._reconfig(name: name)
+          super
         end
         resp
       end

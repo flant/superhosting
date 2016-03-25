@@ -105,42 +105,6 @@ module Superhosting
         {}
       end
 
-      def configure(name:)
-        self._config(name: name, on_reconfig: false, on_config: true)
-        {}
-      end
-
-      def unconfigure(name:)
-        mapper = self.index[name][:mapper]
-
-        site_controller = self.get_controller(Site)
-        sites = mapper.sites.grep_dirs.map { |n| n.name }
-        sites.each do |site_name|
-          unless (resp = site_controller.unconfigure(name: site_name)).net_status_ok?
-            return resp
-          end
-        end
-
-        unless (registry_container_mapper = mapper.lib.registry.f('container')).nil?
-          registry_container_mapper.lines.each {|path| PathMapper.new(path).delete! }
-          registry_container_mapper.delete!
-        end
-
-        {}
-      end
-
-      def apply(name:)
-        self._config(name: name, on_reconfig: true, on_config: false)
-
-        {}
-      end
-
-      def unapply(name:)
-        apply(name: name)
-
-        {}
-      end
-
       def run(name:)
         mapper = self.index[name][:mapper]
 
@@ -156,11 +120,11 @@ module Superhosting
         if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command])).net_status_ok?
           if (mux_mapper = mapper.mux).file?
             mux_name = mux_mapper.value
-            @mux_controller = self.get_controller(Mux)
+            mux_controller = self.get_controller(Mux)
             unless @docker_api.container_running?(mux_name)
-              resp = @mux_controller.add(name: mux_name)
+              resp = mux_controller.add(name: mux_name)
             end
-            @mux_controller.index_push(mux_name, name)
+            mux_controller.index_push(mux_name, name)
           end
         end
         resp
@@ -172,9 +136,9 @@ module Superhosting
         self._stop_docker(name)
         if (mux_mapper = mapper.mux).file?
           mux_name = mux_mapper.value
-          @mux_controller = self.get_controller(Mux)
-          @mux_controller.index_pop(mux_name, name)
-          self._stop_docker(mux_name) unless @mux_controller.index.include?(mux_name)
+          mux_controller = self.get_controller(Mux)
+          mux_controller.index_pop(mux_name, name)
+          self._stop_docker(mux_name) unless mux_controller.index.include?(mux_name)
         end
         {}
       end

@@ -16,7 +16,7 @@ module Superhosting
           if (resp = self.not_existing_validation(name: name)).net_status_ok? and
             (resp = @site_controller.adding_validation(name: name)).net_status_ok?
             @site_mapper.f('aliases').append!(name)
-            @site_controller._reconfig(name: @site_mapper.name)
+            @site_controller.reconfig(name: @site_mapper.name)
 
             @site_controller.reindex_site(name: @site_mapper.name, container_name: @container_mapper.name)
           end
@@ -29,7 +29,7 @@ module Superhosting
           else
             aliases_mapper = @site_mapper.f('aliases')
             pretty_remove(aliases_mapper.path, name)
-            @site_controller._reconfig(name: @site_mapper.name)
+            @site_controller.reconfig(name: @site_mapper.name)
 
             @site_controller.reindex_site(name: @site_mapper.name, container_name: @container_mapper.name)
             {}
