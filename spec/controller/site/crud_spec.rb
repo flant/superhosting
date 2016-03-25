@@ -27,7 +27,7 @@ describe Superhosting::Controller::Site do
     end
   end
 
-  it 'reconfig', :docker do
+  it 'reconfig' do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
         site_registry_path = @site_controller.lib.containers.f(container_name).registry.sites.f(site_name).path

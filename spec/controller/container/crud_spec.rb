@@ -12,7 +12,7 @@ describe Superhosting::Controller::Container do
     container_add_with_exps(name: @container_name)
   end
 
-  it 'reconfig', :docker do
+  it 'reconfig' do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
         container_registry_path = @container_controller.lib.containers.f(container_name).registry.container.path
@@ -33,7 +33,7 @@ describe Superhosting::Controller::Container do
     container_delete_with_exps(name: @container_name)
   end
 
-  it 'list', :docker do
+  it 'list' do
     with_container do |container_name|
       expect(container_list_with_exps[:data]).to include(container_name)
     end

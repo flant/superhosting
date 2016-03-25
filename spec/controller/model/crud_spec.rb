@@ -11,7 +11,7 @@ describe Superhosting::Controller::Model do
     expect(model_list_with_exps[:data]).to including('joomla_v3_l', 'bitrix_m', 'symfony_m', 'fcgi_m')
   end
 
-  it 'reconfig', :docker do
+  it 'reconfig' do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
         container_registry_path = @container_controller.lib.containers.f(container_name).registry.container.path
