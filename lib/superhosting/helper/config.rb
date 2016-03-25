@@ -54,15 +54,22 @@ module Superhosting
         mapper.f('config.rb', overlay: false).reverse.each do |config|
           options = self._config_options(name: name, on_reconfig: on_reconfig, on_config: on_config)
 
-          old_configs = options[:registry_mapper].lines if on_config
+          if on_config
+            registry_mapper = options[:registry_mapper]
+            dummy_registry_mapper = options[:registry_mapper] = registry_mapper.parent.f(".#{registry_mapper.name}.tmp")
+            old_configs = registry_mapper.lines
+          end
 
           ex = ConfigExecutor.new(options)
           ex.execute(config)
           ex.run_commands
 
-          if on_config and !(old_configs = old_configs - options[:registry_mapper].lines).empty?
-            self.debug('Deleting old configs...')
-            old_configs.each {|file| PathMapper.new(file).delete! }
+          if on_config
+            unless (old_configs = old_configs - dummy_registry_mapper.lines).empty?
+              self.debug('Deleting old configs...')
+              old_configs.each { |file| PathMapper.new(file).delete! }
+            end
+            dummy_registry_mapper.override!(registry_mapper.path)
           end
         end
       end

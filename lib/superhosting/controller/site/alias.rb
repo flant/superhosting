@@ -28,7 +28,7 @@ module Superhosting
             self.debug("Alias '#{name}' has already been deleted")
           else
             aliases_mapper = @site_mapper.f('aliases')
-            pretty_remove(aliases_mapper.path, name)
+            aliases_mapper.remove_line!(name)
             @site_controller.reconfig(name: @site_mapper.name)
 
             @site_controller.reindex_site(name: @site_mapper.name, container_name: @container_mapper.name)

@@ -18,6 +18,12 @@ module Superhosting
 
             ::PathMapper::NullNode.new(@path)
           end
+
+          def rename!(new_path)
+            super.tap do
+              self.debug(desc: { code: :directory_rename, data: { path: @path, new_path: new_path } })
+            end
+          end
         end
       end
     end

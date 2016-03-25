@@ -41,7 +41,7 @@ module Superhosting
         mapper.lib.web.create!
 
         # web
-        file_safe_link(mapper.lib.web.path, mapper.web.path)
+        safe_link!(mapper.lib.web.path, mapper.web.path)
         mapper.web.create!
         {}
       end
@@ -51,7 +51,7 @@ module Superhosting
           mapper = self.index[name][:mapper]
 
           # lib
-          file_safe_unlink(mapper.web.path)
+          safe_unlink!(mapper.web.path)
           mapper.lib = mapper.lib
           mapper.lib.web.delete!
           mapper.lib.config.delete!
@@ -87,7 +87,7 @@ module Superhosting
         end unless users.nil?
 
         # chown
-        chown_r(name, name, mapper.lib.web.path)
+        chown_r!(name, name, mapper.lib.web.path)
         {}
       end
 
@@ -96,7 +96,7 @@ module Superhosting
 
         user_controller = self.get_controller(User)
         if (user = user_controller._get(name: name))
-          pretty_remove(mapper.lib.config.f('etc-group').path, "#{name}:x:#{user.gid}:")
+          mapper.lib.config.f('etc-group').remove_line!("#{name}:x:#{user.gid}:")
         end
 
         user_controller._group_del_users(name: name)
@@ -164,7 +164,7 @@ module Superhosting
       end
 
       def _run_docker(name:, options:, image:, command:)
-        pretty_write('/etc/security/docker.conf', "@#{name} #{name}")
+        PathMapper.new('/etc/security/docker.conf').safe_append!("@#{name} #{name}")
         return { error: :logical_error, code: :docker_command_not_found } if command.nil?
         @docker_api.container_run(name, options, image, command)
         self.running_validation(name: name)
@@ -173,8 +173,7 @@ module Superhosting
       def _stop_docker(name)
         @docker_api.container_kill!(name)
         @docker_api.container_rm!(name)
-
-        pretty_remove('/etc/security/docker.conf', "@#{name} #{name}")
+        PathMapper.new('/etc/security/docker.conf').remove_line!("@#{name} #{name}")
       end
     end
   end

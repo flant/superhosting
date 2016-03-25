@@ -24,8 +24,8 @@ module Superhosting
 
       def add(name:, container_name:)
         if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
-          lib_mapper = @container_controller.index[container_name][:mapper].lib
-          state_mapper = lib_mapper.sites.f(name)
+          lib_sites_mapper = @container_controller.index[container_name][:mapper].lib.sites
+          state_mapper = lib_sites_mapper.f(name)
 
           states = {
               none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
@@ -40,8 +40,8 @@ module Superhosting
 
       def delete(name:)
         if self.existing_validation(name: name).net_status_ok?
-          lib_mapper = self.index[name][:container_mapper].lib
-          state_mapper = lib_mapper.sites.f(name)
+          lib_sites_mapper = self.index[name][:container_mapper].lib.sites
+          state_mapper = lib_sites_mapper.f(name)
 
           states = {
               up: { action: :unapply, undo: :apply, next: :configured },
@@ -72,8 +72,8 @@ module Superhosting
           if (resp = self.add(name: new_name, container_name: container_mapper.name)).net_status_ok?
             new_site_mapper.delete!
             new_site_lib_mapper.delete!
-            FileUtils.mv renaming_mapper.path, new_site_mapper.path
-            FileUtils.mv renaming_lib_mapper.path, new_site_lib_mapper.path
+            renaming_mapper.rename!(new_site_mapper.path)
+            renaming_lib_mapper.rename!(new_site_lib_mapper.path)
             resp = self.delete(name: name)
           end
         end

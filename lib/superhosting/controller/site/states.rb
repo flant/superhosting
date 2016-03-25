@@ -10,7 +10,7 @@ module Superhosting
           container_mapper.sites.f(name).create!
           site_lib_mapper = container_mapper.lib.web.f(name).create!
 
-          chown_r(container_name, container_name, site_lib_mapper.path)
+          chown_r!(container_name, container_name, site_lib_mapper.path)
 
           self.reindex_site(name: name, container_name: container_name)
         end
@@ -25,7 +25,6 @@ module Superhosting
 
           self.reindex_site(name: name, container_name: container_mapper.name)
         end
-
         {}
       end
 

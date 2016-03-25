@@ -29,9 +29,8 @@ module Superhosting
           admin_dir.passwd.put!(name)
           self.command!("chmod 640 #{admin_dir.path}")
           self.passwd(name: name, generate: generate)
-        else
-          resp
         end
+        resp
       end
 
       def delete(name:)

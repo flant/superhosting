@@ -61,9 +61,14 @@ en:
     group_del: "Group '%{name}': deleted."
 
     file_create: "File '%{path}': created."
+    file_recreate: "File '%{path}': recreated."
+    file_append: "File '%{path}': modified, add: \n%{content}"
+    file_remove_line: "File '%{path}': removed line '%{line}'."
     file_remove: "File '%{path}': removed."
+    file_rename: "File '%{path}': renamed to '%{new_path}'."
     directory_create: "Directory '%{path}': created."
     directory_remove: "Directory '%{path}': removed."
+    directory_rename: "Directory '%{path}': renamed to '%{new_path}'."
     directories_create: "Directory '%{path}': created with parents."
 
     symlink_create: "Symlink '%{from}' to '%{to}': created."

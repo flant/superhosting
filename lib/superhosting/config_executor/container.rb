@@ -3,7 +3,7 @@ module Superhosting
     class Container < Base
       attr_accessor :container, :mux
 
-      def initialize(container:, registry_mapper:, mux: nil, on_reconfig: true, on_config: true, **kwargs)
+      def initialize(container:, registry_mapper:, on_reconfig:, on_config:, mux: nil, **kwargs)
         self.container = container
         self.mux = mux
         @registry_mapper = registry_mapper

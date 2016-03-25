@@ -57,10 +57,10 @@ module Superhosting
             self.debug("User '#{name}' has already been deleted")
           else
             container_lib_mapper = @lib.containers.f(container_name)
-            passwd_path = container_lib_mapper.config.f('etc-passwd').path
+            passwd_mapper = container_lib_mapper.config.f('etc-passwd')
             user_name = "#{container_name}_#{name}"
             self._del(name: user_name)
-            pretty_remove(passwd_path, /#{user_name}.*/)
+            passwd_mapper.remove_line!(/#{user_name}.*/)
           end
         end
         resp
@@ -94,7 +94,7 @@ module Superhosting
       def _add_custom(name:, group:, shell: '/usr/sbin/nologin', home_dir: "/web/#{group}", uid: nil)
         if (resp = self.adding_validation(name: name, container_name: group)).net_status_ok?
           container_lib_mapper = @lib.containers.f(group)
-          passwd_path = container_lib_mapper.config.f('etc-passwd').path
+          passwd_mapper = container_lib_mapper.config.f('etc-passwd')
 
           useradd_command = "useradd #{name} -g #{group} -d #{home_dir} -s #{shell}".split
           useradd_command += "-u #{uid} -o".split unless uid.nil?
@@ -103,10 +103,9 @@ module Superhosting
           self.command!(useradd_command, desc: { code: :user_add, data: { name: name } })
 
           user = self._get(name: name)
-          pretty_override(passwd_path, "#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
-        else
-          resp
+          passwd_mapper.append!("#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
         end
+        resp
       end
 
       def _pretty_del(name:, group:)
@@ -187,7 +186,7 @@ module Superhosting
 
       def existing_validation(name:, container_name:)
         user_name = "#{container_name}_#{name}"
-        check_in_file('/etc/passwd', user_name) ? {} : { error: :logical_error, code: :user_does_not_exists, data: { name: user_name } }
+        PathMapper.new('/etc/passwd').check(user_name) ? {} : { error: :logical_error, code: :user_does_not_exists, data: { name: user_name } }
       end
 
       def not_existing_validation(name:, container_name:)
