@@ -12,4 +12,7 @@ cp /etc/group /.config/etc-group; \
 ln -fs /.config/etc-group /etc/group; \
 mkdir /.config/ssmtp; \
 ln -fs /.config/ssmtp /etc/ssmtp; \
-mkdir /web"
+mkdir /web; \
+rm -rf /etc/supervisor/conf.d; \
+mkdir /.config/supervisor; \
+ln -fs /.config/supervisor /etc/supervisor/conf.d"
