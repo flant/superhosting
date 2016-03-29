@@ -19,19 +19,17 @@ module Superhosting
         def add(name:)
           if (resp = @admin_controller.existing_validation(name: name)).net_status_ok?
             admin_container_controller = self.get_controller(Controller::Admin::Container, name: name)
-            admin_container_controller.add(name: @container_name)
-          else
-            resp
+            resp = admin_container_controller.add(name: @container_name)
           end
+          resp
         end
 
         def delete(name:)
-          if @admin_controller.not_existing_validation(name: name).net_status_ok?
-            self.debug("Admin '#{name}' has already been deleted")
-          else
+          if (resp = @admin_controller.existing_validation(name: name)).net_status_ok?
             admin_container_controller = self.get_controller(Controller::Admin::Container, name: name)
-            admin_container_controller.delete(name: @container_name)
+            resp = admin_container_controller.delete(name: @container_name)
           end
+          resp
         end
 
         def _list_users

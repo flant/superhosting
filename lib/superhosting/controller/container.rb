@@ -21,22 +21,25 @@ module Superhosting
       end
 
       def add(name:, mail: 'model', admin_mail: nil, model: nil)
-        lib_mapper = @lib.containers.f(name)
+        if (resp = self.not_existing_validation(name: name)).net_status_ok?
+          lib_mapper = @lib.containers.f(name)
 
-        states = {
-            none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-            data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
-            users_installed: { action: :configure, undo: :unconfigure, next: :configured },
-            configured: { action: :apply, next: :configuration_applied },
-            configuration_applied: { action: :run, undo: :stop, next: :up }
-        }
+          states = {
+              none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
+              data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
+              users_installed: { action: :configure, undo: :unconfigure, next: :configured },
+              configured: { action: :apply, next: :configuration_applied },
+              configuration_applied: { action: :run, undo: :stop, next: :up }
+          }
 
-        self.on_state(state_mapper: lib_mapper, states: states,
-                      name: name, mail: mail, admin_mail: admin_mail, model: model)
+          resp = self.on_state(state_mapper: lib_mapper, states: states,
+                               name: name, mail: mail, admin_mail: admin_mail, model: model)
+        end
+        resp
       end
 
       def delete(name:)
-        if self.existing_validation(name: name).net_status_ok?
+        if (resp = self.existing_validation(name: name)).net_status_ok?
           lib_mapper = @lib.containers.f(name)
 
           states = {
@@ -49,10 +52,8 @@ module Superhosting
 
           self.on_state(state_mapper: lib_mapper, states: states,
                         name: name)
-        else
-          self.debug('Container has already deleted.')
         end
-
+        resp
       end
 
       def change(name:, mail: 'model', admin_mail: nil, model: nil)

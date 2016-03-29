@@ -34,18 +34,14 @@ module Superhosting
       end
 
       def delete(name:)
-        if self.existing_validation(name: name).net_status_ok?
+        if (resp = self.existing_validation(name: name)).net_status_ok?
           admin_container_controller = self.get_controller(Admin::Container, name: name)
           if (resp = admin_container_controller._delete_all_users).net_status_ok?
             admin_dir = @admins_mapper.f(name)
             admin_dir.delete!
-            {}
-          else
-            resp
           end
-        else
-          self.debug("Admin '#{name}' has already been deleted")
         end
+        resp
       end
 
       def passwd(name:, generate: false)

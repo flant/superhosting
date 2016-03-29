@@ -23,7 +23,8 @@ module Superhosting
       end
 
       def add(name:, container_name:)
-        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
+        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? and
+            (resp = self.not_existing_validation(name: name)).net_status_ok?
           lib_sites_mapper = @container_controller.index[container_name][:mapper].lib.sites
           state_mapper = lib_sites_mapper.f(name)
 
@@ -39,7 +40,7 @@ module Superhosting
       end
 
       def delete(name:)
-        if self.existing_validation(name: name).net_status_ok?
+        if (resp = self.existing_validation(name: name)).net_status_ok?
           lib_sites_mapper = self.index[name][:container_mapper].lib.sites
           state_mapper = lib_sites_mapper.f(name)
 
@@ -50,9 +51,8 @@ module Superhosting
           }
 
           self.on_state(state_mapper: state_mapper, states: states, name: name)
-        else
-          self.debug('Site has already deleted.')
         end
+        resp
       end
 
       def rename(name:, new_name:)
@@ -112,7 +112,7 @@ module Superhosting
 
       def available_validation(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          resp = (self.index[name][:container_mapper].lib.sites.state.value == 'up') ? {} : { error: :logical_error, code: :container_is_not_available, data: { name: name }  }
+          resp = (self.index[name][:container_mapper].lib.sites.state.value == 'up') ? {} : { error: :logical_error, code: :site_is_not_available, data: { name: name }  }
         end
         resp
       end

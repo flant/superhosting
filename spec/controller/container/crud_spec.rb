@@ -50,6 +50,7 @@ describe Superhosting::Controller::Container do
   it 'admin_delete' do
     with_admin do |admin_name|
       with_container do |container_name|
+        container_admin_add_with_exps(name: admin_name)
         container_admin_delete_with_exps(name: admin_name)
       end
     end
@@ -63,22 +64,37 @@ describe Superhosting::Controller::Container do
 
   # negative
 
+  it 'add:container_exists' do
+    container_add_with_exps(name: @container_name)
+    container_add_with_exps(name: @container_name, model: :incorrect_model_name, code: :container_exists)
+  end
+
   it 'add:invalid_container_name' do
     invalid_names = [:s, :'!incorrectsymbol']
     invalid_names.each {|name| container_add_with_exps(name: name, code: :invalid_container_name) }
-  end
-
-  it 'reconfig:container_does_not_exists' do
-    container_reconfig_with_exps(name: @container_name, code: :container_does_not_exists)
   end
 
   it 'add:model_does_not_exists' do
     container_add_with_exps(name: @container_name, model: :incorrect_model_name, code: :model_does_not_exists)
   end
 
+  it 'reconfig:container_does_not_exists' do
+    container_reconfig_with_exps(name: @container_name, code: :container_does_not_exists)
+  end
+
+  it 'delete:container_does_not_exists' do
+    container_delete_with_exps(name: @container_name, code: :container_does_not_exists)
+  end
+
   it 'admin_add:admin_does_not_exists' do
     with_container do |container_name|
       container_admin_add_with_exps(name: @admin_name, code: :admin_does_not_exists)
+    end
+  end
+
+  it 'admin_delete:admin_does_not_exists' do
+    with_container do |container_name|
+      container_admin_add_with_exps(name: 'incorrect_admin_name', code: :admin_does_not_exists)
     end
   end
 

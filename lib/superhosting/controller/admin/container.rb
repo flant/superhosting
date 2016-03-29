@@ -44,12 +44,9 @@ module Superhosting
         def delete(name:)
           admin_name = "admin_#{@admin_name}"
 
-          if (resp = @container_controller.available_validation(name: name)).net_status_ok?
-            if @user_controller.existing_validation(name: admin_name, container_name: name).net_status_ok?
-              resp = @user_controller.delete(name: admin_name, container_name: name)
-            else
-              self.debug("Admin '#{"#{name}_admin_#{@admin_name}"}' has already been deleted")
-            end
+          if (resp = @container_controller.available_validation(name: name)).net_status_ok? and
+              (resp = @user_controller.existing_validation(name: admin_name, container_name: name)).net_status_ok?
+            resp = @user_controller.delete(name: admin_name, container_name: name)
           end
           resp
         end

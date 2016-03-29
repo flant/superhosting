@@ -71,6 +71,13 @@ describe Superhosting::Controller::Site do
 
   INVALID_SITE_NAMES = ['a', '-site.com', 'site.s', 'a.site.ru', 'sub.site.longregion', 'my_site.com']
 
+  it 'add:site_exists' do
+    with_container do |container_name|
+      site_add_with_exps(name: @site_name, container_name: container_name)
+      site_add_with_exps(name: @site_name, container_name: container_name, code: :site_exists)
+    end
+  end
+
   it 'add:invalid_site_name' do
     with_container do |container_name|
       INVALID_SITE_NAMES.each {|name| site_add_with_exps(name: name, container_name: container_name, code: :invalid_site_name) }
@@ -79,6 +86,12 @@ describe Superhosting::Controller::Site do
 
   it 'add:container_does_not_exists' do
     site_add_with_exps(name: @site_name, container_name: @container_name, code: :container_does_not_exists)
+  end
+
+  it 'rename:site_does_not_exists' do
+    with_container do |container_name|
+      site_rename_with_exps(name: @site_name, new_name: "new.#{@site_name}", code: :site_does_not_exists)
+    end
   end
 
   it 'rename:invalid_site_name' do
@@ -94,6 +107,12 @@ describe Superhosting::Controller::Site do
       with_site do |site_name|
         site_rename_with_exps(name: site_name, new_name: site_name, code: :site_exists)
       end
+    end
+  end
+
+  it 'delete:site_does_not_exists' do
+    with_container do
+      site_delete_with_exps(name: @site_name, code: :site_does_not_exists )
     end
   end
 

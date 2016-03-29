@@ -41,6 +41,7 @@ module Superhosting
         mapper.lib.web.create!
 
         # web
+        PathMapper.new('/web').create!
         safe_link!(mapper.lib.web.path, mapper.web.path)
         mapper.web.create!
         {}

@@ -7,7 +7,6 @@ module Superhosting
 
       COMMANDS_MODULE = Cmd
       CONTROLLERS_MODULE = Superhosting::Controller
-      CONTROLLER_BASE_OPTIONS = [:config_path, :lib_path, :docker_socket]
 
       banner "#{?= * 50}\n#{?- * 19}SUPERHOSTING#{?- * 19}\n#{?= * 50}\n\n"
 
@@ -19,10 +18,6 @@ module Superhosting
       option :debug,
              :long         => '--debug',
              :boolean      => true,
-             :on           => :tail
-
-      option :docker_socket,
-             :long         => '--docker-socket PATH',
              :on           => :tail
 
       def initialize(argv, node)
@@ -122,7 +117,6 @@ module Superhosting
               end
             end
 
-            CONTROLLER_BASE_OPTIONS.each {|opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
             opts.merge!(logger: @logger)
             return node.new(**opts).method(m_name)
           end

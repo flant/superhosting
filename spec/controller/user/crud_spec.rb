@@ -78,4 +78,10 @@ describe Superhosting::Controller::User do
   it 'delete:container_does_not_exists' do
     user_delete_with_exps(name: @user_name, container_name: @container_name, code: :container_does_not_exists)
   end
+
+  it 'delete:user_does_not_exists' do
+    with_container do |container_name|
+      user_delete_with_exps(name: @user_name, container_name: container_name, code: :user_does_not_exists)
+    end
+  end
 end
