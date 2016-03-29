@@ -67,7 +67,7 @@ module Superhosting
         {}
       end
 
-      def install_users(name:)
+      def install_users(name:) # TODO
         mapper = self.index[name][:mapper]
 
         # user / group
@@ -135,6 +135,7 @@ module Superhosting
       end
 
       def run(name:)
+        resp = {}
         mapper = self.index[name][:mapper]
         model = mapper.f('model', default: @config.default_model)
 
@@ -146,15 +147,21 @@ module Superhosting
         volume_opts = []
         mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
         volume_opts.each {|val| command_options << "--volume #{val}" }
+        dummy_signature_mapper = mapper.lib.dummy_signature.put!(command_options)
 
-        if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command])).net_status_ok?
-          if (mux_mapper = mapper.mux).file?
-            mux_name = mux_mapper.value
-            mux_controller = self.get_controller(Mux)
-            unless @docker_api.container_running?(mux_name)
-              resp = mux_controller.add(name: mux_name)
+        if (image.compare_with(mapper.lib.image)) and (dummy_signature_mapper.compare_with(mapper.lib.signature))
+          dummy_signature_mapper.delete!
+        else
+          if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command])).net_status_ok?
+            if (mux_mapper = mapper.mux).file?
+              mux_name = mux_mapper.value
+              mux_controller = self.get_controller(Mux)
+              resp = mux_controller.add(name: mux_name) unless @docker_api.container_running?(mux_name)
+              mux_controller.index_push(mux_name, name)
             end
-            mux_controller.index_push(mux_name, name)
+
+            mapper.lib.image.put!(image)
+            dummy_signature_mapper.rename!(dummy_signature_mapper.parent.path.join('signature'))
           end
         end
         resp
