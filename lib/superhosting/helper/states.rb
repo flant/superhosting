@@ -14,7 +14,7 @@ module Superhosting
             resp.net_status_ok!
           end
 
-          self.debug("Transition '#{method}': launched.")
+          self.debug("Transition '#{method}': completed.")
 
           break if (current_state = state[:next]).nil?
           state_mapper.state.put!(current_state)
@@ -28,7 +28,7 @@ module Superhosting
           opts = method_options(undo_method, options)
           self.send(undo_method, opts)
 
-          self.debug("Transition '#{undo_method}': launched.")
+          self.debug("Transition '#{undo_method}': completed.")
         end
 
         return e.net_status

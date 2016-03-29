@@ -17,7 +17,7 @@ module Superhosting
       end
 
       def t(desc: {}, context: nil)
-        code = desc[:code] || :default
+        code = desc[:code]
         data = desc[:data]
         ::I18n.t [:debug, context, code].join('.'), [:debug, code].join('.'), **data, raise: true
       rescue ::I18n::MissingTranslationData => e

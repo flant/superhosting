@@ -23,7 +23,7 @@ module Superhosting
         if @on_config
           save_to_mapper = PathMapper.new(save_to)
           script = options.delete(:source) || save_to_mapper.name if script.nil?
-          script = script.end_with?('.erb') ? script : "#{script}.erb"
+          script = script.to_s.end_with?('.erb') ? script : "#{script}.erb"
           raise NetStatus::Exception.new(error: :error, code: :can_not_pass_an_absolute_path, data: { path: script }) if Pathname.new(script).absolute?
           script_mapper = self.config_mapper(options).config_templates.f(script)
           raise NetStatus::Exception.new(error: :error, code: :file_does_not_exists, data: { path: script_mapper.path.to_s }) if script_mapper.nil?

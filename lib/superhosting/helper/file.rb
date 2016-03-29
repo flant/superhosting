@@ -1,10 +1,10 @@
 module Superhosting
   module Helper
     module File
-      def safe_link!(path, path_to)
-        unless ::File.exist? path_to
-          ::File.symlink(path, path_to)
-          self.debug(desc: {code: :symlink_create, data: { from: path, to: path_to} })
+      def safe_link!(path_to, path)
+        unless ::File.exist? path
+          ::File.symlink(path_to, path)
+          self.debug(desc: {code: :symlink_create, data: { path_to: path_to, path: path } })
         end
       end
 

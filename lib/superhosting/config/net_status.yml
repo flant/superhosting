@@ -71,13 +71,13 @@ en:
     directory_rename: "Directory '%{path}': renamed to '%{new_path}'."
     directories_create: "Directory '%{path}': created with parents."
 
-    symlink_create: "Symlink '%{from}' to '%{to}': created."
+    symlink_create: "Symlink '%{path}' to '%{path_to}': created."
     symlink_remove: "Symlink '%{path}': removed."
 
-    container_add: "Container '%{name}': launched."
+    container_add: "Container '%{name}': completed."
     container_remove: "Container '%{name}': removed."
     container_stop: "Container '%{name}': stopped."
     container_kill: "Container '%{name}': killed."
     container_restart: "Container '%{name}': restarted."
 
-    default: "Command: '%{command}': launched."
+    command: "Command: '%{command}': completed."
