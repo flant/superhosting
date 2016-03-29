@@ -10,7 +10,7 @@ module Superhosting
       end
 
       def list(container_name:)
-        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           container_mapper = @container_controller.index[container_name][:mapper]
           sites = []
           container_mapper.sites.grep_dirs.each do |mapper|
@@ -23,7 +23,7 @@ module Superhosting
       end
 
       def add(name:, container_name:)
-        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           lib_sites_mapper = @container_controller.index[container_name][:mapper].lib.sites
           state_mapper = lib_sites_mapper.f(name)
 
@@ -80,9 +80,15 @@ module Superhosting
         resp
       end
 
-      def reconfig(name:)
+      def reconfig(name:, configure_only: nil, apply_only: nil)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          super
+          if configure_only
+            self.configure(name: name)
+          elsif apply_only
+            self.apply(name: name)
+          else
+            self.configure_with_apply(name: name)
+          end
         end
         resp
       end
@@ -102,6 +108,13 @@ module Superhosting
 
       def not_existing_validation(name:)
         self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :site_exists, data: { name: name} } : {}
+      end
+
+      def available_validation(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          resp = (self.index[name][:container_mapper].lib.sites.state.value == 'up') ? {} : { error: :logical_error, code: :container_is_not_available, data: { name: name }  }
+        end
+        resp
       end
 
       def index

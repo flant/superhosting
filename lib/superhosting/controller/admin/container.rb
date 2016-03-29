@@ -31,7 +31,7 @@ module Superhosting
         def add(name:)
           admin_name = "admin_#{@admin_name}"
 
-          if (resp = @container_controller.existing_validation(name: name)).net_status_ok? and
+          if (resp = @container_controller.available_validation(name: name)).net_status_ok? and
               (resp = @user_controller.not_existing_validation(name: admin_name, container_name: name)).net_status_ok?
             user, encrypted_password = @admin_passwd.split(':')
             if (resp = @user_controller._add(name: admin_name, container_name: name, shell: '/bin/bash')).net_status_ok?
@@ -44,7 +44,7 @@ module Superhosting
         def delete(name:)
           admin_name = "admin_#{@admin_name}"
 
-          if (resp = @container_controller.existing_validation(name: name)).net_status_ok?
+          if (resp = @container_controller.available_validation(name: name)).net_status_ok?
             if @user_controller.existing_validation(name: admin_name, container_name: name).net_status_ok?
               resp = @user_controller.delete(name: admin_name, container_name: name)
             else

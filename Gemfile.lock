@@ -7,7 +7,7 @@ GIT
 
 GIT
   remote: https://github.com/flant/path_mapper.git
-  revision: 9575ee266a6f2798dc567505ae901dce98582960
+  revision: 365600b474f7033e4ce7099079d6e95b3354b94f
   specs:
     path_mapper (0.0.2)
 

@@ -18,10 +18,10 @@ module Superhosting
 
       end
 
-      def reconfig(name:)
+      def reconfig(name:, configure_only: nil, apply_only: nil)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           self.index[name].each do |container_name|
-            unless (resp = @container_controller.reconfig(name: container_name)).net_status_ok?
+            unless (resp = @container_controller.reconfig(name: container_name, configure_only: configure_only, apply_only: apply_only)).net_status_ok?
               return resp
             end
           end

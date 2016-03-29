@@ -57,8 +57,8 @@ module Superhosting
 
           ex = ConfigExecutor.new(options)
           ex.execute(config)
-          ex.run_commands
           ex.save_registry!(registry_mapper) if on_config
+          ex.run_commands
         end
       end
 

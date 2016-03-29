@@ -63,9 +63,15 @@ module Superhosting
 
       end
 
-      def reconfig(name:)
+      def reconfig(name:, configure_only: nil, apply_only: nil)
         if (resp = self.existing_validation(name: name)).net_status_ok? and (resp = self.running_validation(name: name)).net_status_ok?
-          super
+          if configure_only
+            self.configure(name: name)
+          elsif apply_only
+            self.apply(name: name)
+          else
+            self.configure_with_apply(name: name)
+          end
         end
         resp
       end
@@ -108,6 +114,13 @@ module Superhosting
 
       def not_existing_validation(name:)
         self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_exists, data: { name: name }  } : {}
+      end
+
+      def available_validation(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          resp = (self.index[name][:mapper].lib.state.value == 'up') ? {} : { error: :logical_error, code: :container_is_not_available, data: { name: name }  }
+        end
+        resp
       end
 
       def index

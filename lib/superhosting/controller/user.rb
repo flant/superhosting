@@ -9,7 +9,7 @@ module Superhosting
       end
 
       def list(container_name:)
-        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           { data: _group_get_users(name: container_name) }
         else
           resp
@@ -22,7 +22,7 @@ module Superhosting
         web_mapper = PathMapper.new("/web/#{container_name}")
         home_dir = ftp_dir.nil? ? web_mapper.path : web_mapper.f(ftp_dir).path
 
-        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           if !File.exists? home_dir
             resp = { error: :logical_error, code: :incorrect_ftp_dir, data: { dir: home_dir.to_s } }
           elsif (resp = self.not_existing_validation(name: name, container_name: container_name)).net_status_ok?
@@ -41,7 +41,7 @@ module Superhosting
       end
 
       def passwd(name:, container_name:, generate: false)
-        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           user_name = "#{container_name}_#{name}"
           passwords = self._create_password(generate: generate)
           self._update_password(name: user_name, encrypted_password: passwords[:encrypted_password])
@@ -52,7 +52,7 @@ module Superhosting
       end
 
       def delete(name:, container_name:)
-        if (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           if self.not_existing_validation(name: name, container_name: container_name).net_status_ok?
             self.debug("User '#{name}' has already been deleted")
           else

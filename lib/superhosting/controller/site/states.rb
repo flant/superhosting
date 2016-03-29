@@ -5,7 +5,7 @@ module Superhosting
 
       def install_data(name:, container_name:)
         if (resp = self.adding_validation(name: name)).net_status_ok? and
-            (resp = @container_controller.existing_validation(name: container_name)).net_status_ok?
+            (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           container_mapper = @container_controller.index[container_name][:mapper]
           container_mapper.sites.f(name).create!
           site_lib_mapper = container_mapper.lib.web.f(name).create!
