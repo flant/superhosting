@@ -3,10 +3,10 @@ module Superhosting
     class Container < Base
       attr_accessor :container, :mux
 
-      def initialize(container:, registry_mapper:, on_reconfig:, on_config:, mux: nil, **kwargs)
+      def initialize(container:, on_reconfig:, on_config:, mux: nil, **kwargs)
         self.container = container
         self.mux = mux
-        @registry_mapper = registry_mapper
+        @registry_files = []
         @on_config = on_config
         @on_reconfig = on_reconfig
         super(**kwargs)
@@ -15,7 +15,7 @@ module Superhosting
       def mkdir(path)
         if @on_config
           PathMapper.new(path).create!
-          @registry_mapper.append!(path)
+          @registry_files << path.to_s
         end
       end
 
@@ -28,7 +28,7 @@ module Superhosting
           script_mapper = self.config_mapper(options).config_templates.f(script)
           raise NetStatus::Exception.new(error: :error, code: :file_does_not_exists, data: { path: script_mapper.path.to_s }) if script_mapper.nil?
           save_to_mapper.put!(script_mapper)
-          @registry_mapper.append!(save_to_mapper.path)
+          @registry_files << save_to_mapper.path.to_s
         end
       end
 
@@ -44,6 +44,15 @@ module Superhosting
             self.command! cmd
           end
         end
+      end
+
+      def save_registry!(mapper)
+        old_configs = mapper.lines
+        unless (old_configs = old_configs - @registry_files).empty?
+          self.debug('Deleting old configs...')
+          old_configs.each { |file| PathMapper.new(file).delete! }
+        end
+        mapper.override!(@registry_files.join("\n"))
       end
 
       protected

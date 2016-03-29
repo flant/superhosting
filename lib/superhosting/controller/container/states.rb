@@ -107,8 +107,9 @@ module Superhosting
 
       def run(name:)
         mapper = self.index[name][:mapper]
+        model = mapper.f('model', default: @config.default_model)
 
-        return { error: :input_error, code: :no_docker_image_specified_in_model, data: { model: model_} } if (image = mapper.docker.image).nil?
+        return { error: :input_error, code: :no_docker_image_specified_in_model, data: { model: model } } if (image = mapper.docker.image).nil?
 
         all_options = mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n] }.to_h
         command_options = @docker_api.grab_container_options(all_options)
