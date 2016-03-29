@@ -17,6 +17,12 @@ module Superhosting
             end
           end
 
+          def rename!(new_path)
+            super.tap do
+              self.debug(desc: { code: :file_rename, data: { path: @path, new_path: new_path } })
+            end
+          end
+
           def append!(content)
             super.tap do
               self.debug(desc: { code: :file_create, data: { path: @path } })

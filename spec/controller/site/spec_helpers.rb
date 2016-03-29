@@ -60,6 +60,7 @@ module SpecHelpers
 
         # /var/sx
         expect_dir(container_lib_mapper.web.f(site_name))
+        expect_file(container_lib_mapper.sites.f(site_name).state)
 
         # /web
         expect_dir(web_mapper)

@@ -67,6 +67,7 @@ module SpecHelpers
         self.model_exps(:"container_add_#{model_name}_exps", **kwargs)
 
         # /var/sx
+        expect_file(container_lib_mapper.state)
         expect_dir(container_lib_mapper)
         expect_dir(container_lib_mapper.config)
         expect_file(container_lib_mapper.config.f('etc-group'))

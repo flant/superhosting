@@ -34,7 +34,12 @@ module SpecHelpers
       kwargs = args.extract_options!
       code = kwargs.delete(:code)
 
-      resp = self.send(controller_method.to_sym, *args, **kwargs)
+      resp = begin
+        self.send(controller_method.to_sym, *args, **kwargs)
+      rescue NetStatus::Exception => e
+        e.net_status
+      end
+
       expect_net_status(resp, code: code)
       if code
         self.expect_translation(resp)
