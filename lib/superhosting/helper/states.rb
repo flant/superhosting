@@ -31,7 +31,7 @@ module Superhosting
           self.debug("Transition '#{undo_method}': completed.")
         end
 
-        return e.net_status
+        raise
       end
 
       def method_options(method_name, options)
