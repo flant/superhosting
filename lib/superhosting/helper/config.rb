@@ -9,21 +9,13 @@ module Superhosting
       def unconfigure(name:)
         case self.index[name][:mapper].parent.name
           when 'containers'
-            container_mapper = self.index[name][:mapper]
-
-            site_controller = self.get_controller(Superhosting::Controller::Site)
-            sites = container_mapper.sites.grep_dirs.map { |n| n.name }
-            sites.each do |site_name|
-              unless (resp = site_controller.unconfigure(name: site_name)).net_status_ok?
-                return resp
-              end
-            end
+            registry_container_mapper = self.index[name][:mapper].registry.container
           when 'sites'
-            container_mapper = self.index[name][:container_mapper]
+            registry_container_mapper = self.index[name][:container_mapper].lib.registry.sites.f(name)
           else raise NetStatus::Exception, { error: :logical_error, code: :mapper_type_not_supported, data: { name: type } }
         end
 
-        unless (registry_container_mapper = container_mapper.lib.registry.sites.f(name)).nil?
+        unless registry_container_mapper.nil?
           registry_container_mapper.lines.each {|path| PathMapper.new(path).delete! }
           registry_container_mapper.delete!
         end
@@ -31,7 +23,7 @@ module Superhosting
       end
 
       def apply(name:)
-        self._config(name: name, on_reconfig: true, on_config: false)
+        self._config(name: name, on_reconfig: false, on_config: true)
         {}
       end
 

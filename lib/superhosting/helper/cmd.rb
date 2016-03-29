@@ -12,14 +12,14 @@ module Superhosting
       end
 
       def _command(*command_args, desc: {})
+        (desc[:data] ||= {})[:command] = command_args.join
+        desc[:code] ||= :command
+        self.debug(desc: desc)
+
         cmd = Mixlib::ShellOut.new(*command_args)
         cmd.run_command
 
         yield cmd if block_given? and !cmd.status.success?
-
-        (desc[:data] ||= {})[:command] = command_args.join
-        desc[:code] ||= :command
-        self.debug(desc: desc)
       end
     end
   end

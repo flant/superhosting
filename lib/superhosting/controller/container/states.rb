@@ -106,6 +106,34 @@ module Superhosting
         {}
       end
 
+      def configure(name:)
+        self._each_site(name: name) do |site_controller, site_name|
+          site_controller.configure(name: site_name).net_status_ok!
+        end
+        super
+      end
+
+      def unconfigure(name:)
+        self._each_site(name: name) do |site_controller, site_name|
+          site_controller.unconfigure(name: site_name).net_status_ok!
+        end
+        super
+      end
+
+      def apply(name:)
+        self._each_site(name: name) do |site_controller, site_name|
+          site_controller.apply(name: site_name).net_status_ok!
+        end
+        super
+      end
+
+      def configure_with_apply(name:)
+        self._each_site(name: name) do |site_controller, site_name|
+          site_controller.configure_with_apply(name: site_name).net_status_ok!
+        end
+        super
+      end
+
       def run(name:)
         mapper = self.index[name][:mapper]
         model = mapper.f('model', default: @config.default_model)
@@ -176,6 +204,12 @@ module Superhosting
         @docker_api.container_kill!(name)
         @docker_api.container_rm!(name)
         PathMapper.new('/etc/security/docker.conf').remove_line!("@#{name} #{name}")
+      end
+
+      def _each_site(name:)
+        site_controller = self.get_controller(Superhosting::Controller::Site)
+        sites = self.index[name][:mapper].sites.grep_dirs.map { |n| n.name }
+        sites.each {|site_name| yield site_controller, site_name }
       end
     end
   end
