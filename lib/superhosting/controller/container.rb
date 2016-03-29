@@ -21,20 +21,7 @@ module Superhosting
       end
 
       def add(name:, mail: 'model', admin_mail: nil, model: nil)
-        if (resp = self.not_existing_validation(name: name)).net_status_ok?
-          lib_mapper = @lib.containers.f(name)
-
-          states = {
-              none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-              data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
-              users_installed: { action: :configure, undo: :unconfigure, next: :configured },
-              configured: { action: :apply, next: :configuration_applied },
-              configuration_applied: { action: :run, undo: :stop, next: :up }
-          }
-
-          resp = self.on_state(state_mapper: lib_mapper, states: states,
-                               name: name, mail: mail, admin_mail: admin_mail, model: model)
-        end
+        resp = self._reconfig(name: name, mail: mail, admin_mail: admin_mail, model: model) if (resp = self.not_existing_validation(name: name)).net_status_ok?
         resp
       end
 
@@ -65,14 +52,9 @@ module Superhosting
       end
 
       def reconfig(name:, configure_only: nil, apply_only: nil)
-        if (resp = self.existing_validation(name: name)).net_status_ok? and (resp = self.running_validation(name: name)).net_status_ok?
-          if configure_only
-            self.configure(name: name)
-          elsif apply_only
-            self.apply(name: name)
-          else
-            self.configure_with_apply(name: name)
-          end
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self.set_state(name: name, state: :users_installed)
+          resp = self._reconfig(name: name, configure_only: configure_only, apply_only: apply_only)
         end
         resp
       end
@@ -124,6 +106,28 @@ module Superhosting
         resp
       end
 
+      def _reconfig(name:, configure_only: nil, apply_only: nil, **kwargs)
+        transition = if configure_only
+          :configure
+        elsif apply_only
+          :apply
+        else
+          :configure_with_apply
+        end
+
+        lib_mapper = @lib.containers.f(name)
+
+        states = {
+            none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
+            data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
+            users_installed: { action: transition, undo: :unconfigure, next: :configuration_applied },
+            configuration_applied: { action: :run, undo: :stop, next: :up }
+        }
+
+        self.on_state(state_mapper: lib_mapper, states: states,
+                      name: name, **kwargs)
+      end
+
       def index
         @@index ||= self.reindex
       end
@@ -138,6 +142,7 @@ module Superhosting
         etc_mapper = @config.containers.f(name)
         web_mapper = PathMapper.new('/web').f(name)
         lib_mapper = @lib.containers.f(name)
+        state_mapper = lib_mapper.state
 
         if etc_mapper.nil?
           @@index.delete(name)
@@ -158,7 +163,17 @@ module Superhosting
         @@index[name] = {
             mapper: mapper,
             mux_mapper: mux_mapper,
+            state_mapper: state_mapper
         }
+      end
+
+      def state(name:)
+        self.existing_validation(name: name).net_status_ok!
+        self.index[name][:state_mapper]
+      end
+
+      def set_state(name:, state:)
+        self.state(name: name).put!(state)
       end
     end
   end
