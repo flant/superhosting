@@ -51,19 +51,31 @@ module Superhosting
 
       def _config(name:, on_reconfig:, on_config:)
         mapper = self.index[name][:mapper]
-        mapper.f('config.rb', overlay: false).reverse.each do |config|
-          options = self._config_options(name: name, on_reconfig: on_reconfig, on_config: on_config)
-          registry_mapper = options.delete(:registry_mapper)
+        options = self._config_options(name: name, on_reconfig: on_reconfig, on_config: on_config)
+        registry_mapper = options.delete(:registry_mapper)
+        registry_files = []
 
+        mapper.f('config.rb', overlay: false).reverse.each do |config|
           ex = ConfigExecutor.new(options)
           ex.execute(config)
-          ex.save_registry!(registry_mapper) if on_config
           ex.run_commands
+          registry_files += ex.registry_files
         end
+
+        self._save_registry!(registry_mapper, registry_files) if on_config
       end
 
       def _config_options(name:, on_reconfig:, on_config:)
         {}
+      end
+
+      def _save_registry!(registry_mapper, registry_files)
+        old_configs = registry_mapper.lines
+        unless (old_configs = old_configs - registry_files).empty?
+          self.debug('Deleting old configs...')
+          old_configs.each { |file| PathMapper.new(file).delete! }
+        end
+        registry_mapper.override!(registry_files.join("\n"))
       end
     end
   end
