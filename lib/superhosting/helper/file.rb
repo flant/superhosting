@@ -3,7 +3,7 @@ module Superhosting
     module File
       def safe_link!(path_to, path)
         unless ::File.exist? path
-          self.pretty_debug(desc: {code: :symlink_create, data: { path_to: path_to, path: path } }) do
+          self.debug_operation(desc: { code: :symlink_create, data: { path_to: path_to, path: path } }) do
             ::File.symlink(path_to, path)
           end
         end
@@ -11,7 +11,7 @@ module Superhosting
 
       def safe_unlink!(path)
         if ::File.exist? path
-          self.pretty_debug(desc: {code: :symlink_remove, data: { path: path } }) do
+          self.debug_operation(desc: { code: :symlink_remove, data: { path: path } }) do
             ::File.unlink(path)
           end
         end

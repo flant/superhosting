@@ -165,6 +165,13 @@ module Superhosting
           end
         end
 
+        resp
+      end
+
+      def run_mux(name:)
+        resp = {}
+        mapper = self.index[name][:mapper]
+
         if (mux_mapper = mapper.mux).file?
           mux_name = mux_mapper.value
           mux_controller = self.get_controller(Mux)
@@ -175,16 +182,21 @@ module Superhosting
         resp
       end
 
-      def stop(name:)
+      def stop_mux(name:)
         mapper = self.index[name][:mapper]
 
-        self._stop_docker(name)
         if (mux_mapper = mapper.mux).file?
           mux_name = mux_mapper.value
           mux_controller = self.get_controller(Mux)
-          mux_controller.index_pop(mux_name, name)
           self._stop_docker(mux_name) unless mux_controller.index.include?(mux_name)
         end
+
+        {}
+      end
+
+      def stop(name:)
+        self._stop_docker(name)
+        self.get_controller(Mux).reindex
         {}
       end
 

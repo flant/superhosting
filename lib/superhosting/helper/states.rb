@@ -8,7 +8,7 @@ module Superhosting
           method = state[:action]
           opts = method_options(method, options)
 
-          self.pretty_debug(desc: { code: :transition, data: { name: method } }) do
+          self.debug_block(desc: { code: :transition, data: { name: method } }) do
             unless (resp = self.send(method, opts)).net_status_ok?
               resp.net_status_ok!
             end
@@ -21,7 +21,7 @@ module Superhosting
       rescue Exception => e
         undo_method = state[:undo] || :"undo_#{method}"
 
-        self.pretty_debug(desc: { code: :transition, data: { name: undo_method } }) do
+        self.debug_block(desc: { code: :transition_undo, data: { name: undo_method } }) do
           if respond_to? undo_method
             opts = method_options(undo_method, options)
             self.send(undo_method, opts)

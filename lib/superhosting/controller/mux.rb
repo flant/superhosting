@@ -59,23 +59,22 @@ module Superhosting
       end
 
       def index
-        def generate
-          @index = {}
-          @container_controller.list[:data].each do |container_name|
-            container_mapper = @config.containers.f(container_name)
-            model = container_mapper.f('model', default: @config.default_model)
-            model_mapper = @config.models.f(model)
-            container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
-            if (mux_mapper = container_mapper.mux).file?
-              mux_name = mux_mapper.value
-              (@index[mux_name] ||= []) << container_name
-            end
+        @index || self.reindex
+      end
+
+      def reindex
+        @index ||= {}
+        @container_controller.list[:data].each do |container_name|
+          container_mapper = @config.containers.f(container_name)
+          model = container_mapper.f('model', default: @config.default_model)
+          model_mapper = @config.models.f(model)
+          container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
+          if (mux_mapper = container_mapper.mux).file?
+            mux_name = mux_mapper.value
+            (@index[mux_name] ||= []) << container_name if @container_controller.running_validation(name: container_name).net_status_ok?
           end
-
-          @index
         end
-
-        @index || generate
+        @index
       end
 
       def index_pop(mux_name, container_name)

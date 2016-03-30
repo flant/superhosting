@@ -40,7 +40,7 @@ module Superhosting
 
         @logger = Logger.new(STDOUT)
         @logger.level = (config[:debug] or config[:dry_run]) ? Logger::DEBUG : Logger::INFO
-        @logger.formatter = proc {|severity, datetime, progname, msg| sprintf("%s\n", msg.to_s.strip) }
+        @logger.formatter = proc {|severity, datetime, progname, msg| sprintf("%s\n", msg.to_s) }
 
         self.help if config[:help] or self.class == Base
       end

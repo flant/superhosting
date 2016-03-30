@@ -20,22 +20,37 @@ module Superhosting
         {} # net_status
       end
 
-      def pretty_debug(msg=nil, desc: nil, &b)
+      def debug_block(desc: nil, &b)
+        self._debug_block(desc: desc, operation: false, &b)
+      end
+
+      def debug_operation(desc: nil, &b)
+        self._debug_block(desc: desc, operation: true, &b)
+      end
+
+      def _debug_block(desc: nil, operation: false, &b)
+        msg='FAILED'
+        old = self.indent
         resp = {}
-        if block_given?
-          self.debug(msg, desc: desc)
+
+        unless operation
+          self.debug(desc: desc)
           self.indent_step
-          resp = yield unless self.dry_run
-          self.debug('OK')
-          self.indent_step_back
-        else
-          self.debug(msg, desc: desc)
         end
+
+        resp = yield unless self.dry_run
+        msg = 'OK'
+
         resp
       rescue Exception => e
-        self.debug('FAILED')
-        self.indent_step_back
         raise
+      ensure
+        if operation
+          self.debug(msg, desc: desc)
+        else
+          self.debug(msg)
+        end
+        self.indent = old
       end
 
       def t(desc: {}, context: nil)
@@ -67,7 +82,7 @@ module Superhosting
       end
 
       def with_indent(msg)
-        ind = "#{'* ' * 2 * self.indent }"
+        ind = "#{' ' * 4 * self.indent }"
         "#{ind}#{msg.sub("\n", "\n#{ind}")}"
       end
     end

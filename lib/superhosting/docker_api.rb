@@ -26,25 +26,25 @@ module Superhosting
     end
 
     def container_kill!(name)
-      self.pretty_debug(desc: { code: :container_kill, data: { name: name } }) do
+      self.debug_operation(desc: { code: :container_kill, data: { name: name } }) do
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/kill")
       end
     end
 
     def container_rm!(name)
-      self.pretty_debug(desc: { code: :container_remove, data: { name: name } }) do
+      self.debug_operation(desc: { code: :container_remove, data: { name: name } }) do
         resp_if_success raw_connection.request(method: :delete, path: "/containers/#{name}")
       end
     end
 
     def container_stop!(name)
-      self.pretty_debug(desc: { code: :container_stop, data: { name: name } }) do
+      self.debug_operation(desc: { code: :container_stop, data: { name: name } }) do
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/stop")
       end
     end
 
     def container_restart!(name)
-      self.pretty_debug(desc: { code: :container_restart, data: { name: name } }) do
+      self.debug_operation(desc: { code: :container_restart, data: { name: name } }) do
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/restart")
       end
     end
@@ -72,7 +72,7 @@ module Superhosting
 
     def container_run(name, options, image, command)
       cmd = "docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}"
-      self.pretty_debug(desc: { code: :container_add, data: { name: name } }) do
+      self.debug_operation(desc: { code: :container_add, data: { name: name } }) do
         self.command!(cmd)
       end
     end

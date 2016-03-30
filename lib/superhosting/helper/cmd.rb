@@ -15,7 +15,7 @@ module Superhosting
         (desc[:data] ||= {})[:command] = command_args.join
         desc[:code] ||= :command
 
-        self.pretty_debug(desc: desc) do
+        self.debug_operation(desc: desc) do
           cmd = Mixlib::ShellOut.new(*command_args)
           cmd.run_command
           yield cmd if block_given? and !cmd.status.success?

@@ -6,12 +6,12 @@ module Superhosting
           include Superhosting::Helper::Logger
 
           def delete!(full: false)
-            self.pretty_debug(desc: { code: :directory_remove, data: { path: @path} }) do
+            self.debug_operation(desc: { code: :directory_remove, data: { path: @path} }) do
               @path.rmtree
 
               path_ = @path.parent
               while path_.children.empty?
-                self.pretty_debug(desc: { code: :directory_remove, data: { path: path_} }) do
+                self.debug_operation(desc: { code: :directory_remove, data: { path: path_} }) do
                   path_.rmdir
                   path_ = path_.parent
                 end
@@ -22,7 +22,7 @@ module Superhosting
           end
 
           def rename!(new_path)
-            self.pretty_debug(desc: { code: :directory_rename, data: { path: @path, new_path: new_path } }) do
+            self.debug_operation(desc: { code: :directory_rename, data: { path: @path, new_path: new_path } }) do
               super
             end
           end

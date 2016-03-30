@@ -32,7 +32,8 @@ module Superhosting
           states = {
               up: { action: :stop, undo: :run, next: :configured },
               configured: { action: :unconfigure, undo: :configure, next: :configuration_applied },
-              configuration_applied: { action: :unapply, next: :users_installed },
+              configuration_applied: { action: :unapply, next: :mux_runned },
+              mux_runned: { action: :stop_mux, undo: :run_mux, next: :users_installed },
               users_installed: { action: :uninstall_users, next: :data_installed },
               data_installed: { action: :uninstall_data }
           }
@@ -120,7 +121,8 @@ module Superhosting
         states = {
             none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
             data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
-            users_installed: { action: transition, undo: :unconfigure, next: :configuration_applied },
+            users_installed: { action: :run_mux, undo: :stop_mux, next: :mux_runned },
+            mux_runned: { action: transition, undo: :unconfigure, next: :configuration_applied },
             configuration_applied: { action: :run, undo: :stop, next: :up }
         }
 
