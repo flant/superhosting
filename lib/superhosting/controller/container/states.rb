@@ -67,7 +67,7 @@ module Superhosting
         {}
       end
 
-      def install_users(name:) # TODO
+      def install_users(name:)
         mapper = self.index[name][:mapper]
 
         # user / group
@@ -75,17 +75,24 @@ module Superhosting
         user_controller._group_pretty_add(name: name)
         unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?
           return resp
-        end
+        end unless user_controller._get(name: name)
         user = user_controller._get(name: name)
         mapper.lib.config.f('etc-group').safe_append!("#{name}:x:#{user.gid}:")
 
         # system users
-        users = mapper.system_users
-        users.lines.each do |u|
+        current_system_users = user_controller._group_get_system_users(name: name)
+        add_users = mapper.system_users.lines - current_system_users
+        del_users = current_system_users - mapper.system_users.lines
+        add_users.each do |u|
           unless (resp = user_controller._add_system_user(name: u.strip, container_name: name)).net_status_ok?
             return resp
           end
-        end unless users.nil?
+        end
+        del_users.each do |u|
+          unless (resp = user_controller._del(name: "#{name}_#{u.strip}")).net_status_ok?
+            return resp
+          end
+        end
 
         # chown
         chown_r!(name, name, mapper.lib.web.path)

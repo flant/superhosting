@@ -7,6 +7,7 @@ module Superhosting
 
       COMMANDS_MODULE = Cmd
       CONTROLLERS_MODULE = Superhosting::Controller
+      CONTROLLER_BASE_OPTIONS = [:dry_run]
 
       banner "#{?= * 50}\n#{?- * 19}SUPERHOSTING#{?- * 19}\n#{?= * 50}\n\n"
 
@@ -17,6 +18,11 @@ module Superhosting
 
       option :debug,
              :long         => '--debug',
+             :boolean      => true,
+             :on           => :tail
+
+      option :dry_run,
+             :long         => '--dry-run',
              :boolean      => true,
              :on           => :tail
 
@@ -33,7 +39,7 @@ module Superhosting
         @node = node
 
         @logger = Logger.new(STDOUT)
-        @logger.level = config[:debug] ? Logger::DEBUG : Logger::INFO
+        @logger.level = (config[:debug] or config[:dry_run]) ? Logger::DEBUG : Logger::INFO
         @logger.formatter = proc {|severity, datetime, progname, msg| sprintf("%s\n", msg.to_s.strip) }
 
         self.help if config[:help] or self.class == Base
@@ -117,6 +123,7 @@ module Superhosting
               end
             end
 
+            CONTROLLER_BASE_OPTIONS.each {|opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
             opts.merge!(logger: @logger)
             return node.new(**opts).method(m_name)
           end

@@ -8,27 +8,24 @@ module Superhosting
           method = state[:action]
           opts = method_options(method, options)
 
-          self.debug("Current state '#{current_state}'.")
-
-          unless (resp = self.send(method, opts)).net_status_ok?
-            resp.net_status_ok!
+          self.pretty_debug(desc: { code: :transition, data: { name: method } }) do
+            unless (resp = self.send(method, opts)).net_status_ok?
+              resp.net_status_ok!
+            end
           end
-
-          self.debug("Transition '#{method}': completed.")
 
           break if (current_state = state[:next]).nil?
           state_mapper.state.put!(current_state)
         end
         {}
       rescue Exception => e
-        self.debug("Transition '#{method}': crashed.")
-
         undo_method = state[:undo] || :"undo_#{method}"
-        if respond_to? undo_method
-          opts = method_options(undo_method, options)
-          self.send(undo_method, opts)
 
-          self.debug("Transition '#{undo_method}': completed.")
+        self.pretty_debug(desc: { code: :transition, data: { name: undo_method } }) do
+          if respond_to? undo_method
+            opts = method_options(undo_method, options)
+            self.send(undo_method, opts)
+          end
         end
 
         raise

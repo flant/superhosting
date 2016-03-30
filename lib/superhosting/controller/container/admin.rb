@@ -33,7 +33,7 @@ module Superhosting
         end
 
         def _list_users
-          users = @user_controller._group_get_users(name: @container_name)
+          users = @user_controller._group_get_users_names(name: @container_name)
           users.select {|user| user.start_with? "#{@container_name}_admin_" }
         end
       end

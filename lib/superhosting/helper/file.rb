@@ -3,19 +3,21 @@ module Superhosting
     module File
       def safe_link!(path_to, path)
         unless ::File.exist? path
-          ::File.symlink(path_to, path)
-          self.debug(desc: {code: :symlink_create, data: { path_to: path_to, path: path } })
+          self.pretty_debug(desc: {code: :symlink_create, data: { path_to: path_to, path: path } }) do
+            ::File.symlink(path_to, path)
+          end
         end
       end
 
       def safe_unlink!(path)
         if ::File.exist? path
-          ::File.unlink(path)
-          self.debug(desc: {code: :symlink_remove, data: { path: path } })
+          self.pretty_debug(desc: {code: :symlink_remove, data: { path: path } }) do
+            ::File.unlink(path)
+          end
         end
       end
 
-      def chown_r!(user, group, path)
+      def chown_r!(user, group, path) # TODO
         FileUtils.chown_R user, group, path
       end
     end

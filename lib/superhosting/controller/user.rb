@@ -10,7 +10,7 @@ module Superhosting
 
       def list(container_name:)
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
-          { data: _group_get_users(name: container_name) }
+          { data: self._group_get_users_names(name: container_name) }
         else
           resp
         end
@@ -129,8 +129,7 @@ module Superhosting
       end
 
       def _update_password(name:, encrypted_password:)
-        self.command!("usermod -p '#{encrypted_password}' #{name}")
-        self.debug(desc: { code: :user_update, data: { name: name } })
+        self.command!("usermod -p '#{encrypted_password}' #{name}", desc: { code: :user_update, data: { name: name } })
       end
 
       def _group_get(name:)
@@ -163,7 +162,7 @@ module Superhosting
 
           users = []
           Etc.passwd do |user|
-            users << user.name if user.gid == gid
+            users << user if user.gid == gid
           end
           users
         else
@@ -171,8 +170,20 @@ module Superhosting
         end
       end
 
+      def _group_get_users_names(name:)
+        self._group_get_users(name: name).map(&:name)
+      end
+
+      def _group_get_system_users(name:)
+        if (base_user = self._get(name: name))
+          self._group_get_users(name: name).map {|u| u.name.slice(/(?<=#{name}_).*/) if u.uid != base_user.uid }.compact
+        else
+          []
+        end
+      end
+
       def _group_del_users(name:)
-        self._group_get_users(name: name).each {|user| self._del(name: user) }
+        self._group_get_users_names(name: name).each {|user| self._del(name: user) }
       end
 
       def adding_validation(name:, container_name:)

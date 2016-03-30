@@ -26,23 +26,27 @@ module Superhosting
     end
 
     def container_kill!(name)
-      resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/kill")
-      self.debug(desc: { code: :container_kill, data: { name: name } })
+      self.pretty_debug(desc: { code: :container_kill, data: { name: name } }) do
+        resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/kill")
+      end
     end
 
     def container_rm!(name)
-      resp_if_success raw_connection.request(method: :delete, path: "/containers/#{name}")
-      self.debug(desc: { code: :container_remove, data: { name: name } })
+      self.pretty_debug(desc: { code: :container_remove, data: { name: name } }) do
+        resp_if_success raw_connection.request(method: :delete, path: "/containers/#{name}")
+      end
     end
 
     def container_stop!(name)
-      resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/stop")
-      self.debug(desc: { code: :container_stop, data: { name: name } })
+      self.pretty_debug(desc: { code: :container_stop, data: { name: name } }) do
+        resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/stop")
+      end
     end
 
     def container_restart!(name)
-      resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/restart")
-      self.debug(desc: { code: :container_restart, data: { name: name } })
+      self.pretty_debug(desc: { code: :container_restart, data: { name: name } }) do
+        resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/restart")
+      end
     end
 
     def container_rm_inactive!(name)
@@ -68,8 +72,7 @@ module Superhosting
 
     def container_run(name, options, image, command)
       cmd = "docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}"
-      self.command!(cmd)
-      self.debug(desc: { code: :container_add, data: { name: name } }) # TODO
+      self.command!(cmd, desc: { code: :container_add, data: { name: name } })
     end
 
     def grab_container_options(command_options)

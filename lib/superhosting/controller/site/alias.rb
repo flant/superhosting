@@ -24,16 +24,14 @@ module Superhosting
         end
 
         def delete(name:)
-          if self.not_existing_validation(name: name).net_status_ok?
-            self.debug("Alias '#{name}' has already been deleted")
-          else
+          if (resp = self.existing_validation(name: name)).net_status_ok?
             aliases_mapper = @site_mapper.f('aliases')
             aliases_mapper.remove_line!(name)
             @site_controller.reconfig(name: @site_mapper.name)
 
             @site_controller.reindex_site(name: @site_mapper.name, container_name: @container_mapper.name)
-            {}
           end
+          resp
         end
 
         def existing_validation(name:)

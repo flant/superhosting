@@ -53,7 +53,7 @@ module Superhosting
 
       def reconfig(name:, configure_only: nil, apply_only: nil)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          self.set_state(name: name, state: :users_installed)
+          self.set_state(name: name, state: :data_installed)
           resp = self._reconfig(name: name, configure_only: configure_only, apply_only: apply_only)
         end
         resp
