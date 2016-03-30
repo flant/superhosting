@@ -72,7 +72,9 @@ module Superhosting
 
     def container_run(name, options, image, command)
       cmd = "docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}"
-      self.command!(cmd, desc: { code: :container_add, data: { name: name } })
+      self.pretty_debug(desc: { code: :container_add, data: { name: name } }) do
+        self.command!(cmd)
+      end
     end
 
     def grab_container_options(command_options)
