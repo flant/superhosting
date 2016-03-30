@@ -14,7 +14,7 @@ module Superhosting
             end
 
             break if state[:next].nil?
-            state_mapper.state.put!(current_state)
+            state_mapper.state.put!(state[:next])
           end
           current_state = state[:next]
         end
