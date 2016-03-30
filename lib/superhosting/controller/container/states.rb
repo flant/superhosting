@@ -160,17 +160,18 @@ module Superhosting
           dummy_signature_mapper.delete!
         else
           if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command])).net_status_ok?
-            if (mux_mapper = mapper.mux).file?
-              mux_name = mux_mapper.value
-              mux_controller = self.get_controller(Mux)
-              resp = mux_controller.add(name: mux_name) unless @docker_api.container_running?(mux_name)
-              mux_controller.index_push(mux_name, name)
-            end
-
             mapper.lib.image.put!(image)
             dummy_signature_mapper.rename!(dummy_signature_mapper.parent.path.join('signature'))
           end
         end
+
+        if (mux_mapper = mapper.mux).file?
+          mux_name = mux_mapper.value
+          mux_controller = self.get_controller(Mux)
+          resp = mux_controller.add(name: mux_name) unless @docker_api.container_running?(mux_name)
+          mux_controller.index_push(mux_name, name)
+        end
+
         resp
       end
 
