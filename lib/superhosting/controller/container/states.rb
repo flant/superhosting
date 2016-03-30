@@ -156,7 +156,7 @@ module Superhosting
         volume_opts.each {|val| command_options << "--volume #{val}" }
         dummy_signature_mapper = mapper.lib.dummy_signature.put!(command_options)
 
-        if (image.compare_with(mapper.lib.image)) and (dummy_signature_mapper.compare_with(mapper.lib.signature))
+        if (image.compare_with(mapper.lib.image)) and (dummy_signature_mapper.compare_with(mapper.lib.signature)) # TODO
           dummy_signature_mapper.delete!
         else
           self._stop_docker(name: name) if self.running_validation(name: name).net_status_ok?
@@ -174,9 +174,9 @@ module Superhosting
         mapper = self.index[name][:mapper]
 
         if (mux_mapper = mapper.mux).file?
-          mux_name = mux_mapper.value
+          mux_name = "mux-#{mux_mapper.value}"
           mux_controller = self.get_controller(Mux)
-          resp = mux_controller.add(name: mux_name) unless @docker_api.container_running?(mux_name)
+          resp = mux_controller.add(name: mux_name) if mux_controller.not_running_validation(name: mux_name).net_status_ok?
           mux_controller.index_push(mux_name, name)
         end
 
@@ -187,7 +187,7 @@ module Superhosting
         mapper = self.index[name][:mapper]
 
         if (mux_mapper = mapper.mux).file?
-          mux_name = mux_mapper.value
+          mux_name = "mux-#{mux_mapper.value}"
           mux_controller = self.get_controller(Mux)
           self._stop_docker(name: mux_name) unless mux_controller.index.include?(mux_name)
         end

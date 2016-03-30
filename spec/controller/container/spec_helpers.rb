@@ -18,8 +18,8 @@ module SpecHelpers
         container_controller.delete(**kwargs)
       end
 
-      def container_reconfig(**kwargs)
-        container_controller.reconfig(**kwargs)
+      def container_reconfigure(**kwargs)
+        container_controller.reconfigure(**kwargs)
       end
 
       def container_list(**kwargs)

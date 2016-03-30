@@ -10,10 +10,11 @@ module Superhosting
 
       def add(name:)
         if (resp = self.adding_validation(name: name))
-          mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).get
+          mux_name = name[/(?<=mux-).*/]
+          mapper = MapperInheritance::Mux.new(@config.muxs.f(mux_name)).get
 
           # image
-          return { error: :input_error, code: :no_docker_image_specified_in_mux, data: { mux: name } } if (image = mapper.docker.image).nil?
+          return { error: :input_error, code: :no_docker_image_specified_in_mux, data: { mux: mux_name } } if (image = mapper.docker.image).nil?
 
           # docker
           mapper.erb_options = { mux: mapper }
@@ -30,10 +31,10 @@ module Superhosting
         end
       end
 
-      def reconfig(name:, configure_only: nil, apply_only: nil)
+      def reconfigure(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           self.index[name].each do |container_name|
-            break unless (resp = @container_controller.reconfig(name: container_name, configure_only: configure_only, apply_only: apply_only)).net_status_ok?
+            break unless (resp = @container_controller.reconfigure(name: container_name)).net_status_ok?
           end
         end
         resp
@@ -66,10 +67,9 @@ module Superhosting
         @index ||= {}
         @container_controller.list[:data].each do |container|
           container_name = container[:name]
-          next if (container_index = @container_controller.index[container_name]).nil?
-          container_mapper = container_index[:mapper]
+          container_mapper = @container_controller.index[container_name][:mapper]
           if (mux_mapper = container_mapper.mux).file?
-            mux_name = mux_mapper.value
+            mux_name = "mux-#{mux_mapper.value}"
             (@index[mux_name] ||= []) << container_name if @container_controller.running_validation(name: container_name).net_status_ok?
           end
         end

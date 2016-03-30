@@ -22,8 +22,8 @@ module SpecHelpers
         site_controller.rename(**kwargs)
       end
 
-      def site_reconfig(**kwargs)
-        site_controller.reconfig(**kwargs)
+      def site_reconfigure(**kwargs)
+        site_controller.reconfigure(**kwargs)
       end
 
       def site_list(**kwargs)

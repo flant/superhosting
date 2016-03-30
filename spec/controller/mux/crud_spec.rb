@@ -15,7 +15,7 @@ describe Superhosting::Controller::Mux do
         time_container = File.mtime(container_registry_path)
         time_site = File.mtime(site_registry_path)
 
-        mux_reconfig_with_exps(name: 'php-5.5')
+        mux_reconfigure_with_exps(name: 'mux-php-5.5')
 
         expect(container_registry_path).not_to eq time_container
         expect(site_registry_path).not_to eq time_site
@@ -26,6 +26,6 @@ describe Superhosting::Controller::Mux do
   # negative
 
   it 'reconfig:mux_does_not_exists' do
-    mux_reconfig_with_exps(name: 'php-5.5', code: :mux_does_not_exists)
+    mux_reconfigure_with_exps(name: 'mux-php-5.5', code: :mux_does_not_exists)
   end
 end

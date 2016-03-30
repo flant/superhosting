@@ -14,7 +14,9 @@ module Superhosting
           container_mapper = @container_controller.index[container_name][:mapper]
           sites = []
           container_mapper.sites.grep_dirs.each do |mapper|
-            sites << mapper.name if container_mapper.lib.sites.f(mapper.name).state.file?
+            if (state = container_mapper.lib.sites.f(mapper.name).state).file?
+              sites << { name: mapper.name, state: state.value }
+            end
           end
           { data: sites }
         else
@@ -25,7 +27,7 @@ module Superhosting
       def add(name:, container_name:)
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? and
             (resp = self.not_existing_validation(name: name)).net_status_ok?
-          resp = self._reconfig(name: name, container_name: container_name)
+          resp = self._reconfigure(name: name, container_name: container_name)
         end
         resp
       end
@@ -71,23 +73,15 @@ module Superhosting
         resp
       end
 
-      def reconfig(name:, configure_only: nil, apply_only: nil)
+      def reconfigure(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           self.set_state(name: name, state: :data_installed)
-          self._reconfig(name: name, configure_only: configure_only, apply_only: apply_only)
+          self._reconfigure(name: name)
         end
         resp
       end
 
-      def _reconfig(name:, configure_only: nil, apply_only: nil, **kwargs)
-        transition = if configure_only
-          :configure
-        elsif apply_only
-          :apply
-        else
-          :configure_with_apply
-        end
-
+      def _reconfigure(name:, **kwargs)
         lib_sites_mapper = if (container_name = kwargs[:container_name])
           @container_controller.index[container_name][:mapper].lib.sites
         else
@@ -97,7 +91,8 @@ module Superhosting
 
         states = {
             none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-            data_installed: { action: transition, undo: :unconfigured, next: :up }
+            data_installed: { action: :configure, undo: :unconfigure, next: :configured },
+            configured: { action: :apply, undo: :unapply, next: :up }
         }
 
         self.on_state(state_mapper: state_mapper, states: states,

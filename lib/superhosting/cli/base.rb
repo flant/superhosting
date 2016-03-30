@@ -21,6 +21,11 @@ module Superhosting
              :boolean      => true,
              :on           => :tail
 
+      option :verbose,
+             :long         => '--verbose',
+             :boolean      => true,
+             :on           => :tail
+
       option :dry_run,
              :long         => '--dry-run',
              :boolean      => true,
@@ -39,7 +44,7 @@ module Superhosting
         @node = node
 
         @logger = Logger.new(STDOUT)
-        @logger.level = (config[:debug] or config[:dry_run]) ? Logger::DEBUG : Logger::INFO
+        @logger.level = (config[:debug] or config[:dry_run] or config[:verbose]) ? Logger::DEBUG : Logger::INFO
         @logger.formatter = proc {|severity, datetime, progname, msg| sprintf("%s\n", msg.to_s) }
 
         self.help if config[:help] or self.class == Base
@@ -128,7 +133,7 @@ module Superhosting
             return node.new(**opts).method(m_name)
           end
         end
-        raise Error::Base.new('Method doesn\'t found')
+        raise NetStatus::Exception, { message: 'Method doesn\'t found' }
       end
 
       class << self

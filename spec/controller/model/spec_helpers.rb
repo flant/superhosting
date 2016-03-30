@@ -14,8 +14,8 @@ module SpecHelpers
         model_controller.list
       end
 
-      def model_reconfig(**kwargs)
-        model_controller.reconfig(**kwargs)
+      def model_reconfigure(**kwargs)
+        model_controller.reconfigure(**kwargs)
       end
     end
   end

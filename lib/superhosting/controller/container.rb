@@ -21,7 +21,7 @@ module Superhosting
       end
 
       def add(name:, mail: 'model', admin_mail: nil, model: nil)
-        resp = self._reconfig(name: name, mail: mail, admin_mail: admin_mail, model: model) if (resp = self.not_existing_validation(name: name)).net_status_ok?
+        resp = self._reconfigure(name: name, mail: mail, admin_mail: admin_mail, model: model) if (resp = self.not_existing_validation(name: name)).net_status_ok?
         resp
       end
 
@@ -52,12 +52,28 @@ module Superhosting
 
       end
 
-      def reconfig(name:, configure_only: nil, apply_only: nil)
+      def reconfigure(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           self.set_state(name: name, state: :data_installed)
-          resp = self._reconfig(name: name, configure_only: configure_only, apply_only: apply_only)
+          resp = self._reconfigure(name: name)
         end
         resp
+      end
+
+      def _reconfigure(name:, **kwargs)
+        lib_mapper = @lib.containers.f(name)
+
+        states = {
+            none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
+            data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
+            users_installed: { action: :run_mux, undo: :stop_mux, next: :mux_runned },
+            mux_runned: { action: :configure, undo: :unconfigure, next: :configured },
+            configured: { action: :apply, undo: :unapply, next: :configuration_applied },
+            configuration_applied: { action: :run, undo: :stop, next: :up }
+        }
+
+        self.on_state(state_mapper: lib_mapper, states: states,
+                      name: name, **kwargs)
       end
 
       def save(name:, to:)
@@ -107,29 +123,6 @@ module Superhosting
         resp
       end
 
-      def _reconfig(name:, configure_only: nil, apply_only: nil, **kwargs)
-        transition = if configure_only
-          :configure
-        elsif apply_only
-          :apply
-        else
-          :configure_with_apply
-        end
-
-        lib_mapper = @lib.containers.f(name)
-
-        states = {
-            none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-            data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
-            users_installed: { action: :run_mux, undo: :stop_mux, next: :mux_runned },
-            mux_runned: { action: transition, undo: :unconfigure, next: :configuration_applied },
-            configuration_applied: { action: :run, undo: :stop, next: :up }
-        }
-
-        self.on_state(state_mapper: lib_mapper, states: states,
-                      name: name, **kwargs)
-      end
-
       def index
         @@index ||= self.reindex
       end
@@ -162,11 +155,7 @@ module Superhosting
           MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).get
         end
 
-        @@index[name] = {
-            mapper: mapper,
-            mux_mapper: mux_mapper,
-            state_mapper: state_mapper
-        }
+        @@index[name] = { mapper: mapper, mux_mapper: mux_mapper, state_mapper: state_mapper }
       end
 
       def state(name:)

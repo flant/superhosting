@@ -10,8 +10,8 @@ module SpecHelpers
 
       # methods
 
-      def mux_reconfig(**kwargs)
-        mux_controller.reconfig(**kwargs)
+      def mux_reconfigure(**kwargs)
+        mux_controller.reconfigure(**kwargs)
       end
     end
   end

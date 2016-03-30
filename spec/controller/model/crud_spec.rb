@@ -19,7 +19,7 @@ describe Superhosting::Controller::Model do
         time_container = File.mtime(container_registry_path)
         time_site = File.mtime(site_registry_path)
 
-        model_reconfig_with_exps(name: 'bitrix_m')
+        model_reconfigure_with_exps(name: 'bitrix_m')
 
         expect(container_registry_path).not_to eq time_container
         expect(site_registry_path).not_to eq time_site
@@ -30,6 +30,6 @@ describe Superhosting::Controller::Model do
   # negative
 
   it 'reconfig:model_does_not_exists' do
-    model_reconfig_with_exps(name: 'bad_model', code: :model_does_not_exists)
+    model_reconfigure_with_exps(name: 'bad_model', code: :model_does_not_exists)
   end
 end

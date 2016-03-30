@@ -18,10 +18,10 @@ module Superhosting
 
       end
 
-      def reconfig(name:, configure_only: nil, apply_only: nil)
+      def reconfigure(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           self.index[name].each do |container_name|
-            break unless (resp = @container_controller.reconfig(name: container_name, configure_only: configure_only, apply_only: apply_only)).net_status_ok?
+            break unless (resp = @container_controller.reconfigure(name: container_name)).net_status_ok?
           end
         end
         resp
@@ -36,18 +36,18 @@ module Superhosting
       end
 
       def index
-        def generate
-          @index = {}
-          @container_controller.list[:data].each do |container|
-            container_mapper = @config.containers.f(container[:name])
-            model = container_mapper.f('model', default: @config.default_model).value
-            (@index[model] ||= []) << container[:name]
-          end
+        @index || self.reindex
+      end
 
-          @index
+      def reindex
+        @index ||= {}
+        @container_controller.list[:data].each do |container|
+          container_mapper = @container_controller.index[container[:name]][:mapper]
+          model = container_mapper.f('model', default: @config.default_model).value
+
+          (@index[model] ||= []) << container[:name]
         end
-
-        @index || generate
+        @index
       end
     end
   end

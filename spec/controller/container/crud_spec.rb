@@ -20,7 +20,7 @@ describe Superhosting::Controller::Container do
         time_container = File.mtime(container_registry_path)
         time_site = File.mtime(site_registry_path)
 
-        container_reconfig_with_exps(name: container_name)
+        container_reconfigure_with_exps(name: container_name)
 
         expect(container_registry_path).not_to eq time_container
         expect(site_registry_path).not_to eq time_site
@@ -33,9 +33,9 @@ describe Superhosting::Controller::Container do
     container_delete_with_exps(name: @container_name)
   end
 
-  xit 'list' do
+  it 'list' do
     with_container do |container_name|
-      expect(container_list_with_exps[:data]).to include(name: container_name)
+      expect(container_list_with_exps[:data].first).to include(:name, :state)
     end
   end
 
@@ -79,7 +79,7 @@ describe Superhosting::Controller::Container do
   end
 
   it 'reconfig:container_does_not_exists' do
-    container_reconfig_with_exps(name: @container_name, code: :container_does_not_exists)
+    container_reconfigure_with_exps(name: @container_name, code: :container_does_not_exists)
   end
 
   it 'delete:container_does_not_exists' do
@@ -102,11 +102,11 @@ describe Superhosting::Controller::Container do
 
   it 'add#mux', :docker do
     container_add_with_exps(name: @container_name, model: 'bitrix_m')
-    expect(docker_api.container_running?('php-5.5')).to be true
+    expect(docker_api.container_running?('mux-php-5.5')).to be true
     container_add_with_exps(name: "#{@container_name}2", model: 'bitrix_m')
     container_delete_with_exps(name: @container_name)
-    expect(docker_api.container_running?('php-5.5')).to be true
+    expect(docker_api.container_running?('mux-php-5.5')).to be true
     container_delete_with_exps(name: "#{@container_name}2")
-    expect(docker_api.container_running?('php-5.5')).to be false
+    expect(docker_api.container_running?('mux-php-5.5')).to be false
   end
 end

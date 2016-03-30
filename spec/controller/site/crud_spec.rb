@@ -33,7 +33,7 @@ describe Superhosting::Controller::Site do
         site_registry_path = @site_controller.lib.containers.f(container_name).registry.sites.f(site_name).path
         time_site = File.mtime(site_registry_path)
 
-        site_reconfig_with_exps(name: site_name)
+        site_reconfigure_with_exps(name: site_name)
 
         expect(site_registry_path).not_to eq time_site
       end
@@ -43,7 +43,7 @@ describe Superhosting::Controller::Site do
   it 'list' do
     with_container do |container_name|
       with_site do |site_name|
-        expect(site_list_with_exps(container_name: container_name)[:data]).to include(site_name)
+        expect(site_list_with_exps(container_name: container_name)[:data].first).to include(:name, :state)
       end
     end
   end

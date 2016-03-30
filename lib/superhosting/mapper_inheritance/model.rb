@@ -17,6 +17,7 @@ module Superhosting
       end
 
       def get
+        raise NetStatus::Exception, { error: :input_error, code: :model_does_not_exists, data: { name: @model_mapper.name } } unless @model_mapper.dir?
         raise NetStatus::Exception, { error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: @model_mapper.name } } if @model_mapper.abstract?
         super
       end
