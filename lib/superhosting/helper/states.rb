@@ -12,10 +12,11 @@ module Superhosting
             unless (resp = self.send(method, opts)).net_status_ok?
               resp.net_status_ok!
             end
-          end
 
-          break if (current_state = state[:next]).nil?
-          state_mapper.state.put!(current_state)
+            break if state[:next].nil?
+            state_mapper.state.put!(current_state)
+          end
+          current_state = state[:next]
         end
         {}
       rescue Exception => e
