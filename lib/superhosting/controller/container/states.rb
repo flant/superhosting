@@ -159,6 +159,7 @@ module Superhosting
         if (image.compare_with(mapper.lib.image)) and (dummy_signature_mapper.compare_with(mapper.lib.signature))
           dummy_signature_mapper.delete!
         else
+          self._stop_docker(name: name) if self.running_validation(name: name)
           if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command])).net_status_ok?
             mapper.lib.image.put!(image)
             dummy_signature_mapper.rename!(dummy_signature_mapper.parent.path.join('signature'))
