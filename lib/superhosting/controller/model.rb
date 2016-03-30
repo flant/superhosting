@@ -38,10 +38,10 @@ module Superhosting
       def index
         def generate
           @index = {}
-          @container_controller.list[:data].each do |container_name|
-            container_mapper = @config.containers.f(container_name)
+          @container_controller.list[:data].each do |container|
+            container_mapper = @config.containers.f(container[:name])
             model = container_mapper.f('model', default: @config.default_model).value
-            (@index[model] ||= []) << container_name
+            (@index[model] ||= []) << container[:name]
           end
 
           @index

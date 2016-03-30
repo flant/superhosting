@@ -15,7 +15,7 @@ module Superhosting
         # containers = (docker & sx)
 
         containers = @config.containers.grep_dirs.map do |n|
-          n.name if self.index.key? n.name and self.index[n.name][:mapper].lib.state.file?
+          { name: n.name, state: self.state(name: n.name).value } if self.index.key? n.name and self.index[n.name][:mapper].lib.state.file?
         end.compact
         { data: containers }
       end

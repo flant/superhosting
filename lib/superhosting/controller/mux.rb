@@ -64,11 +64,10 @@ module Superhosting
 
       def reindex
         @index ||= {}
-        @container_controller.list[:data].each do |container_name|
-          container_mapper = @config.containers.f(container_name)
-          model = container_mapper.f('model', default: @config.default_model)
-          model_mapper = @config.models.f(model)
-          container_mapper = MapperInheritance::Model.new(container_mapper, model_mapper).get
+        @container_controller.list[:data].each do |container|
+          container_name = container[:name]
+          next if (container_index = @container_controller.index[container_name]).nil?
+          container_mapper = container_index[:mapper]
           if (mux_mapper = container_mapper.mux).file?
             mux_name = mux_mapper.value
             (@index[mux_name] ||= []) << container_name if @container_controller.running_validation(name: container_name).net_status_ok?

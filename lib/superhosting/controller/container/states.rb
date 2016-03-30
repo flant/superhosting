@@ -159,7 +159,7 @@ module Superhosting
         if (image.compare_with(mapper.lib.image)) and (dummy_signature_mapper.compare_with(mapper.lib.signature))
           dummy_signature_mapper.delete!
         else
-          self._stop_docker(name: name) if self.running_validation(name: name)
+          self._stop_docker(name: name) if self.running_validation(name: name).net_status_ok?
           if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command])).net_status_ok?
             mapper.lib.image.put!(image)
             dummy_signature_mapper.rename!(dummy_signature_mapper.parent.path.join('signature'))
@@ -189,14 +189,14 @@ module Superhosting
         if (mux_mapper = mapper.mux).file?
           mux_name = mux_mapper.value
           mux_controller = self.get_controller(Mux)
-          self._stop_docker(mux_name) unless mux_controller.index.include?(mux_name)
+          self._stop_docker(name: mux_name) unless mux_controller.index.include?(mux_name)
         end
 
         {}
       end
 
       def stop(name:)
-        self._stop_docker(name)
+        self._stop_docker(name: name)
         self.get_controller(Mux).reindex
         {}
       end
@@ -228,7 +228,7 @@ module Superhosting
         self.running_validation(name: name)
       end
 
-      def _stop_docker(name)
+      def _stop_docker(name:)
         @docker_api.container_kill!(name)
         @docker_api.container_rm!(name)
         PathMapper.new('/etc/security/docker.conf').remove_line!("@#{name} #{name}")

@@ -16,9 +16,9 @@ module Superhosting
         def list
           if (resp = @container_controller.list).net_status_ok?
             containers = resp[:data]
-            container_users = containers.map do |c_name|
-              unless @user_controller._get(name: "#{c_name}_admin_#{@admin_name}").nil?
-                { container: c_name, user: "#{c_name}_admin_#{@admin_name}" }
+            container_users = containers.map do |container|
+              unless @user_controller._get(name: "#{container[:name]}_admin_#{@admin_name}").nil?
+                { container: container[:name], user: "#{container[:name]}_admin_#{@admin_name}" }
               end
             end.compact
 
