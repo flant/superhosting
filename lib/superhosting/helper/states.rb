@@ -12,7 +12,9 @@ module Superhosting
             unless (resp = self.send(method, opts)).net_status_ok?
               resp.net_status_ok!
             end
-            state_mapper.state.put!(state[:next]) unless (state[:next]).nil?
+            self.debug_block(desc: { code: :change_state, data: { from: current_state, to: state[:next] } }) do
+              state_mapper.state.put!(state[:next]) unless (state[:next]).nil?
+            end
           end
           break if (current_state = state[:next]).nil?
         end
@@ -38,6 +40,17 @@ module Superhosting
           opts.merge!(name => opt)
         end
         opts
+      end
+
+      def state(name:)
+        self.existing_validation(name: name).net_status_ok!
+        self.index[name][:state_mapper]
+      end
+
+      def set_state(name:, state:)
+        self.debug_block(desc: { code: :change_state, data: { from: self.state(name: name).value, to: state } }) do
+          self.state(name: name).put!(state)
+        end
       end
     end
   end

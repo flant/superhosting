@@ -5,27 +5,33 @@ module Superhosting
         module FileNode
           include Superhosting::Helper::Logger
 
-          def put!(content)
-            self.debug_operation(desc: { code: :file_recreate, data: { path: @path } }) do
-              super
+          def _put!(content)
+            self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
+              super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
             end
           end
 
-          def append!(content)
-            self.debug_operation(desc: { code: :file_append, data: { path: @path, content: content } }) do
-              super
+          def _remove_line!(line)
+            self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
+              super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
             end
           end
 
-          def rename!(new_path)
-            self.debug_operation(desc: { code: :file_rename, data: { path: @path, new_path: new_path } }) do
-              super
+          def _append!(content)
+            self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
+              super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
             end
           end
 
-          def delete!(full: false)
-            self.debug_operation(desc: { code: :file_remove, data: { path: @path } }) do
-              super
+          def _rename!(new_path)
+            self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
+              super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
+            end
+          end
+
+          def _delete!(full: false)
+            self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
+              super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
             end
           end
         end

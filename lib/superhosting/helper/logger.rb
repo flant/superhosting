@@ -9,47 +9,53 @@ module Superhosting
         Thread.current[:superhosting_dry_run]
       end
 
-      def debug(msg=nil, desc: nil, &b)
+      def debug(msg=nil, indent: true, desc: nil, &b)
         unless logger.nil?
           unless desc.nil?
             (desc[:data] ||= {})[:msg] = msg
             msg = t(desc: desc)
           end
-          logger.debug(with_indent(msg), &b)
+          msg = indent ? with_indent(msg) : msg.strip
+          logger.debug(msg, &b)
         end
         {} # net_status
       end
 
-      def debug_block(desc: nil, &b)
-        self._debug_block(desc: desc, operation: false, &b)
-      end
-
       def debug_operation(desc: nil, &b)
-        self._debug_block(desc: desc, operation: true, &b)
-      end
-
-      def _debug_block(desc: nil, operation: false, &b)
-        msg='FAILED'
         old = self.indent
-        resp = {}
 
-        unless operation
-          self.debug(desc: desc)
-          self.indent_step
+        status = :failed
+        diff = nil
+        resp = b.call do |resp|
+          status = resp[:code]
+          diff = resp[:diff]
         end
-
-        resp = yield unless self.dry_run
-        msg = 'OK'
 
         resp
       rescue Exception => e
         raise
       ensure
-        if operation
-          self.debug(msg, desc: desc)
-        else
-          self.debug(msg)
-        end
+        desc[:code] = :"#{desc[:code]}.#{status}"
+        self.debug(desc: desc)
+        self.debug(diff, indent: false) unless diff.nil?
+        self.indent = old
+      end
+
+      def debug_block(desc: nil, operation: false, &b)
+        old = self.indent
+
+        self.debug(desc: desc)
+        self.indent_step
+
+        status = :failed
+        resp = yield
+        status = :ok
+
+        resp
+      rescue Exception => e
+        raise
+      ensure
+        self.debug(desc: { code: status })
         self.indent = old
       end
 
@@ -83,7 +89,7 @@ module Superhosting
 
       def with_indent(msg)
         ind = "#{' ' * 4 * self.indent }"
-        "#{ind}#{msg.sub("\n", "\n#{ind}")}"
+        "#{ind}#{msg.to_s.sub("\n", "\n#{ind}")}"
       end
     end
   end

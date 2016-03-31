@@ -94,14 +94,25 @@ module Superhosting
 
           useradd_command = "useradd #{name} -g #{group} -d #{home_dir} -s #{shell}".split
           useradd_command += "-u #{uid} -o".split unless uid.nil?
-
-          self._pretty_del(name: name, group: group) unless self._get(name: name).nil?
-          self.command!(useradd_command, desc: { code: :user_add, data: { name: name } })
+          self.command!(useradd_command, debug: false)
 
           user = self._get(name: name)
           passwd_mapper.append!("#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
         end
         resp
+      end
+
+      def _pretty_add_custom(name:, group:, shell: '/usr/sbin/nologin', home_dir: "/web/#{group}", uid: nil)
+        self.debug_operation(desc: { code: :user, data: { name: name } }) do |&blk|
+          if self._get(name: name)
+            blk.call(code: :ok)
+            {}
+          else
+            self._add_custom(name: name, group: group, shell: shell, home_dir: home_dir, uid: uid).tap do
+              blk.call(code: :added)
+            end
+          end
+        end
       end
 
       def _pretty_del(name:, group:)
@@ -111,7 +122,11 @@ module Superhosting
       end
 
       def _del(name:)
-        self.command!("userdel #{name}", desc: { code: :user_del, data: { name: name } })
+        self.debug_operation(desc: { code: :user, data: { name: name } }) do |&blk|
+          self.command!("userdel #{name}", debug: false).tap do
+            blk.call(code: :deleted)
+          end
+        end
       end
 
       def _create_password(generate: false)
@@ -129,7 +144,11 @@ module Superhosting
       end
 
       def _update_password(name:, encrypted_password:)
-        self.command!("usermod -p '#{encrypted_password}' #{name}", desc: { code: :user_update, data: { name: name } })
+        self.debug_operation(desc: { code: :user, data: { name: name } }) do |&blk|
+          self.command!("usermod -p '#{encrypted_password}' #{name}", debug: false).tap do
+            blk.call(code: :updated)
+          end
+        end
       end
 
       def _group_get(name:)
@@ -141,7 +160,11 @@ module Superhosting
       end
 
       def _group_add(name:)
-        self.command!("groupadd #{name}", desc: { code: :group_add, data: { name: name } })
+        self.debug_operation(desc: { code: :group, data: { name: name } }) do |&blk|
+          self.command!("groupadd #{name}", debug: false).tap do
+            blk.call(code: :added)
+          end
+        end
       end
 
       def _group_pretty_add(name:)
@@ -149,7 +172,11 @@ module Superhosting
       end
 
       def _group_del(name:)
-        self.command!("groupdel #{name}", desc: { code: :group_del, data: { name: name } })
+        self.debug_operation(desc: { code: :group, data: { name: name } }) do |&blk|
+          self.command!("groupdel #{name}", debug: false).tap do
+            blk.call(code: :deleted)
+          end
+        end
       end
 
       def _group_pretty_del(name:)

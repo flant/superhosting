@@ -12,9 +12,10 @@ module Superhosting
         super(**kwargs)
       end
 
-      def mkdir(path)
+      def mkdir(path, **options)
         if @on_config
           PathMapper.new(path).create!
+          self.set_file_attributes(path, options)
           self.registry_files << path.to_s
         end
       end
@@ -28,6 +29,7 @@ module Superhosting
           script_mapper = self.config_mapper(options).config_templates.f(script)
           raise NetStatus::Exception.new(error: :error, code: :file_does_not_exists, data: { path: script_mapper.path.to_s }) if script_mapper.nil?
           save_to_mapper.put!(script_mapper)
+          self.set_file_attributes(save_to_mapper.path, options)
           self.registry_files << save_to_mapper.path.to_s
         end
       end
@@ -47,6 +49,11 @@ module Superhosting
       end
 
       protected
+
+      def set_file_attributes(path, user: nil, group: nil, mode: nil, **kwargs)
+        chown!(user, group, path) if user and group
+        chmod!(mode, path) if user and mode
+      end
 
       def base_mapper
         self.container

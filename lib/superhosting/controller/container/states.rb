@@ -73,9 +73,9 @@ module Superhosting
         # user / group
         user_controller = self.get_controller(User)
         user_controller._group_pretty_add(name: name)
-        unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?
+        unless (resp = user_controller._pretty_add_custom(name: name, group: name)).net_status_ok?
           return resp
-        end unless user_controller._get(name: name)
+        end
         user = user_controller._get(name: name)
         mapper.lib.config.f('etc-group').safe_append!("#{name}:x:#{user.gid}:")
 
@@ -154,15 +154,13 @@ module Superhosting
         volume_opts = []
         mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
         volume_opts.each {|val| command_options << "--volume #{val}" }
-        dummy_signature_mapper = mapper.lib.dummy_signature.put!(command_options)
+        dummy_signature_md5 = Digest::MD5.new.digest(command_options.join("\n"))
 
-        if (image.compare_with(mapper.lib.image)) and (dummy_signature_mapper.compare_with(mapper.lib.signature)) # TODO
-          dummy_signature_mapper.delete!
-        else
+        if !image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5)
           self._stop_docker(name: name) if self.running_validation(name: name).net_status_ok?
           if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command])).net_status_ok?
             mapper.lib.image.put!(image)
-            dummy_signature_mapper.rename!(dummy_signature_mapper.parent.path.join('signature'))
+            mapper.lib.signature.put!(command_options)
           end
         end
 

@@ -23,7 +23,7 @@ module Superhosting
       end
 
       def apply(name:)
-        self._config(name: name, on_reconfig: false, on_config: true)
+        self._config(name: name, on_reconfig: true, on_config: false)
         {}
       end
 

@@ -12,6 +12,7 @@ require 'highline/import'
 require 'i18n'
 require 'unicode'
 require 'punycode'
+require 'digest/md5'
 
 require 'path_mapper'
 require 'net_status'

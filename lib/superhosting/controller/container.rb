@@ -157,15 +157,6 @@ module Superhosting
 
         @@index[name] = { mapper: mapper, mux_mapper: mux_mapper, state_mapper: state_mapper }
       end
-
-      def state(name:)
-        self.existing_validation(name: name).net_status_ok!
-        self.index[name][:state_mapper]
-      end
-
-      def set_state(name:, state:)
-        self.state(name: name).put!(state)
-      end
     end
   end
 end

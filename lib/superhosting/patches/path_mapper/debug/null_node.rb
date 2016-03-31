@@ -5,27 +5,21 @@ module Superhosting
         module NullNode
           include Superhosting::Helper::Logger
 
-          def create!
-            self.debug_operation(desc: { code: :directories_create, data: { path: @path } }) do
-              super
+          def _create!
+            self.debug_operation(desc: { code: :directory, data: { path: @path } }) do |&blk|
+              super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
             end
           end
 
-          def put!(content)
-            self.debug_operation(desc: { code: :file_create, data: { path: @path } }) do
-              super
+          def _put!(content)
+            self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
+              super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
             end
           end
 
-          def rename!(new_path)
-            self.debug_operation(desc: { code: :file_rename, data: { path: @path, new_path: new_path } }) do
-              super
-            end
-          end
-
-          def append!(content)
-            self.debug_operation(desc: { code: :file_create, data: { path: @path } }) do
-              super
+          def _append!(content)
+            self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
+              super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
             end
           end
         end

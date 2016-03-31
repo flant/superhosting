@@ -26,26 +26,30 @@ module Superhosting
     end
 
     def container_kill!(name)
-      self.debug_operation(desc: { code: :container_kill, data: { name: name } }) do
+      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/kill")
+        blk.call(code: :killed)
       end
     end
 
     def container_rm!(name)
-      self.debug_operation(desc: { code: :container_remove, data: { name: name } }) do
+      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
         resp_if_success raw_connection.request(method: :delete, path: "/containers/#{name}")
+        blk.call(code: :removed)
       end
     end
 
     def container_stop!(name)
-      self.debug_operation(desc: { code: :container_stop, data: { name: name } }) do
+      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/stop")
+        blk.call(code: :stopped)
       end
     end
 
     def container_restart!(name)
-      self.debug_operation(desc: { code: :container_restart, data: { name: name } }) do
+      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/restart")
+        blk.call(code: :restarted)
       end
     end
 
@@ -72,8 +76,10 @@ module Superhosting
 
     def container_run(name, options, image, command)
       cmd = "docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}"
-      self.debug_operation(desc: { code: :container_add, data: { name: name } }) do
-        self.command!(cmd)
+      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
+        self.command!(cmd).tap do
+          blk.call(code: :added)
+        end
       end
     end
 
