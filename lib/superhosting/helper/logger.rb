@@ -1,22 +1,26 @@
 module Superhosting
   module Helper
     module Logger
-      def logger
+      def __logger
         Thread.current[:superhosting_logger]
       end
 
-      def dry_run
+      def __dry_run
         Thread.current[:superhosting_dry_run]
       end
 
+      def __debug
+        Thread.current[:superhosting_debug]
+      end
+
       def debug(msg=nil, indent: true, desc: nil, &b)
-        unless logger.nil?
+        unless self.__logger.nil?
           unless desc.nil?
             (desc[:data] ||= {})[:msg] = msg
             msg = t(desc: desc)
           end
           msg = indent ? with_indent(msg) : msg.strip
-          logger.debug(msg, &b)
+          self.__logger.debug(msg, &b)
         end
         {} # net_status
       end
@@ -37,7 +41,7 @@ module Superhosting
       ensure
         desc[:code] = :"#{desc[:code]}.#{status}"
         self.debug(desc: desc)
-        self.debug(diff, indent: false) unless diff.nil?
+        self.debug(diff, indent: false) if !diff.nil? and self.__debug
         self.indent = old
       end
 

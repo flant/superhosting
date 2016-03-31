@@ -7,7 +7,7 @@ module Superhosting
 
       COMMANDS_MODULE = Cmd
       CONTROLLERS_MODULE = Superhosting::Controller
-      CONTROLLER_BASE_OPTIONS = [:dry_run]
+      CONTROLLER_BASE_OPTIONS = [:dry_run, :debug]
 
       banner "#{?= * 50}\n#{?- * 19}SUPERHOSTING#{?- * 19}\n#{?= * 50}\n\n"
 
