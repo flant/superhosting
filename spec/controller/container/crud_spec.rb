@@ -109,4 +109,11 @@ describe Superhosting::Controller::Container do
     container_delete_with_exps(name: "#{@container_name}2")
     expect(docker_api.container_running?('mux-php-5.5')).to be false
   end
+
+  it 'recreate', :docker do
+    container_add_with_exps(name: @container_name)
+    container_delete_with_exps(name: @container_name)
+    container_add_with_exps(name: @container_name)
+    container_delete_with_exps(name: @container_name)
+  end
 end

@@ -12,8 +12,12 @@ module Superhosting
             unless (resp = self.send(method, opts)).net_status_ok?
               resp.net_status_ok!
             end
-            self.debug_block(desc: { code: :change_state, data: { from: current_state, to: state[:next] } }) do
-              state_mapper.state.put!(state[:next]) unless (state[:next]).nil?
+            self.debug_block(desc: { code: :change_state, data: { from: current_state, to: state[:next] } }) do # TODO
+              if (state[:next]).nil?
+                state_mapper.state.delete!(full: true)
+              else
+                state_mapper.state.put!(state[:next])
+              end
             end
           end
           break if (current_state = state[:next]).nil?
@@ -47,9 +51,13 @@ module Superhosting
         self.index[name][:state_mapper]
       end
 
-      def set_state(name:, state:)
+      def set_state(name:, state:) # TODO
         self.debug_block(desc: { code: :change_state, data: { from: self.state(name: name).value, to: state } }) do
-          self.state(name: name).put!(state)
+          if state.nil?
+            self.state(name: name).delete!(full: full)
+          else
+            self.state(name: name).put!(state)
+          end
         end
       end
     end

@@ -151,4 +151,13 @@ describe Superhosting::Controller::Site do
       expect_in_file(conf_mapper, 'xn--d1acufc.xn--p1ai')
     end
   end
+
+  it 'recreate' do
+    with_container do |container_name|
+      site_add_with_exps(name: @site_name, container_name: container_name)
+      site_delete_with_exps(name: @site_name)
+      site_add_with_exps(name: @site_name, container_name: container_name)
+      site_delete_with_exps(name: @site_name)
+    end
+  end
 end
