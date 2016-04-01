@@ -77,7 +77,11 @@ module Superhosting
           return resp
         end
         user = user_controller._get(name: name)
-        mapper.lib.config.f('etc-group').safe_append!("#{name}:x:#{user.gid}:")
+
+        self.with_dry_run do |dry_run|
+          user_gid = dry_run ? 'XXXX' : user.gid
+          mapper.lib.config.f('etc-group').safe_append!("#{name}:x:#{user_gid}:")
+        end
 
         # system users
         current_system_users = user_controller._group_get_system_users(name: name)

@@ -26,8 +26,8 @@ module Superhosting
       rescue Exception => e
         undo_method = state[:undo] || :"undo_#{method}"
 
-        self.debug_block(desc: { code: :transition_undo, data: { name: undo_method } }) do
-          if respond_to? undo_method
+        if respond_to? undo_method
+          self.debug_block(desc: { code: :transition_undo, data: { name: undo_method } }) do
             opts = method_options(undo_method, options)
             self.send(undo_method, opts)
           end

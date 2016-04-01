@@ -10,8 +10,8 @@ module Superhosting
       @config = PathMapper.new(config_path)
       @lib = PathMapper.new(lib_path)
       Thread.current[:superhosting_logger] ||= logger
-      Thread.current[:superhosting_debug] ||= debug
-      Thread.current[:superhosting_dry_run] ||= dry_run
+      Thread.current[:debug] ||= debug
+      Thread.current[:dry_run] ||= dry_run
 
       @docker_api = docker_api || DockerApi.new(socket: @config.f('docker_socket', default: nil))
     end

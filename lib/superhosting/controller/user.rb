@@ -97,7 +97,11 @@ module Superhosting
           self.command!(useradd_command, debug: false)
 
           user = self._get(name: name)
-          passwd_mapper.append!("#{name}:x:#{user.uid}:#{user.gid}::#{home_dir}:#{shell}")
+
+          self.with_dry_run do |dry_run|
+            user_gid, user_uid = dry_run ? ['XXXX', 'XXXX'] : [user.gid, user.uid]
+            passwd_mapper.append!("#{name}:x:#{user_uid}:#{user_gid}::#{home_dir}:#{shell}")
+          end
         end
         resp
       end
@@ -123,8 +127,11 @@ module Superhosting
 
       def _del(name:)
         self.debug_operation(desc: { code: :user, data: { name: name } }) do |&blk|
-          self.command!("userdel #{name}", debug: false).tap do
+          self.with_dry_run do |dry_run|
+            resp = {}
+            resp = self.command!("userdel #{name}", debug: false) unless dry_run
             blk.call(code: :deleted)
+            resp
           end
         end
       end
@@ -145,8 +152,11 @@ module Superhosting
 
       def _update_password(name:, encrypted_password:)
         self.debug_operation(desc: { code: :user, data: { name: name } }) do |&blk|
-          self.command!("usermod -p '#{encrypted_password}' #{name}", debug: false).tap do
+          self.with_dry_run do |dry_run|
+            resp = {}
+            resp = self.command!("usermod -p '#{encrypted_password}' #{name}", debug: false) unless dry_run
             blk.call(code: :updated)
+            resp
           end
         end
       end
@@ -161,8 +171,11 @@ module Superhosting
 
       def _group_add(name:)
         self.debug_operation(desc: { code: :group, data: { name: name } }) do |&blk|
-          self.command!("groupadd #{name}", debug: false).tap do
+          self.with_dry_run do |dry_run|
+            resp = {}
+            resp = self.command!("groupadd #{name}", debug: false) unless dry_run
             blk.call(code: :added)
+            resp
           end
         end
       end
@@ -173,8 +186,11 @@ module Superhosting
 
       def _group_del(name:)
         self.debug_operation(desc: { code: :group, data: { name: name } }) do |&blk|
-          self.command!("groupdel #{name}", debug: false).tap do
+          self.with_dry_run do |dry_run|
+            resp = {}
+            resp = self.command!("groupdel #{name}", debug: false) unless dry_run
             blk.call(code: :deleted)
+            resp
           end
         end
       end

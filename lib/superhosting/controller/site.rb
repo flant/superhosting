@@ -60,11 +60,11 @@ module Superhosting
           renaming_lib_mapper = container_mapper.lib.web.f("renaming_#{name}")
 
           mapper.rename!(renaming_mapper.path)
+          mapper.create!
           mapper.lib.rename!(renaming_lib_mapper.path)
+          mapper.lib.create!
 
           if (resp = self.add(name: new_name, container_name: container_mapper.name)).net_status_ok?
-            new_site_mapper.delete!
-            new_site_lib_mapper.delete!
             renaming_mapper.rename!(new_site_mapper.path)
             renaming_lib_mapper.rename!(new_site_lib_mapper.path)
             resp = self.delete(name: name)

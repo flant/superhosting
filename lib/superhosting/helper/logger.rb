@@ -6,11 +6,22 @@ module Superhosting
       end
 
       def __dry_run
-        Thread.current[:superhosting_dry_run]
+        Thread.current[:dry_run]
       end
 
       def __debug
-        Thread.current[:superhosting_debug]
+        Thread.current[:debug]
+      end
+
+      def with_dry_run
+        old = __dry_run
+        yield old
+      ensure
+        __dry_run = old
+      end
+
+      def storage
+        Thread.current[:dry_storage] ||= {}
       end
 
       def debug(msg=nil, indent: true, desc: nil, &b)

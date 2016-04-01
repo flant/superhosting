@@ -25,9 +25,13 @@ module Superhosting
       end
 
       def _command_without_debug(*command_args)
-        cmd = Mixlib::ShellOut.new(*command_args)
-        cmd.run_command
-        yield cmd if block_given? and !cmd.status.success?
+        self.with_dry_run do |dry_run|
+          unless dry_run
+            cmd = Mixlib::ShellOut.new(*command_args)
+            cmd.run_command
+            yield cmd if block_given? and !cmd.status.success?
+          end
+        end
       end
     end
   end
