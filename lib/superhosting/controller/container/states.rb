@@ -80,7 +80,7 @@ module Superhosting
 
         self.with_dry_run do |dry_run|
           user_gid = dry_run ? 'XXXX' : user.gid
-          mapper.lib.config.f('etc-group').safe_append!("#{name}:x:#{user_gid}:")
+          mapper.lib.config.f('etc-group').append_line!("#{name}:x:#{user_gid}:")
         end
 
         # system users
@@ -224,7 +224,7 @@ module Superhosting
       end
 
       def _run_docker(name:, options:, image:, command:)
-        PathMapper.new('/etc/security/docker.conf').safe_append!("@#{name} #{name}")
+        PathMapper.new('/etc/security/docker.conf').append_line!("@#{name} #{name}")
         return { error: :logical_error, code: :docker_command_not_found } if command.nil?
         @docker_api.container_run(name, options, image, command)
         self.running_validation(name: name)

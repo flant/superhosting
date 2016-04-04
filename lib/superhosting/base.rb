@@ -9,7 +9,7 @@ module Superhosting
       @lib_path = Pathname.new(lib_path)
       @config = PathMapper.new(config_path)
       @lib = PathMapper.new(lib_path)
-      Thread.current[:superhosting_logger] ||= logger
+      Thread.current[:logger] ||= logger
       Thread.current[:debug] ||= debug
       Thread.current[:dry_run] ||= dry_run
 

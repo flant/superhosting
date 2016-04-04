@@ -28,9 +28,9 @@ require 'superhosting/helper/config'
 require 'superhosting/helpers'
 
 require 'superhosting/patches/string/punycode'
-require 'superhosting/patches/path_mapper/debug/dir_node'
-require 'superhosting/patches/path_mapper/debug/file_node'
-require 'superhosting/patches/path_mapper/debug/null_node'
+require 'superhosting/patches/path_mapper/dir_node'
+require 'superhosting/patches/path_mapper/file_node'
+require 'superhosting/patches/path_mapper/null_node'
 
 require 'superhosting/base'
 require 'superhosting/controller/admin'

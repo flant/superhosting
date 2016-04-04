@@ -2,15 +2,27 @@ module Superhosting
   module Helper
     module Logger
       def __logger
-        Thread.current[:superhosting_logger]
+        Thread.current[:logger]
+      end
+
+      def __logger=(val)
+        Thread.current[:logger] = val
+      end
+
+      def with_logger(logger: nil)
+        old = self.__logger
+        self.__logger = nil if logger.is_a? FalseClass
+        yield
+      ensure
+        self.__logger = old
       end
 
       def __dry_run
         Thread.current[:dry_run]
       end
 
-      def __debug
-        Thread.current[:debug]
+      def __dry_run=(val)
+        Thread.current[:dry_run] = val
       end
 
       def with_dry_run
@@ -24,13 +36,17 @@ module Superhosting
         Thread.current[:dry_storage] ||= {}
       end
 
+      def __debug
+        Thread.current[:debug]
+      end
+
       def debug(msg=nil, indent: true, desc: nil, &b)
         unless self.__logger.nil?
           unless desc.nil?
             (desc[:data] ||= {})[:msg] = msg
             msg = t(desc: desc)
           end
-          msg = indent ? with_indent(msg) : msg.strip
+          msg = indent ? with_indent(msg) : msg.chomp
           self.__logger.debug(msg, &b)
         end
         {} # net_status

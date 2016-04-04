@@ -15,7 +15,7 @@ module Superhosting
         def add(name:)
           if (resp = self.not_existing_validation(name: name)).net_status_ok? and
             (resp = @site_controller.adding_validation(name: name)).net_status_ok?
-            @site_mapper.f('aliases').append!(name)
+            @site_mapper.f('aliases').append_line!(name)
             @site_controller.reconfigure(name: @site_mapper.name)
 
             @site_controller.reindex_site(name: @site_mapper.name, container_name: @container_mapper.name)

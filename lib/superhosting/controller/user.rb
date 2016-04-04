@@ -100,7 +100,7 @@ module Superhosting
 
           self.with_dry_run do |dry_run|
             user_gid, user_uid = dry_run ? ['XXXX', 'XXXX'] : [user.gid, user.uid]
-            passwd_mapper.append!("#{name}:x:#{user_uid}:#{user_gid}::#{home_dir}:#{shell}")
+            passwd_mapper.append_line!("#{name}:x:#{user_uid}:#{user_gid}::#{home_dir}:#{shell}")
           end
         end
         resp

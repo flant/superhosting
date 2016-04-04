@@ -1,27 +1,29 @@
 module Superhosting
   module Helper
     module Cmd
-      def command!(*command_args, debug: true)
-        self._command(*command_args, debug: debug) do |cmd|
+      def command!(*command_args, **kwargs)
+        self._command(*command_args, **kwargs) do |cmd|
           raise NetStatus::Exception.new(error: :error, code: :command_with_error, data: { error: [cmd.stdout, cmd.stderr].join("\n") })
         end
       end
 
-      def command(*command_args, debug: true)
-        self._command(command_args, debug: debug)
+      def command(*command_args, **kwargs)
+        self._command(command_args, **kwargs)
       end
 
-      def _command(*command_args, debug:)
-        desc = { code: :command, data: { command: command_args.join } }
-        if debug
-          self.debug_operation(desc: desc) do |&blk|
+      def _command(*command_args, debug: true, logger: nil)
+        self.with_logger(logger: logger) do
+          desc = { code: :command, data: { command: command_args.join } }
+          if debug
+            self.debug_operation(desc: desc) do |&blk|
+              self._command_without_debug(*command_args)
+              blk.call(code: :ok)
+            end
+          else
             self._command_without_debug(*command_args)
-            blk.call(code: :ok)
           end
-        else
-          self._command_without_debug(*command_args)
+          {} # net_status
         end
-        {} # net_status
       end
 
       def _command_without_debug(*command_args)
