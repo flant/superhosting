@@ -29,7 +29,7 @@ describe Superhosting::Controller::Model do
 
   # negative
 
-  it 'reconfig:model_does_not_exists' do
-    model_reconfigure_with_exps(name: 'bad_model', code: :model_does_not_exists)
+  it 'reconfig:model_does_not_used' do
+    model_reconfigure_with_exps(name: 'bitrix_m', code: :model_does_not_used)
   end
 end

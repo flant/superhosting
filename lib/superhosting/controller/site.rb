@@ -151,7 +151,7 @@ module Superhosting
 
         model_name = container_mapper.f('model', default: @config.default_model)
         model_mapper = @config.models.f(model_name)
-        etc_mapper = MapperInheritance::Model.new(etc_mapper, model_mapper).get
+        etc_mapper = MapperInheritance::Model.new(model_mapper).set_inheritors(etc_mapper)
 
         mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
         etc_mapper.erb_options = { site: mapper, container: mapper }

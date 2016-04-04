@@ -13,14 +13,11 @@ module Superhosting
               resp.net_status_ok!
             end
 
-            self.with_logger(logger: false) do
-              if (state[:next]).nil?
-                state_mapper.state.delete!(full: true)
-              else
-                state_mapper.state.put!(state[:next])
-              end
+            if state[:next].nil?
+              state_mapper.state.delete!(full: true, logger: false)
+            else
+              self.set_state(name: options[:name], state: state[:next])
             end
-            self.debug(desc: { code: :change_state, data: { from: current_state, to: state[:next] } })
           end
           break if (current_state = state[:next]).nil?
         end
@@ -53,15 +50,17 @@ module Superhosting
         self.index[name][:state_mapper]
       end
 
-      def set_state(name:, state:) # TODO
+      def set_state(name:, state:)
+        state_mapper = self.state(name: name)
+        old_state = state_mapper.value
         self.with_logger(logger: false) do
           if state.nil?
-            self.state(name: name).delete!(full: full)
+            state_mapper.delete!(full: full)
           else
-            self.state(name: name).put!(state)
+            state_mapper.put!(state)
           end
         end
-        self.debug(desc: { code: :change_state, data: { from: self.state(name: name).value, to: state } })
+        self.debug(desc: { code: :change_state, data: { from: old_state, to: state } })
       end
     end
   end

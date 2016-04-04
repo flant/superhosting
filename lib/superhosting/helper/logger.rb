@@ -40,6 +40,14 @@ module Superhosting
         Thread.current[:debug]
       end
 
+      def info(msg=nil, indent: true, desc: nil, &b)
+        unless self.__logger.nil?
+          msg = indent ? with_indent(msg) : msg.chomp
+          self.__logger.info(msg, &b)
+        end
+        {} # net_status
+      end
+
       def debug(msg=nil, indent: true, desc: nil, &b)
         unless self.__logger.nil?
           unless desc.nil?

@@ -224,7 +224,7 @@ module Superhosting
       end
 
       def _run_docker(name:, options:, image:, command:)
-        PathMapper.new('/etc/security/docker.conf').append_line!("@#{name} #{name}")
+        PathMapper.new('/etc/security/docker.conf').append_line!("@#{name} #{name}") unless name.start_with? 'mux'
         return { error: :logical_error, code: :docker_command_not_found } if command.nil?
         @docker_api.container_run(name, options, image, command)
         self.running_validation(name: name)
@@ -233,7 +233,7 @@ module Superhosting
       def _stop_docker(name:)
         @docker_api.container_kill!(name)
         @docker_api.container_rm!(name)
-        PathMapper.new('/etc/security/docker.conf').remove_line!("@#{name} #{name}")
+        PathMapper.new('/etc/security/docker.conf').remove_line!("@#{name} #{name}") unless name.start_with? 'mux'
       end
 
       def _each_site(name:)

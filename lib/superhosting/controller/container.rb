@@ -146,13 +146,13 @@ module Superhosting
 
         model_name = etc_mapper.f('model', default: @config.default_model)
         model_mapper = @config.models.f(model_name)
-        etc_mapper = MapperInheritance::Model.new(etc_mapper, model_mapper).get
+        etc_mapper = MapperInheritance::Model.new(model_mapper).set_inheritors(etc_mapper)
 
         mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
 
         etc_mapper.erb_options = { container: mapper }
         mux_mapper = if (mux_file_mapper = etc_mapper.mux).file?
-          MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).get
+          MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).set_inheritors
         end
 
         @@index[name] = { mapper: mapper, mux_mapper: mux_mapper, state_mapper: state_mapper }

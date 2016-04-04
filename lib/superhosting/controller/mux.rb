@@ -11,7 +11,7 @@ module Superhosting
       def add(name:)
         if (resp = self.adding_validation(name: name))
           mux_name = name[/(?<=mux-).*/]
-          mapper = MapperInheritance::Mux.new(@config.muxs.f(mux_name)).get
+          mapper = MapperInheritance::Mux.new(@config.muxs.f(mux_name)).set_inheritors
 
           # image
           return { error: :input_error, code: :no_docker_image_specified_in_mux, data: { mux: mux_name } } if (image = mapper.docker.image).nil?

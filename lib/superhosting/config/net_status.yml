@@ -37,6 +37,7 @@ en:
     incorrect_ftp_dir: "Incorrect ftp-dir '%{dir}'."
 
     model_does_not_exists: "Model '%{name}' doesn't exists."
+    model_does_not_used: "Model '%{name}' doesn't used."
     base_model_should_not_be_abstract: "Base model '%{name}' should not be abstract."
     mux_does_not_exists: "Mux '%{name}' doesn't exists."
     base_mux_should_not_be_abstract: "Base mux '%{name}' should not be abstract."

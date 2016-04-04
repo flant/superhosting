@@ -196,6 +196,8 @@ module SpecHelpers
           command("docker ps --filter 'name=test' -a | xargs docker stop")
           command("docker ps --filter 'name=test' -a | xargs docker rm")
 
+          PathMapper.new('/etc/security/docker.conf').remove_line!("@#{@container_name} #{@container_name}")
+
           Etc.passwd do |user|
             command("userdel #{user.name}") if user.name.start_with? 'test'
           end

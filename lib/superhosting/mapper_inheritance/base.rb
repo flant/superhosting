@@ -1,21 +1,15 @@
 module Superhosting
   module MapperInheritance
     module Base
-      def initialize(mapper)
-        @mapper = mapper
-        @inheritors = {}
+      attr_accessor :inheritors, :inheritors_tree
+
+      def initialize
+        self.inheritors = {}
+        self.inheritors_tree = {}
       end
 
-      def get
-        self.set_inheritors
-        self.set_inheritance
-        @mapper
-      end
-
-      def set_inheritance
-        @inheritors.sort.each do |k, inheritors|
-          inheritors.each {|inheritor| @mapper << inheritor }
-        end
+      def set_inheritors(mapper)
+        self.set_inheritance(mapper)
       end
     end
   end
