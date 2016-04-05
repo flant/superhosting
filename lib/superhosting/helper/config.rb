@@ -36,6 +36,11 @@ module Superhosting
         {}
       end
 
+      def unconfigure_with_unapply(name:)
+        self.unconfigure(name: name)
+        self.unapply(name: name)
+      end
+
       def reconfig(name:)
         self.unconfigure(name: name)
         self.configure(name: name)

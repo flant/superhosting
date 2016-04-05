@@ -47,6 +47,7 @@ require 'superhosting/controller/site/states'
 require 'superhosting/controller/user'
 require 'superhosting/controller/mux'
 require 'superhosting/controller/model'
+require 'superhosting/controller/base'
 
 require 'superhosting/composite_mapper'
 require 'superhosting/composite_mapper/base'

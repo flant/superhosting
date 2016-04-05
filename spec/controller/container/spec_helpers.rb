@@ -172,9 +172,10 @@ module SpecHelpers
       # other
 
       def with_container(**kwargs)
-        container_add_with_exps(name: @container_name, **kwargs)
-        yield @container_name if block_given?
-        container_delete_with_exps(name: @container_name)
+        options = { name: @container_name }.merge!(kwargs)
+        container_add_with_exps(**options)
+        yield options[:name] if block_given?
+        container_delete_with_exps(name: options[:name])
       end
 
       def with_container_admin

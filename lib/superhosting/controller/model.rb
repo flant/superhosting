@@ -19,23 +19,12 @@ module Superhosting
       end
 
       def tree(name:)
-        def show_tree(node)
+        def show_tree(node, type='model')
           node.each do |k, hash|
-            self.info(k.name)
+            self.info("#{"#{type}: " if type == 'mux'}#{k.name}")
             self.indent_step
             %w(mux model).each do |type|
-              if !hash[type].nil? and !hash[type].empty?
-                self.info(type)
-                self.indent_step
-                (hash[type] || []).each do |v|
-                  if v.is_a? Hash
-                    self.show_tree(v)
-                  else
-                    self.info(v)
-                  end
-                end
-                self.indent_step_back
-              end
+              (hash[type] || []).each {|v| self.show_tree(v, type) } if !hash[type].nil? and !hash[type].empty?
             end
             self.indent_step_back
           end

@@ -94,6 +94,12 @@ module SpecHelpers
       expect(hash).to_not include(:error)
     end
 
+    def expect_file_mtime(*file_path, &b)
+      files = file_path.map {|path| [path, File.mtime(path)] }
+      yield
+      files.each {|path,time| expect(time).to_not eq File.mtime(path) }
+    end
+
     def logger
       Logger.new(STDOUT).tap do |logger|
         logger.level = Logger::DEBUG

@@ -30,9 +30,8 @@ module Superhosting
           lib_mapper = @lib.containers.f(name)
 
           states = {
-              up: { action: :stop, undo: :run, next: :configured },
-              configured: { action: :unconfigure, undo: :configure, next: :configuration_applied },
-              configuration_applied: { action: :unapply, next: :mux_runned },
+              up: { action: :stop, undo: :run, next: :configuration_applied },
+              configuration_applied: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :mux_runned },
               mux_runned: { action: :stop_mux, undo: :run_mux, next: :users_installed },
               users_installed: { action: :uninstall_users, next: :data_installed },
               data_installed: { action: :uninstall_data }
@@ -67,8 +66,7 @@ module Superhosting
             none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
             data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
             users_installed: { action: :run_mux, undo: :stop_mux, next: :mux_runned },
-            mux_runned: { action: :configure, undo: :unconfigure, next: :configured },
-            configured: { action: :apply, undo: :unapply, next: :configuration_applied },
+            mux_runned: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :configuration_applied },
             configuration_applied: { action: :run, undo: :stop, next: :up }
         }
 

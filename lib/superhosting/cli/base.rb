@@ -104,8 +104,28 @@ module Superhosting
           config[key] unless config[key].nil?
         end
 
-        node = CONTROLLERS_MODULE
+        def get_method(m_name, node)
+          params = node.instance_method(:initialize).parameters
+
+          opts = {}
+          params.each do |req, name|
+            if req.to_s.start_with? 'key'
+              if name == :name
+                opt = get_subcontroller_option
+              elsif config.key? name
+                opt = config[name]
+              end
+              opts.merge!(name => opt) unless opt.nil?
+            end
+          end
+
+          CONTROLLER_BASE_OPTIONS.each { |opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
+          opts.merge!(logger: @logger)
+          node.new(**opts).method(m_name)
+        end
+
         names = self.class.get_splited_class_name
+        node = names.one? ? CONTROLLERS_MODULE::Base : CONTROLLERS_MODULE
 
         names.each do |n|
           c_name = n.capitalize.to_sym
@@ -114,23 +134,7 @@ module Superhosting
           if node.respond_to? :constants and node.constants.include? c_name
             node = node.const_get(c_name)
           elsif node.respond_to? :instance_methods and node.instance_methods(false).include? m_name
-            params = node.instance_method(:initialize).parameters
-
-            opts = {}
-            params.each do |req, name|
-              if req.to_s.start_with? 'key'
-                if name == :name
-                  opt = get_subcontroller_option
-                elsif config.key? name
-                  opt = config[name]
-                end
-                opts.merge!(name => opt) unless opt.nil?
-              end
-            end
-
-            CONTROLLER_BASE_OPTIONS.each {|opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
-            opts.merge!(logger: @logger)
-            return node.new(**opts).method(m_name)
+            return get_method(m_name, node)
           end
         end
         raise NetStatus::Exception, { message: 'Method doesn\'t found' }
@@ -176,7 +180,7 @@ module Superhosting
             COMMANDS_MODULE.constants.select {|c| Class === COMMANDS_MODULE.const_get(c) }.sort
           end
 
-          @@commands_hierarchy = get_commands.inject({}) do |h,k|
+          @@commands_hierarchy = get_commands.sort_by {|k1, k2| split_toggle_case_name(k1).one? ? 0 : 1 }.inject({}) do |h,k|
             node = h
             parts = split_toggle_case_name(k)
             parts.each do |cmd|

@@ -11,17 +11,21 @@ module Superhosting
 
       def list(container_name:)
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
-          container_mapper = @container_controller.index[container_name][:mapper]
-          sites = []
-          container_mapper.sites.grep_dirs.each do |mapper|
-            if (state = container_mapper.lib.sites.f(mapper.name).state).file?
-              sites << { name: mapper.name, state: state.value }
-            end
-          end
-          { data: sites }
+          { data: self._list(container_name: container_name) }
         else
           resp
         end
+      end
+
+      def _list(container_name:)
+        container_mapper = @container_controller.index[container_name][:mapper]
+        sites = []
+        container_mapper.sites.grep_dirs.each do |mapper|
+          if (state = container_mapper.lib.sites.f(mapper.name).state).file?
+            sites << { name: mapper.name, state: state.value }
+          end
+        end
+        sites
       end
 
       def add(name:, container_name:)
@@ -91,8 +95,7 @@ module Superhosting
 
         states = {
             none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-            data_installed: { action: :configure, undo: :unconfigure, next: :configured },
-            configured: { action: :apply, undo: :unapply, next: :up }
+            data_installed: { action: :configure_with_apply, undo: :unconfigure, next: :up },
         }
 
         self.on_state(state_mapper: state_mapper, states: states,

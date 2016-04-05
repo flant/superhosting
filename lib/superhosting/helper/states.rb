@@ -60,7 +60,7 @@ module Superhosting
             state_mapper.put!(state)
           end
         end
-        self.debug(desc: { code: :change_state, data: { from: old_state, to: state } })
+        self.debug(desc: { code: :change_state, data: { obj: name, from: old_state, to: state } })
       end
     end
   end

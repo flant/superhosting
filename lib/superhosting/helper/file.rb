@@ -2,8 +2,10 @@ module Superhosting
   module Helper
     module File
       def safe_link!(path_to, path)
-        unless ::File.exist? path
-          self.debug_operation(desc: { code: :symlink, data: { path_to: path_to, path: path } }) do |&blk|
+        self.debug_operation(desc: { code: :symlink, data: { path_to: path_to, path: path } }) do |&blk|
+          if ::File.exist? path
+            blk.call(code: :ok)
+          else
             self.with_dry_run do |dry_run|
               ::File.symlink(path_to, path) unless dry_run
               blk.call(code: :created)
@@ -23,7 +25,7 @@ module Superhosting
         end
       end
 
-      def chown_r!(user, group, path) # TODO
+      def chown_r!(user, group, path)
         self.debug_operation(desc: { code: :chown_r, data: { user: user, group: group, path: path } }) do |&blk|
           self.with_dry_run do |dry_run|
             FileUtils.chown_R(user, group, path) unless dry_run

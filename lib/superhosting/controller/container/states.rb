@@ -79,8 +79,13 @@ module Superhosting
         user = user_controller._get(name: name)
 
         self.with_dry_run do |dry_run|
-          user_gid = dry_run ? 'XXXX' : user.gid
-          mapper.lib.config.f('etc-group').append_line!("#{name}:x:#{user_gid}:")
+          user_gid = if dry_run
+            'XXXX' if user.nil?
+          else
+            user.gid
+          end
+
+          mapper.lib.config.f('etc-group').append_line!("#{name}:x:#{user_gid}:") unless user_gid.nil?
         end
 
         # system users
@@ -126,7 +131,7 @@ module Superhosting
 
       def unconfigure(name:)
         self._each_site(name: name) do |site_controller, site_name|
-          site_controller.unconfigure(name: site_name).net_status_ok!
+          site_controller.unconfigure(name: site_name).net_status_ok! # TODO: unchanged site status
         end
         super
       end
@@ -139,8 +144,8 @@ module Superhosting
       end
 
       def configure_with_apply(name:)
-        self._each_site(name: name) do |site_controller, site_name|
-          site_controller.configure_with_apply(name: site_name).net_status_ok!
+        self._each_site(name: name) do |controller, name, state|
+          controller.reconfigure(name: name).net_status_ok!
         end
         super
       end
@@ -238,8 +243,9 @@ module Superhosting
 
       def _each_site(name:)
         site_controller = self.get_controller(Superhosting::Controller::Site)
-        sites = self.index[name][:mapper].sites.grep_dirs.map { |n| n.name }
-        sites.each {|site_name| yield site_controller, site_name }
+        site_controller._list(container_name: name).each do |site|
+          yield site_controller, site[:name], site[:state]
+        end
       end
     end
   end

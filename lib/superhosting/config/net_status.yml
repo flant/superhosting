@@ -103,7 +103,7 @@ en:
     failed: "FAILED"
     ok: "OK"
 
-    change_state: "State changed from '%{from}' to '%{to}' OK"
+    change_state: "State of '%{obj}' changed from '%{from}' to '%{to}' OK"
 
     chown_r:
       failed: "Command: chown -r '%{user}' '%{group}' '%{path}'... FAILED"

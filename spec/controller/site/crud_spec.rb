@@ -30,12 +30,7 @@ describe Superhosting::Controller::Site do
   it 'reconfig' do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
-        site_registry_path = @site_controller.lib.containers.f(container_name).registry.sites.f(site_name).path
-        time_site = File.mtime(site_registry_path)
-
         site_reconfigure_with_exps(name: site_name)
-
-        expect(site_registry_path).not_to eq time_site
       end
     end
   end

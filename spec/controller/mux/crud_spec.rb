@@ -10,15 +10,7 @@ describe Superhosting::Controller::Mux do
   it 'reconfig' do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
-        container_registry_path = @container_controller.lib.containers.f(container_name).registry.container.path
-        site_registry_path = @container_controller.lib.containers.f(container_name).registry.sites.f(site_name).path
-        time_container = File.mtime(container_registry_path)
-        time_site = File.mtime(site_registry_path)
-
         mux_reconfigure_with_exps(name: 'mux-php-5.5')
-
-        expect(container_registry_path).not_to eq time_container
-        expect(site_registry_path).not_to eq time_site
       end
     end
   end
