@@ -151,7 +151,6 @@ module Superhosting
       end
 
       def run(name:)
-        resp = {}
         mapper = self.index[name][:mapper]
         model = mapper.f('model', default: @config.default_model)
 
@@ -165,12 +164,11 @@ module Superhosting
         volume_opts.each {|val| command_options << "--volume #{val}" }
         dummy_signature_md5 = Digest::MD5.new.digest(command_options.join("\n"))
 
-        if !image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5)
-          self._stop_docker(name: name) if self.running_validation(name: name).net_status_ok?
-          if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command])).net_status_ok?
-            mapper.lib.image.put!(image)
-            mapper.lib.signature.put!(command_options)
-          end
+        restart = (!image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5))
+
+        if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command], restart: restart)).net_status_ok?
+          mapper.lib.image.put!(image, logger: false)
+          mapper.lib.signature.put!(command_options, logger: false)
         end
 
         resp
@@ -228,10 +226,31 @@ module Superhosting
         }
       end
 
-      def _run_docker(name:, options:, image:, command:)
+      def _run_docker(name:, options:, image:, command:, restart: false)
         PathMapper.new('/etc/security/docker.conf').append_line!("@#{name} #{name}") unless name.start_with? 'mux'
         return { error: :logical_error, code: :docker_command_not_found } if command.nil?
-        @docker_api.container_run(name, options, image, command)
+        if @docker_api.container_exists?(name)
+          if @docker_api.container_dead?(name)
+            @docker_api.container_kill!(name)
+            @docker_api.container_rm!(name)
+            @docker_api.container_run(name, options, image, command)
+          elsif @docker_api.container_exited?(name)
+            @docker_api.container_start!(name)
+          elsif restart
+            if @docker_api.container_running?(name) or @docker_api.container_restarting?(name) or @docker_api.container_paused?(name)
+              @docker_api.container_restart!(name)
+            end
+          elsif @docker_api.container_paused?(name)
+            @docker_api.container_unpause!(name)
+          elsif @docker_api.container_restarting?(name)
+            Polling.start 10 do
+               break unless @docker_api.container_restarting?(name)
+               sleep 2
+            end
+          end
+        else
+          @docker_api.container_run(name, options, image, command)
+        end
         self.running_validation(name: name)
       end
 

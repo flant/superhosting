@@ -1,7 +1,7 @@
 module Superhosting
   module Controller
     class User < Base
-      USER_NAME_FORMAT = /^[a-zA-Z][-a-zA-Z0-9_]{3,32}$/
+      USER_NAME_FORMAT = /^[a-zA-Z][-a-zA-Z0-9_]{,31}$/
 
       def initialize(**kwargs)
         super(**kwargs)

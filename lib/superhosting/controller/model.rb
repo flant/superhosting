@@ -65,18 +65,18 @@ module Superhosting
       end
 
       def index
-        @index || self.reindex
+        @@index ||= self.reindex
       end
 
       def reindex
-        @index ||= {}
+        @@index ||= {}
         @container_controller.list[:data].each do |container|
           container_mapper = @container_controller.index[container[:name]][:mapper]
           model = container_mapper.f('model', default: @config.default_model).value
 
-          (@index[model] ||= []) << container[:name]
+          (@@index[model] ||= []) << container[:name]
         end
-        @index
+        @@index
       end
     end
   end

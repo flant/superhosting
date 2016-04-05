@@ -13,6 +13,7 @@ require 'i18n'
 require 'unicode'
 require 'punycode'
 require 'digest/md5'
+require 'polling'
 
 require 'path_mapper'
 require 'net_status'

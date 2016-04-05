@@ -90,7 +90,10 @@ en:
       removed: "Container '%{name}': REMOVED"
       stopped: "Container '%{name}': STOPPED"
       killed: "Container '%{name}': KILLED"
+      started: "Container '%{name}': STARTED"
       restarted: "Container '%{name}': RESTARTED"
+      paused: "Container '%{name}': PAUSED"
+      unpaused: "Container '%{name}': UNPAUSED"
       failed: "Container '%{name}': FAILED"
       ok: "Container '%{name}': OK"
     command:
@@ -103,7 +106,7 @@ en:
     failed: "FAILED"
     ok: "OK"
 
-    change_state: "State of '%{obj}' changed from '%{from}' to '%{to}' OK"
+    change_state: "State of '%{obj}' change from '%{from}' to '%{to}' OK"
 
     chown_r:
       failed: "Command: chown -r '%{user}' '%{group}' '%{path}'... FAILED"

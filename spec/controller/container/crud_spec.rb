@@ -13,10 +13,8 @@ describe Superhosting::Controller::Container do
   end
 
   it 'reconfig' do
-    with_container(model: 'bitrix_m') do |container_name|
-      with_site do |site_name|
-        container_reconfigure_with_exps(name: container_name)
-      end
+    with_container do |container_name|
+      container_reconfigure_with_exps(name: container_name)
     end
   end
 
@@ -107,5 +105,30 @@ describe Superhosting::Controller::Container do
     container_delete_with_exps(name: @container_name)
     container_add_with_exps(name: @container_name)
     container_delete_with_exps(name: @container_name)
+  end
+
+  it 'reconfig@up_docker', :docker do
+    def up_docker(name)
+      expect(docker_api.container_running?(name)).to be_falsey
+      container_reconfigure_with_exps(name: name)
+      expect(docker_api.container_running?(name)).to be_truthy
+    end
+
+    with_container(model: 'test_model') do |container_name|
+      docker_api.container_stop!(container_name)
+      up_docker(container_name)
+
+      docker_api.container_kill!(container_name)
+      up_docker(container_name)
+
+      docker_api.container_pause!(container_name)
+      up_docker(container_name)
+
+      docker_api.container_kill!(container_name)
+      docker_api.container_rm!(container_name)
+      expect(docker_api.container_exists?(container_name)).to be_falsey
+      container_reconfigure_with_exps(name: container_name)
+      expect(docker_api.container_running?(container_name)).to be_truthy
+    end
   end
 end

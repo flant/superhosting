@@ -60,20 +60,20 @@ module Superhosting
       end
 
       def index
-        @index || self.reindex
+        @@index ||= self.reindex
       end
 
       def reindex
-        @index ||= {}
+        @@index ||= {}
         @container_controller.list[:data].each do |container|
           container_name = container[:name]
           container_mapper = @container_controller.index[container_name][:mapper]
           if (mux_mapper = container_mapper.mux).file?
             mux_name = "mux-#{mux_mapper.value}"
-            (@index[mux_name] ||= []) << container_name if @container_controller.running_validation(name: container_name).net_status_ok?
+            (@@index[mux_name] ||= []) << container_name if @container_controller.running_validation(name: container_name).net_status_ok?
           end
         end
-        @index
+        @@index
       end
 
       def index_pop(mux_name, container_name)

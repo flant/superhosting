@@ -28,7 +28,7 @@ module Superhosting
     def container_kill!(name)
       self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
         self.with_dry_run do |dry_run|
-          self.storage[name] = :not_running if dry_run
+          self.storage.delete(name) if dry_run
           resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/kill") unless dry_run
         end
         blk.call(code: :killed)
@@ -48,10 +48,40 @@ module Superhosting
     def container_stop!(name)
       self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
         self.with_dry_run do |dry_run|
-          self.storage[name] = :not_running if dry_run
+          self.storage[name] = 'exited' if dry_run
           resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/stop") unless dry_run
         end
         blk.call(code: :stopped)
+      end
+    end
+
+    def container_start!(name)
+      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
+        self.with_dry_run do |dry_run|
+          self.storage[name] = 'running' if dry_run
+          resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/start") unless dry_run
+        end
+        blk.call(code: :started)
+      end
+    end
+
+    def container_pause!(name)
+      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
+        self.with_dry_run do |dry_run|
+          self.storage[name] = 'paused' if dry_run
+          resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/pause") unless dry_run
+        end
+        blk.call(code: :paused)
+      end
+    end
+
+    def container_unpause!(name)
+      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
+        self.with_dry_run do |dry_run|
+          self.storage[name] = 'running' if dry_run
+          resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/unpause") unless dry_run
+        end
+        blk.call(code: :unpaused)
       end
     end
 
@@ -59,6 +89,7 @@ module Superhosting
       self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
         self.with_dry_run do |dry_run|
           resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/restart") unless dry_run
+          self.storage[name] = 'running' if dry_run
         end
         blk.call(code: :restarted)
       end
@@ -68,19 +99,36 @@ module Superhosting
       self.container_rm!(name) if self.container_exists?(name) and !self.container_running?(name)
     end
 
-    def container_not_running?(name)
+    def container_status?(name, status)
       self.with_dry_run do |dry_run|
-        return true if dry_run and self.storage[name] == :not_running
-        !container_running?(name)
+        return true if dry_run and self.storage[name] == status
+        resp = container_info(name)
+        resp.nil? ? false : resp['State']['Status'] == status
       end
     end
 
     def container_running?(name)
-      self.with_dry_run do |dry_run|
-        return true if dry_run and self.storage[name] == :running
-        resp = container_info(name)
-        resp.nil? ? false : resp['State']['Status'] == 'running'
-      end
+      container_status?(name, 'running')
+    end
+
+    def container_not_running?(name)
+      !container_running?(name)
+    end
+
+    def container_restarting?(name)
+      container_status?(name, 'restarting')
+    end
+
+    def container_paused?(name)
+      container_status?(name, 'paused')
+    end
+
+    def container_exited?(name)
+      container_status?(name, 'exited')
+    end
+
+    def container_dead?(name)
+      container_status?(name, 'dead')
     end
 
     def container_not_exists?(name)

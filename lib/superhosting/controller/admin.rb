@@ -27,6 +27,7 @@ module Superhosting
           admin_dir = @admins_mapper.f(name)
           admin_dir.create!
           admin_dir.passwd.put!(name)
+          self.reindex_admin(name: name)
           self.command!("chmod 640 #{admin_dir.path}")
           self.passwd(name: name, generate: generate)
         end
@@ -39,6 +40,7 @@ module Superhosting
           if (resp = admin_container_controller._delete_all_users).net_status_ok?
             admin_dir = @admins_mapper.f(name)
             admin_dir.delete!
+            self.reindex_admin(name: name)
           end
         end
         resp
@@ -75,13 +77,23 @@ module Superhosting
       end
 
       def index
-        index = {}
-        @admins_mapper.grep_dirs.each do |dir_name|
-          admin_name = dir_name.name
-          admin_container_controller = self.get_controller(Admin::Container, name: admin_name)
-          index[admin_name] = admin_container_controller._users_list.net_status_ok![:data] || []
+        @@index ||= self.reindex
+      end
+
+      def reindex
+        @@index = {}
+        @admins_mapper.grep_dirs.each {|dir_name| self.reindex_admin(name: dir_name.name) }
+        @@index
+      end
+
+      def reindex_admin(name:)
+        @@index ||= {}
+        if @admins_mapper.f(name).nil?
+          @@index.delete(name)
+        else
+          admin_container_controller = self.get_controller(Admin::Container, name: name)
+          @@index[name] = admin_container_controller._users_list.net_status_ok![:data] || []
         end
-        index
       end
     end
   end
