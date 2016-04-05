@@ -98,10 +98,16 @@ module Superhosting
           end
         end
         del_users.each do |u|
-          unless (resp = user_controller._del(name: "#{name}_#{u.strip}")).net_status_ok?
+          user_name = "#{name}_#{u.strip}"
+          user = user_controller._get(name: user_name)
+          unless (resp = user_controller._del(name: user_name)).net_status_ok?
             return resp
           end
+          mapper.lib.config.f('etc-passwd').remove_line!(/^#{user_name}:.*/)
         end
+
+        # docker
+        PathMapper.new('/etc/security/docker.conf').append_line!("@#{name} #{name}")
 
         # chown
         chown_r!(name, name, mapper.lib.web.path)
@@ -119,33 +125,36 @@ module Superhosting
         user_controller._group_del_users(name: name)
         user_controller._group_pretty_del(name: name)
 
+        # docker
+        PathMapper.new('/etc/security/docker.conf').remove_line!("@#{name} #{name}")
+
         {}
       end
 
       def configure(name:)
-        self._each_site(name: name) do |site_controller, site_name|
-          site_controller.configure(name: site_name).net_status_ok!
+        self._each_site(name: name) do |controller, sname, state|
+          controller.configure(name: sname).net_status_ok!
         end
         super
       end
 
       def unconfigure(name:)
-        self._each_site(name: name) do |site_controller, site_name|
-          site_controller.unconfigure(name: site_name).net_status_ok! # TODO: unchanged site status
+        self._each_site(name: name) do |controller, sname, state|
+          controller.unconfigure(name: sname).net_status_ok! # TODO: unchanged site status
         end
         super
       end
 
       def apply(name:)
-        self._each_site(name: name) do |site_controller, site_name|
-          site_controller.apply(name: site_name).net_status_ok!
+        self._each_site(name: name) do |controller, sname, state|
+          controller.apply(name: sname).net_status_ok!
         end
         super
       end
 
       def configure_with_apply(name:)
-        self._each_site(name: name) do |controller, name, state|
-          controller.reconfigure(name: name).net_status_ok!
+        self._each_site(name: name) do |controller, sname, state|
+          controller.reconfigure(name: sname).net_status_ok!
         end
         super
       end
@@ -156,19 +165,15 @@ module Superhosting
 
         return { error: :input_error, code: :no_docker_image_specified_in_model, data: { model: model } } if (image = mapper.docker.image).nil?
 
-        all_options = mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n] }.to_h
-        command_options = @docker_api.grab_container_options(all_options)
-
-        volume_opts = []
-        mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
-        volume_opts.each {|val| command_options << "--volume #{val}" }
-        dummy_signature_md5 = Digest::MD5.new.digest(command_options.join("\n"))
+        command_options, command = self._docker_options(mapper: mapper)
+        dump_command_option = Marshal.dump(command_options + [command])
+        dummy_signature_md5 = Digest::MD5.new.digest(dump_command_option)
 
         restart = (!image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5))
 
-        if (resp = self._run_docker(name: name, options: command_options, image: image, command: all_options[:command], restart: restart)).net_status_ok?
+        if (resp = self._run_docker(name: name, options: command_options, image: image, command: command, restart: restart)).net_status_ok?
           mapper.lib.image.put!(image, logger: false)
-          mapper.lib.signature.put!(command_options, logger: false)
+          mapper.lib.signature.put!(dump_command_option, logger: false)
         end
 
         resp
@@ -194,14 +199,19 @@ module Superhosting
         if (mux_mapper = mapper.mux).file?
           mux_name = "mux-#{mux_mapper.value}"
           mux_controller = self.get_controller(Mux)
-          self._stop_docker(name: mux_name) unless mux_controller.index.include?(mux_name)
+          mux_controller.index_pop(mux_name, name)
+          unless mux_controller.index.include?(mux_name)
+            @docker_api.container_kill!(mux_name)
+            @docker_api.container_rm!(mux_name)
+          end
         end
 
         {}
       end
 
       def stop(name:)
-        self._stop_docker(name: name)
+        @docker_api.container_kill!(name)
+        @docker_api.container_rm!(name)
         self.get_controller(Mux).reindex
         {}
       end
@@ -226,20 +236,31 @@ module Superhosting
         }
       end
 
+      def _docker_options(mapper:)
+        all_options = mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n] }.to_h
+        command_options = @docker_api.grab_container_options(all_options)
+
+        volume_opts = []
+        mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
+        volume_opts.each {|val| command_options << "--volume #{val}" }
+
+        [command_options, all_options[:command].value]
+      end
+
       def _run_docker(name:, options:, image:, command:, restart: false)
-        PathMapper.new('/etc/security/docker.conf').append_line!("@#{name} #{name}") unless name.start_with? 'mux'
         return { error: :logical_error, code: :docker_command_not_found } if command.nil?
-        if @docker_api.container_exists?(name)
+
+        if restart
+          @docker_api.container_kill!(name)
+          @docker_api.container_rm!(name)
+          @docker_api.container_run(name, options, image, command)
+        elsif @docker_api.container_exists?(name)
           if @docker_api.container_dead?(name)
             @docker_api.container_kill!(name)
             @docker_api.container_rm!(name)
             @docker_api.container_run(name, options, image, command)
           elsif @docker_api.container_exited?(name)
             @docker_api.container_start!(name)
-          elsif restart
-            if @docker_api.container_running?(name) or @docker_api.container_restarting?(name) or @docker_api.container_paused?(name)
-              @docker_api.container_restart!(name)
-            end
           elsif @docker_api.container_paused?(name)
             @docker_api.container_unpause!(name)
           elsif @docker_api.container_restarting?(name)
@@ -252,12 +273,6 @@ module Superhosting
           @docker_api.container_run(name, options, image, command)
         end
         self.running_validation(name: name)
-      end
-
-      def _stop_docker(name:)
-        @docker_api.container_kill!(name)
-        @docker_api.container_rm!(name)
-        PathMapper.new('/etc/security/docker.conf').remove_line!("@#{name} #{name}") unless name.start_with? 'mux'
       end
 
       def _each_site(name:)

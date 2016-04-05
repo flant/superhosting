@@ -11,6 +11,10 @@ describe Superhosting::Controller::Model do
     expect(model_list_with_exps[:data]).to including('joomla_v3_l', 'bitrix_m', 'symfony_m', 'fcgi_m')
   end
 
+  it 'tree' do
+    expect(model_tree_with_exps).to include(:data) # TODO
+  end
+
   it 'reconfig' do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|

@@ -18,14 +18,8 @@ module Superhosting
 
           # docker
           mapper.erb_options = { mux: mapper }
-          all_options = mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n] }.to_h
-          command_options = @docker_api.grab_container_options(command_options: all_options)
-
-          volume_opts = []
-          mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
-          volume_opts.each {|val| command_options << "--volume #{val}" }
-
-          @container_controller._run_docker(name: name, options: command_options, image: image, command: all_options[:command])
+          command_options, command = @container_controller._docker_options(mapper: mapper)
+          @container_controller._run_docker(name: name, options: command_options, image: image, command: command)
         else
           resp
         end
@@ -48,7 +42,7 @@ module Superhosting
       end
 
       def existing_validation(name:)
-        self.index.include?(name) ? self.running_validation(name: name) : { error: :logical_error, code: :mux_does_not_exists, data: { name: name } }
+        self.index.include?(name) ? {} : { error: :logical_error, code: :mux_does_not_exists, data: { name: name } }
       end
 
       def not_running_validation(name:)
@@ -70,7 +64,11 @@ module Superhosting
           container_mapper = @container_controller.index[container_name][:mapper]
           if (mux_mapper = container_mapper.mux).file?
             mux_name = "mux-#{mux_mapper.value}"
-            (@@index[mux_name] ||= []) << container_name if @container_controller.running_validation(name: container_name).net_status_ok?
+            if @container_controller.running_validation(name: container_name).net_status_ok?
+              self.index_push(mux_name, container_name)
+            else
+              self.index_pop(mux_name, container_name)
+            end
           end
         end
         @@index
@@ -85,7 +83,7 @@ module Superhosting
 
       def index_push(mux_name, container_name)
         self.index[mux_name] ||= []
-        self.index[mux_name] << container_name
+        self.index[mux_name] << container_name unless self.index[mux_name].include? container_name
       end
     end
   end

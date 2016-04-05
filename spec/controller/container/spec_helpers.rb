@@ -5,7 +5,7 @@ module SpecHelpers
       include SpecHelpers::Base
 
       def container_controller
-        @container_controller ||= Superhosting::Controller::Container.new(docker_api: docker_api, logger: logger)
+        @container_controller ||= Superhosting::Controller::Container.new(docker_api: docker_api)
       end
 
       # methods
@@ -40,94 +40,92 @@ module SpecHelpers
 
       # expectations
 
+      def container_base(**kwargs)
+        name = kwargs[:name]
+        etc_mapper = self.config.containers.f(name)
+        lib_mapper = self.lib.containers.f(name)
+        web_mapper = self.web.f(name)
+
+        yield name, etc_mapper, lib_mapper, web_mapper
+      end
+
       def container_add_exps(**kwargs)
-        container_name = kwargs[:name]
-        model_name = kwargs[:model]
-        config_mapper = container_controller.config
-        lib_mapper = container_controller.lib
-        models_mapper = config_mapper.models
-        container_mapper = config_mapper.containers.f(container_name)
-        container_lib_mapper = lib_mapper.containers.f(container_name)
-        web_mapper = PathMapper.new('/web')
-        etc_mapper = PathMapper.new('/etc')
+        self.container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+          model_name = kwargs[:model]
+          models_mapper = self.config.models
 
-        # /etc/sx
-        expect_dir(container_mapper)
-        expect_file(config_mapper.default_model)
-        expect_dir(models_mapper)
+          # /etc/sx
+          expect_dir(etc_mapper)
+          expect_file(self.config.default_model)
+          expect_dir(models_mapper)
 
-        # /etc/sx/models
-        if model_name.nil?
-          model_name = config_mapper.default_model
-        else
-          expect_file(container_mapper.model)
+          # /etc/sx/models
+          if model_name.nil?
+            model_name = self.config.default_model
+          else
+            expect_file(etc_mapper.model)
+          end
+          model_mapper = models_mapper.f(model_name)
+          expect_dir(model_mapper)
+          self.model_exps(:"container_add_#{model_name}_exps", **kwargs)
+
+          # /var/sx
+          expect_file(lib_mapper.state)
+          expect_dir(lib_mapper)
+          expect_dir(lib_mapper.config)
+          expect_file(lib_mapper.config.f('etc-group'))
+          expect_file(lib_mapper.config.f('etc-passwd'))
+          expect_dir(lib_mapper.web)
+          expect_dir(lib_mapper.registry)
+          expect_file(lib_mapper.registry.container)
+
+          # /web/
+          expect_dir(self.web)
+          expect_dir(web_mapper)
+          expect_file_owner(web_mapper, name)
+
+          # group / user
+          expect_group(name)
+          expect_user(name)
+          expect_in_file(self.etc.passwd, /#{name}.*\/usr\/sbin\/nologin/)
+          expect_in_file(lib_mapper.config.f('etc-passwd'), /#{name}.*\/usr\/sbin\/nologin/)
+          expect_in_file(lib_mapper.config.f('etc-group'), /#{name}.*/)
+
+          # docker.conf
+          expect_file(self.etc.security.f('docker.conf'))
+          expect_in_file(self.etc.security.f('docker.conf'), "@#{name} #{name}")
+
+          # container
+          expect(docker_api.container_running?(name)).to be_truthy
         end
-        model_mapper = models_mapper.f(model_name)
-        expect_dir(model_mapper)
-        self.model_exps(:"container_add_#{model_name}_exps", **kwargs)
-
-        # /var/sx
-        expect_file(container_lib_mapper.state)
-        expect_dir(container_lib_mapper)
-        expect_dir(container_lib_mapper.config)
-        expect_file(container_lib_mapper.config.f('etc-group'))
-        expect_file(container_lib_mapper.config.f('etc-passwd'))
-        expect_dir(container_lib_mapper.web)
-        expect_dir(container_lib_mapper.registry)
-        expect_file(container_lib_mapper.registry.container)
-
-        # /web/
-        expect_dir(web_mapper)
-        expect_dir(web_mapper.f(container_name))
-        expect_file_owner(web_mapper.f(container_name), container_name)
-
-        # group / user
-        expect_group(container_name)
-        expect_user(container_name)
-        expect_in_file(etc_mapper.passwd, /#{container_name}.*\/usr\/sbin\/nologin/)
-        expect_in_file(container_lib_mapper.config.f('etc-passwd'), /#{container_name}.*\/usr\/sbin\/nologin/)
-        expect_in_file(container_lib_mapper.config.f('etc-group'), /#{container_name}.*/)
-
-        # docker.conf
-        expect_file(etc_mapper.security.f('docker.conf'))
-        expect_in_file(etc_mapper.security.f('docker.conf'), "@#{container_name} #{container_name}")
-
-        # container
-        expect(docker_api.container_running?(container_name)).to be_truthy
       end
 
       def container_delete_exps(**kwargs)
-        container_name = kwargs[:name]
-        config_mapper = container_controller.config
-        lib_mapper = container_controller.lib
-        container_mapper = config_mapper.containers.f(container_name)
-        container_lib_mapper = lib_mapper.containers.f(container_name)
-        web_mapper = PathMapper.new('/web')
-        etc_mapper = PathMapper.new('/etc')
+        self.container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+          # /etc/sx
+          not_expect_dir(etc_mapper)
 
-        # /etc/sx
-        not_expect_dir(container_mapper)
+          # model
+          model_name = etc_mapper.f('model', default: self.config.default_model)
+          self.model_exps(:"container_delete_#{model_name}_exps", **kwargs)
 
-        # model
-        model_name = container_mapper.f('model', default: config_mapper.default_model)
-        self.model_exps(:"container_delete_#{model_name}_exps", **kwargs)
+          # /var/sx
+          not_expect_dir(lib_mapper)
 
-        # /var/sx
-        not_expect_dir(container_lib_mapper)
+          # /web
+          not_expect_dir(web_mapper)
 
-        # /web
-        not_expect_dir(web_mapper.f(container_name))
+          # group / user
+          not_expect_group(name)
+          not_expect_user(name)
+          not_expect_in_file(self.etc.passwd, /#{name}:.*\/usr\/sbin\/nologin/)
 
-        # group / user
-        not_expect_group(container_name)
-        not_expect_user(container_name)
-        not_expect_in_file(etc_mapper.passwd, /#{container_name}:.*\/usr\/sbin\/nologin/)
+          # docker
+          not_expect_in_file(self.etc.security.f('docker.conf'), "@#{name} #{name}")
 
-        # docker
-        not_expect_in_file(etc_mapper.security.f('docker.conf'), "@#{container_name} #{container_name}")
-
-        # container
-        expect(docker_api.container_not_exists?(container_name)).to be_truthy
+          # container
+          expect(docker_api.container_not_exists?(name)).to be_truthy
+        end
       end
 
       def container_admin_add_exps(**kwargs)
@@ -139,51 +137,40 @@ module SpecHelpers
       end
 
       def container_add_fcgi_m_exps(**kwargs)
-        container_name = kwargs[:name]
-        lib_mapper = container_controller.lib
-        container_lib_mapper = lib_mapper.containers.f(container_name)
-        container_web_mapper = PathMapper.new('/web').f(container_name)
+        self.container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+          # /var/sx
+          config_supervisord = lib_mapper.config.supervisor.f('supervisord.conf')
+          expect_file(config_supervisord)
+          expect_in_file(config_supervisord, "file=/web/#{name}/supervisor.sock")
 
-        # /var/sx
-        config_supervisord = container_lib_mapper.config.supervisor.f('supervisord.conf')
-        expect_file(config_supervisord)
-        expect_in_file(config_supervisord, "file=/web/#{container_name}/supervisor.sock")
-
-        # /web
-        expect_dir(container_web_mapper.supervisor)
-        expect_dir(container_web_mapper.logs.supervisor)
+          # /web
+          expect_dir(web_mapper.supervisor)
+          expect_dir(web_mapper.logs.supervisor)
+        end
       end
 
       def container_delete_fcgi_m_exps(**kwargs)
-        container_name = kwargs[:name]
-        lib_mapper = container_controller.lib
-        container_lib_mapper = lib_mapper.containers.f(container_name)
-        container_web_mapper = PathMapper.new('/web').f(container_name)
+        self.container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+          # /var/sx
+          config_supervisord = lib_mapper.supervisor.f('supervisord.conf')
+          not_expect_file(config_supervisord)
 
-        # /var/sx
-        config_supervisord = container_lib_mapper.supervisor.f('supervisord.conf')
-        not_expect_file(config_supervisord)
-
-        # /web
-        not_expect_dir(container_web_mapper.supervisor)
-        not_expect_dir(container_web_mapper.logs.supervisor)
+          # /web
+          not_expect_dir(web_mapper.supervisor)
+          not_expect_dir(web_mapper.logs.supervisor)
+        end
       end
 
       # other
 
-      def with_container(**kwargs)
-        options = { name: @container_name }.merge!(kwargs)
-        container_add_with_exps(**options)
-        yield options[:name] if block_given?
-        container_delete_with_exps(name: options[:name])
+      def with_container(**kwargs, &b)
+        with_base('container', default: { name: @container_name }, **kwargs, &b)
       end
 
-      def with_container_admin
+      def with_container_admin(**kwargs, &b)
         with_container do |container_name|
           with_admin do |admin_name|
-            container_admin_add_with_exps(name: admin_name)
-            yield container_name, admin_name
-            container_admin_delete_with_exps(name: admin_name)
+            with_base('container_admin', default: { name: admin_name }, to_yield: [container_name, admin_name], **kwargs, &b)
           end
         end
       end
@@ -194,7 +181,7 @@ module SpecHelpers
         end
 
         after :each do
-          command("docker ps --filter 'name=test' -a | xargs docker stop")
+          command("docker ps --filter 'name=test' -a | xargs docker kill")
           command("docker ps --filter 'name=test' -a | xargs docker rm")
 
           PathMapper.new('/etc/security/docker.conf').remove_line!("@#{@container_name} #{@container_name}")

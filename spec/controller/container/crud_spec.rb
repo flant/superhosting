@@ -12,15 +12,14 @@ describe Superhosting::Controller::Container do
     container_add_with_exps(name: @container_name)
   end
 
+  it 'delete' do
+    with_container
+  end
+
   it 'reconfig' do
     with_container do |container_name|
       container_reconfigure_with_exps(name: container_name)
     end
-  end
-
-  it 'delete' do
-    container_add_with_exps(name: @container_name)
-    container_delete_with_exps(name: @container_name)
   end
 
   it 'list' do
@@ -38,12 +37,7 @@ describe Superhosting::Controller::Container do
   end
 
   it 'admin_delete' do
-    with_admin do |admin_name|
-      with_container do |container_name|
-        container_admin_add_with_exps(name: admin_name)
-        container_admin_delete_with_exps(name: admin_name)
-      end
-    end
+    with_container_admin
   end
 
   it 'admin_list' do
@@ -91,20 +85,12 @@ describe Superhosting::Controller::Container do
   # other
 
   it 'add#mux', :docker do
-    container_add_with_exps(name: @container_name, model: 'bitrix_m')
-    expect(docker_api.container_running?('mux-php-5.5')).to be true
-    container_add_with_exps(name: "#{@container_name}2", model: 'bitrix_m')
-    container_delete_with_exps(name: @container_name)
-    expect(docker_api.container_running?('mux-php-5.5')).to be true
-    container_delete_with_exps(name: "#{@container_name}2")
-    expect(docker_api.container_running?('mux-php-5.5')).to be false
-  end
-
-  it 'recreate', :docker do
-    container_add_with_exps(name: @container_name)
-    container_delete_with_exps(name: @container_name)
-    container_add_with_exps(name: @container_name)
-    container_delete_with_exps(name: @container_name)
+    with_container(model: 'bitrix_m') do
+      expect(docker_api.container_running?('mux-php-5.5')).to be_truthy
+      with_container(name: "#{@container_name}2", model: 'bitrix_m')
+      expect(docker_api.container_running?('mux-php-5.5')).to be_truthy
+    end
+    expect(docker_api.container_running?('mux-php-5.5')).to be_falsey
   end
 
   it 'reconfig@up_docker', :docker do
@@ -130,5 +116,21 @@ describe Superhosting::Controller::Container do
       container_reconfigure_with_exps(name: container_name)
       expect(docker_api.container_running?(container_name)).to be_truthy
     end
+  end
+
+  it 'reconfig@system_users' do
+    with_container do |container_name|
+      self.config.containers.f(container_name).system_users.put!('test_system_user')
+      container_reconfigure_with_exps(name: container_name)
+      self.user_add_exps(name: 'test_system_user', container_name: container_name, shell: '/usr/sbin/nologin')
+    end
+  end
+
+  it 'recreate container' do
+    2.times.each { with_container }
+  end
+
+  it 'recreate container admin' do
+    2.times.each { with_container_admin }
   end
 end

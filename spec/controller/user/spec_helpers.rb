@@ -32,40 +32,38 @@ module SpecHelpers
 
       # expectations
 
-      def user_add_exps(**kwargs)
-        lib_mapper = user_controller.lib
+      def user_base(**kwargs)
         container_name = kwargs[:container_name] || @container_name
-        user_name = "#{container_name}_#{kwargs[:name]}"
-        container_lib_mapper = lib_mapper.containers.f(container_name)
-        etc_mapper = PathMapper.new('/etc')
+        container_lib_mapper = self.lib.containers.f(container_name)
+        name = "#{container_name}_#{kwargs[:name] || @user_name}"
 
-        shell = kwargs[:ftp_only] ? '/usr/sbin/nologin' : '/bin/bash'
+        yield name, container_name, container_lib_mapper
+      end
 
-        # group / user
-        expect_user(user_name)
-        expect_in_file(etc_mapper.passwd, /#{user_name}.*#{shell}/)
-        expect_in_file(container_lib_mapper.config.f('etc-passwd'), /#{user_name}.*#{shell}/)
+      def user_add_exps(**kwargs)
+        self.user_base(**kwargs) do |name, container_name, container_lib_mapper|
+          # group / user
+          shell = kwargs[:shell] || kwargs[:ftp_only] ?  '/usr/sbin/nologin' : '/bin/bash'
+          expect_user(name)
+          expect_in_file(self.etc.passwd, /#{name}.*#{shell}/)
+          expect_in_file(container_lib_mapper.config.f('etc-passwd'), /#{name}.*#{shell}/)
+        end
       end
 
       def user_delete_exps(**kwargs)
-        lib_mapper = user_controller.lib
-        container_name = kwargs[:container_name] || @container_name
-        user_name = "#{container_name}_#{kwargs[:name]}"
-        container_lib_mapper = lib_mapper.containers.f(container_name)
-        etc_mapper = PathMapper.new('/etc')
-
-        # group / user
-        not_expect_user(user_name)
-        not_expect_in_file(etc_mapper.passwd, /#{user_name}/)
-        not_expect_in_file(container_lib_mapper.config.f('etc-passwd'), /#{user_name}.*/)
+        self.user_base(**kwargs) do |name, container_name, container_lib_mapper|
+          # group / user
+          not_expect_user(name)
+          not_expect_in_file(self.etc.passwd, /#{name}/)
+          not_expect_in_file(container_lib_mapper.config.f('etc-passwd'), /#{name}.*/)
+        end
       end
 
       def user_passwd_exps(**kwargs)
-        user_name = kwargs[:name]
-        etc_mapper = PathMapper.new('/etc')
-
-        # /etc/shadow
-        expect_in_file(etc_mapper.shadow, /#{user_name}:(?!!)/)
+        self.user_base(**kwargs) do |name, container_name, container_lib_mapper|
+          # /etc/shadow
+          expect_in_file(self.etc.shadow, /#{name}:(?!!)/)
+        end
       end
 
       def user_change_exps(**kwargs)
@@ -74,10 +72,9 @@ module SpecHelpers
 
       # other
 
-      def with_user
-        user_add_with_exps(name: @user_name, container_name: @container_name)
-        yield @user_name
-        user_delete_with_exps(name: @user_name, container_name: @container_name)
+      def with_user(**kwargs, &b)
+        self.with_base('user', default: { name: @user_name, container_name: @container_name },
+                       to_delete: { name: @user_name, container_name: @container_name }, **kwargs, &b)
       end
 
       included do

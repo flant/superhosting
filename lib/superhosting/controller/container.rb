@@ -48,7 +48,16 @@ module Superhosting
       end
 
       def update(name:)
-
+        if (resp = self.existing_validation(name: name)).net_status_ok? and @docker_api.container_exists?(name)
+          mapper = self.index[name][:mapper]
+          image = mapper.lib.image.value
+          unless @docker_api.container_image_actual?(name, image)
+            self._stop_docker(name: name)
+            command_options, command = self._docker_options(name: name)
+            resp = self._run_docker(name: name, options: command_options, image: image, command: command)
+          end
+        end
+        resp
       end
 
       def reconfigure(name:)

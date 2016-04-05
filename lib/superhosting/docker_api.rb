@@ -17,6 +17,10 @@ module Superhosting
       JSON.load(resp.body) if resp.status == 200
     end
 
+    def image_info(name)
+      resp_if_success raw_connection.request(method: :get, path: "/images/#{name}/json")
+    end
+
     def container_info(name)
       resp_if_success raw_connection.request(method: :get, path: "/containers/#{name}/json")
     end
@@ -139,6 +143,17 @@ module Superhosting
       self.with_dry_run do |dry_run|
         return true if dry_run and self.storage.key? name
         container_info(name).nil? ? false : true
+      end
+    end
+
+    def container_image_actual?(name, image)
+      container = container_info(name)
+      image = image_info(image)
+
+      if container.nil? or image.nil?
+        false
+      else
+        container['Image'] == image['Id']
       end
     end
 

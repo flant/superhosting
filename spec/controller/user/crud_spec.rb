@@ -14,8 +14,7 @@ describe Superhosting::Controller::User do
 
   it 'delete' do
     with_container do |container_name|
-      user_add_with_exps(name: @user_name, container_name: container_name)
-      user_delete_with_exps(name: @user_name, container_name: container_name)
+      with_user
     end
   end
 
@@ -82,6 +81,14 @@ describe Superhosting::Controller::User do
   it 'delete:user_does_not_exists' do
     with_container do |container_name|
       user_delete_with_exps(name: @user_name, container_name: container_name, code: :user_does_not_exists)
+    end
+  end
+
+  # other
+
+  it 'recreate', :docker do
+    with_container do |container_name|
+      2.times.each { with_user }
     end
   end
 end

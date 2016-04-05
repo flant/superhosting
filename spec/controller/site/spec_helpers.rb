@@ -5,7 +5,7 @@ module SpecHelpers
       include SpecHelpers::Base
 
       def site_controller
-        @site_controller ||= Superhosting::Controller::Site.new(logger: logger)
+        @site_controller ||= Superhosting::Controller::Site.new
       end
 
       # methods
@@ -40,56 +40,57 @@ module SpecHelpers
 
       # expectations
 
-      def site_add_exps(**kwargs)
-        config_mapper = site_controller.config
-        lib_mapper = site_controller.lib
+      def site_base(**kwargs)
         container_name = kwargs[:container_name] || @container_name
-        site_name = kwargs[:name]
-        container_mapper = config_mapper.containers.f(container_name)
-        container_lib_mapper = lib_mapper.containers.f(container_name)
-        site_mapper = container_mapper.sites.f(site_name)
-        web_mapper = PathMapper.new('/web').f(container_name).f(site_name)
+        name = kwargs[:name] || @site_name
+        container_etc_mapper = self.config.containers.f(container_name)
+        container_lib_mapper = self.lib.containers.f(container_name)
+        etc_mapper = container_etc_mapper.sites.f(name)
+        web_mapper = self.web.f(container_name).f(name)
+        lib_mapper = self.lib.containers.f(container_name).web.f(name)
+        state_mapper = self.lib.containers.f(container_name).sites.f(name).state
 
-        # /etc/sx
-        expect_dir(container_mapper.sites)
-        expect_dir(site_mapper)
+        yield name, etc_mapper, lib_mapper, web_mapper, state_mapper, container_name, container_etc_mapper, container_lib_mapper
+      end
 
-        # model
-        model_name = container_mapper.f('model', default: config_mapper.default_model)
-        self.model_exps(:"site_add_#{model_name}_exps", **kwargs)
+      def site_add_exps(**kwargs)
+        self.site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, container_name, container_etc_mapper, container_lib_mapper|
+          # /etc/sx
+          expect_dir(container_etc_mapper.sites)
+          expect_dir(etc_mapper)
 
-        # /var/sx
-        expect_dir(container_lib_mapper.web.f(site_name))
-        expect_file(container_lib_mapper.sites.f(site_name).state)
+          # model
+          model_name = container_etc_mapper.f('model', default: self.config.default_model)
+          self.model_exps(:"site_add_#{model_name}_exps", **kwargs)
 
-        # /web
-        expect_dir(web_mapper)
-        expect_file_owner(web_mapper, container_name)
+          # /var/sx
+          expect_dir(lib_mapper)
+          expect_file(state_mapper)
+
+          # /web
+          expect_dir(web_mapper)
+          expect_file_owner(web_mapper, container_name)
+        end
       end
 
       def site_delete_exps(**kwargs)
-        config_mapper = site_controller.config
-        lib_mapper = site_controller.lib
-        container_name = kwargs[:container_name] || @container_name
-        site_name = kwargs[:name]
-        container_mapper = config_mapper.containers.f(container_name)
-        container_lib_mapper = lib_mapper.containers.f(container_name)
-        site_mapper = container_mapper.sites.f(site_name)
-        web_mapper = PathMapper.new('/web').f(container_name).f(site_name)
+        self.site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, container_name, container_etc_mapper, container_lib_mapper|
+          # /etc/sx
+          not_expect_dir(etc_mapper)
 
-        # /etc/sx
-        not_expect_dir(site_mapper)
+          # model
+          model_name = container_etc_mapper.f('model', default: self.config.default_model)
+          self.model_exps(:"site_delete_#{model_name}_exps", **kwargs)
 
-        # model
-        model_name = container_mapper.f('model', default: config_mapper.default_model)
-        self.model_exps(:"site_delete_#{model_name}_exps", **kwargs)
+          # /var/sx
+          not_expect_dir(lib_mapper)
+          not_expect_dir(container_lib_mapper.registry.sites.f(name))
+          not_expect_dir(state_mapper.parent)
+          not_expect_file(state_mapper)
 
-        # /var/sx
-        not_expect_dir(container_lib_mapper.web.f(site_name))
-        not_expect_dir(container_lib_mapper.registry.sites.f(site_name))
-
-        # /web
-        not_expect_dir(web_mapper)
+          # /web
+          not_expect_dir(web_mapper)
+        end
       end
 
       def site_rename_exps(**kwargs)
@@ -99,70 +100,57 @@ module SpecHelpers
 
       def site_alias_add_exps(**kwargs)
         alias_name = kwargs.delete(:name)
-        config_mapper = site_controller.config
-        container_name = @container_name
-        container_mapper = config_mapper.containers.f(container_name)
-        site_mapper = container_mapper.sites.f(@site_name)
 
-        expect_file(site_mapper.aliases)
-        expect_in_file(site_mapper.aliases, /^#{alias_name}$/)
+        self.site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, container_name, container_etc_mapper, container_lib_mapper|
+          expect_file(etc_mapper.aliases)
+          expect_in_file(etc_mapper.aliases, /^#{alias_name}$/)
 
-        model_name = container_mapper.f('model', default: config_mapper.default_model)
-        self.model_exps(:"site_alias_#{model_name}_exps", **kwargs)
+          model_name = container_etc_mapper.f('model', default: self.config.default_model)
+          self.model_exps(:"site_alias_#{model_name}_exps", **kwargs)
+        end
       end
 
       def site_alias_delete_exps(**kwargs)
         alias_name = kwargs.delete(:name)
-        config_mapper = site_controller.config
-        container_name = @container_name
-        container_mapper = config_mapper.containers.f(container_name)
-        site_mapper = container_mapper.sites.f(@site_name)
 
-        model_name = container_mapper.f('model', default: config_mapper.default_model)
-        self.model_exps(:"site_alias_#{model_name}_exps", **kwargs)
+        self.site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, container_name, container_etc_mapper, container_lib_mapper|
+          model_name = container_etc_mapper.f('model', default: self.config.default_model)
+          self.model_exps(:"site_alias_#{model_name}_exps", **kwargs)
 
-        not_expect_file(site_mapper.aliases)
-        not_expect_in_file(site_mapper.aliases, /^#{alias_name}$/)
+          not_expect_file(etc_mapper.aliases)
+          not_expect_in_file(etc_mapper.aliases, /^#{alias_name}$/)
+        end
       end
 
       def site_add_fcgi_m_exps(**kwargs)
-        container_name = kwargs[:container_name] || @container_name
-        site_name = kwargs[:name] || @site_name
-        site_web_mapper = PathMapper.new('/web').f(container_name).f(site_name)
-        nginx_sites_mapper = PathMapper.new('/etc').nginx.sites
-
-        config_name = "#{container_name}-#{site_name}.conf"
-        expect_file(nginx_sites_mapper.f(config_name))
-        expect_in_file(nginx_sites_mapper.f(config_name), "access_log /web/#{container_name}/logs/#{site_name}_access_nginx.log main")
-        expect_in_file(nginx_sites_mapper.f(config_name), "root #{site_web_mapper.path}/;")
+        self.site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, container_name, container_etc_mapper, container_lib_mapper|
+          nginx_mapper = self.etc.nginx.sites
+          config_name = "#{container_name}-#{name}.conf"
+          expect_file(nginx_mapper.f(config_name))
+          expect_in_file(nginx_mapper.f(config_name), "access_log /web/#{container_name}/logs/#{name}_access_nginx.log main")
+          expect_in_file(nginx_mapper.f(config_name), "root #{web_mapper.path}/;")
+        end
       end
 
       def site_delete_fcgi_m_exps(**kwargs)
-        container_name = kwargs[:container_name] || @container_name
-        site_name = kwargs[:name] || @site_name
-        nginx_sites_mapper = PathMapper.new('/etc').nginx.sites
-
-        not_expect_file(nginx_sites_mapper.f("#{container_name}-#{site_name}.conf"))
+        self.site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, container_name, container_etc_mapper, container_lib_mapper|
+          nginx_mapper = self.etc.nginx.sites
+          not_expect_file(nginx_mapper.f("#{container_name}-#{name}.conf"))
+        end
       end
 
       def site_alias_fcgi_m_exps(**kwargs)
-        container_name = kwargs[:container_name] || @container_name
-        site_name = kwargs[:name] || @site_name
-        config_mapper = site_controller.config
-        container_mapper = config_mapper.containers.f(container_name)
-        site_mapper = container_mapper.sites.f(site_name)
-        nginx_sites_mapper = PathMapper.new('/etc').nginx.sites
-
-        config_name = "#{container_name}-#{site_name}.conf"
-        expect_in_file(nginx_sites_mapper.f(config_name), "server_name #{([site_name] + site_mapper.aliases.lines).map(&:punycode).join(' ')};")
+        self.site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, container_name, container_etc_mapper, container_lib_mapper|
+          nginx_mapper = self.etc.nginx.sites
+          config_name = "#{container_name}-#{name}.conf"
+          expect_in_file(nginx_mapper.f(config_name), "server_name #{([name] + etc_mapper.aliases.lines).map(&:punycode).join(' ')};")
+        end
       end
 
       # other
 
-      def with_site(**kwargs)
-        site_add_with_exps(name: @site_name, container_name: @container_name, **kwargs)
-        yield @site_name
-        site_delete_with_exps(name: @site_name)
+      def with_site(**kwargs, &b)
+        self.with_base('site', default: { name: @site_name, container_name: @container_name }, **kwargs, &b)
       end
 
       included do

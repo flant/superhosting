@@ -12,8 +12,7 @@ describe Superhosting::Controller::Admin do
   end
 
   it 'delete' do
-    admin_add_with_exps(name: @admin_name, generate: true)
-    admin_delete_with_exps(name: @admin_name)
+    with_admin
   end
 
   it 'passwd' do
@@ -40,12 +39,7 @@ describe Superhosting::Controller::Admin do
   end
 
   it 'container_delete' do
-    with_container do |container_name|
-      with_admin do |admin_name|
-        admin_container_add_with_exps(name: container_name)
-        admin_container_delete_with_exps(name: container_name)
-      end
-    end
+    with_admin_container
   end
 
   it 'container_list' do
@@ -92,5 +86,15 @@ describe Superhosting::Controller::Admin do
 
   it 'container_delete:admin_does_not_exists' do
     admin_container_delete_with_exps(name: @admin_name, code: :admin_does_not_exists)
+  end
+
+  # other
+
+  it 'recreate admin' do
+    2.times.each { with_admin }
+  end
+
+  it 'recreate admin container' do
+    2.times.each { with_admin_container }
   end
 end

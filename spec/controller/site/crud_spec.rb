@@ -14,8 +14,17 @@ describe Superhosting::Controller::Site do
 
   it 'delete' do
     with_container do |container_name|
+      with_site
+    end
+  end
+
+  xit 'delete by alias' do # TODO
+    with_container do |container_name|
       site_add_with_exps(name: @site_name, container_name: container_name)
-      site_delete_with_exps(name: @site_name)
+      alias_name = "alias-#{@site_name}"
+      site_alias_add_with_exps(name: alias_name)
+      site_delete(name: alias_name)
+      site_delete_exps(name: @site_name)
     end
   end
 
@@ -142,17 +151,14 @@ describe Superhosting::Controller::Site do
   it 'add#punycode' do
     with_container do |container_name|
       site_add_with_exps(name: 'домен.рф', container_name: container_name)
-      conf_mapper = PathMapper.new('/etc').nginx.sites.f("#{container_name}-домен.рф.conf")
+      conf_mapper = self.etc.nginx.sites.f("#{container_name}-домен.рф.conf")
       expect_in_file(conf_mapper, 'xn--d1acufc.xn--p1ai')
     end
   end
 
   it 'recreate' do
-    with_container do |container_name|
-      site_add_with_exps(name: @site_name, container_name: container_name)
-      site_delete_with_exps(name: @site_name)
-      site_add_with_exps(name: @site_name, container_name: container_name)
-      site_delete_with_exps(name: @site_name)
+    with_container do
+      2.times.each { with_site }
     end
   end
 end

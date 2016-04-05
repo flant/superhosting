@@ -5,12 +5,16 @@ module SpecHelpers
       include SpecHelpers::Base
 
       def model_controller
-        @model_controller ||= Superhosting::Controller::Model.new(docker_api: docker_api)
+        @model_controller ||= Superhosting::Controller::Model.new
       end
 
       # methods
 
       def model_list(**kwargs)
+        model_controller.list
+      end
+
+      def model_tree(**kwargs)
         model_controller.list
       end
 

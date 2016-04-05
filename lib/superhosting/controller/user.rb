@@ -57,7 +57,7 @@ module Superhosting
           passwd_mapper = container_lib_mapper.config.f('etc-passwd')
           user_name = "#{container_name}_#{name}"
           self._del(name: user_name)
-          passwd_mapper.remove_line!(/#{user_name}.*/)
+          passwd_mapper.remove_line!(/^#{user_name}:.*/)
         end
         resp
       end

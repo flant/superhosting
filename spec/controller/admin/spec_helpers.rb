@@ -40,43 +40,43 @@ module SpecHelpers
 
       # expectations
 
-      def admin_add_exps(**kwargs)
-        admin_name = kwargs[:name]
-        config_mapper = admin_controller.config
-        admins_mapper = config_mapper.admins
-        admin_mapper = admins_mapper.f(admin_name)
+      def admin_base(**kwargs)
+        name = kwargs[:name]
+        admins_mapper = self.config.admins
+        mapper = admins_mapper.f(name)
 
-        # /etc/sx/admins
-        expect_dir(admins_mapper)
-        expect_dir(admin_mapper)
-        expect_file(admin_mapper.passwd)
+        yield name, mapper, admins_mapper
+      end
+
+      def admin_add_exps(**kwargs)
+        self.admin_base(**kwargs) do |name, mapper, admins_mapper|
+          # /etc/sx/admins
+          expect_dir(admins_mapper)
+          expect_dir(mapper)
+          expect_file(mapper.passwd)
+        end
       end
 
       def admin_passwd_exps(**kwargs)
-        admin_name = kwargs[:name]
-        config_mapper = admin_controller.config
-        admins_mapper = config_mapper.admins
-        admin_mapper = admins_mapper.f(admin_name)
-
-        # /etc/sx/admins
-        expect_in_file(admin_mapper.passwd, /#{admin_name}:(?!!)/)
+        self.admin_base(**kwargs) do |name, mapper, admins_mapper|
+          # /etc/sx/admins
+          expect_in_file(mapper.passwd, /#{name}:(?!!)/)
+        end
       end
 
       def admin_delete_exps(**kwargs)
-        admin_name = kwargs[:name]
-        config_mapper = admin_controller.config
-        admins_mapper = config_mapper.admins
-        admin_mapper = admins_mapper.f(admin_name)
-        etc_passwd_mapper = PathMapper.new('/etc/passwd')
+        self.admin_base(**kwargs) do |name, mapper, admins_mapper|
+          etc_passwd_mapper = self.etc.passwd
 
-        # /etc/sx/admins
-        not_expect_dir(admin_mapper)
-        not_expect_in_file(etc_passwd_mapper, /_admin_#{admin_name}/)
-      end
+          # /etc/sx/admins
+          not_expect_dir(mapper)
+          not_expect_in_file(etc_passwd_mapper, /_admin_#{name}/)
+        end
+       end
 
       def admin_container_add_exps(**kwargs)
         user_add_exps(name: "admin_#{@admin_name}")
-        user_passwd_exps(name: "#{@container_name}_admin_#{@admin_name}")
+        user_passwd_exps(name: "admin_#{@admin_name}")
       end
 
       def admin_container_delete_exps(**kwargs)
@@ -85,18 +85,14 @@ module SpecHelpers
 
       # other
 
-      def with_admin
-        admin_add_with_exps(name: @admin_name, generate: true)
-        yield @admin_name
-        admin_delete_with_exps(name: @admin_name)
+      def with_admin(**kwargs, &b)
+        self.with_base('admin', default: { name: @admin_name, generate: true }, **kwargs, &b)
       end
 
-      def with_admin_container
+      def with_admin_container(**kwargs, &b)
         with_container do |container_name|
           with_admin do |admin_name|
-            admin_container_add(name: container_name)
-            yield container_name, admin_name
-            admin_container_delete(name: container_name)
+            self.with_base('admin_container', default: { name: container_name }, to_yield: [container_name, admin_name], **kwargs, &b)
           end
         end
       end
