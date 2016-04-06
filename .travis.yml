@@ -18,12 +18,8 @@ before_script:
 - docker tag sx-base:latest superhosting/php:5.5
 - docker tag sx-base:latest superhosting/php:5.6
 script:
-- sudo docker run --detach --name mux-php-5.5 --volume /sys/fs/cgroup:/sys/fs/cgroup --volume /web:/web --volume /var/sx:/var/sx superhosting/php:5.5 /bin/bash -lec 'while true ; do date ; sleep 1; done'
-- sleep 5 && sudo docker inspect mux-php-5.5
-- docker run --detach --name testC19d205 --user testC19d205_fcgi --volume /var/sx/containers/testC19d205/config/:/.config:ro --volume /var/sx/containers/testC19d205/web:/web/testC19d205 superhosting/fcgi /bin/bash -lec 'while true ; do date ; sleep 1; done'
-- sleep 5 && sudo docker inspect testC19d205
-
-#- sudo -E su --preserve-environment -lc 'bundle exec rake spec'
+- sudo -E su --preserve-environment -lc "docker run --detach --name mux-php-5.5 --volume /sys/fs/cgroup:/sys/fs/cgroup --volume /web:/web --volume /var/sx:/var/sx superhosting/php:5.5 /bin/bash -lec 'while true ; do date ; sleep 1; done'"
+- sleep 5 && docker inspect mux-php-5.5
 
 deploy:
   provider: rubygems
