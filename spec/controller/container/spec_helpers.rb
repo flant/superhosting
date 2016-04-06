@@ -22,6 +22,10 @@ module SpecHelpers
         container_controller.reconfigure(**kwargs)
       end
 
+      def container_update(**kwargs)
+        container_controller.update(**kwargs)
+      end
+
       def container_list(**kwargs)
         container_controller.list
       end
@@ -42,9 +46,9 @@ module SpecHelpers
 
       def container_base(**kwargs)
         name = kwargs[:name]
-        etc_mapper = self.config.containers.f(name)
-        lib_mapper = self.lib.containers.f(name)
-        web_mapper = self.web.f(name)
+        etc_mapper = self.container_etc(name)
+        lib_mapper = self.container_lib(name)
+        web_mapper = self.container_web(name)
 
         yield name, etc_mapper, lib_mapper, web_mapper
       end
@@ -181,8 +185,11 @@ module SpecHelpers
         end
 
         after :each do
-          command("docker ps --filter 'name=test' -a | xargs docker kill")
-          command("docker ps --filter 'name=test' -a | xargs docker rm")
+          if @with_docker
+            command("docker ps --filter 'name=test' -a | xargs docker unpause")
+            command("docker ps --filter 'name=test' -a | xargs docker kill")
+            command("docker ps --filter 'name=test' -a | xargs docker rm")
+          end
 
           PathMapper.new('/etc/security/docker.conf').remove_line!("@#{@container_name} #{@container_name}")
 
@@ -190,10 +197,10 @@ module SpecHelpers
             command("userdel #{user.name}") if user.name.start_with? 'test'
           end
 
-          command("rm -rf /etc/sx/containers/test*")
-          command("rm -rf /var/sx/containers/test*")
-          command("rm -rf /web/test*")
-          command("rm -rf /etc/postfix/postfwd.cf.d/test*")
+          command('rm -rf /etc/sx/containers/test*')
+          command('rm -rf /var/sx/containers/test*')
+          command('rm -rf /web/test*')
+          command('rm -rf /etc/postfix/postfwd.cf.d/test*')
         end
       end
     end

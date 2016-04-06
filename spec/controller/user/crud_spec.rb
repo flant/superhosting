@@ -8,7 +8,7 @@ describe Superhosting::Controller::User do
 
   it 'add' do
     with_container do |container_name|
-      user_add_with_exps(name: @user_name, container_name: container_name)
+      expect(user_add_with_exps(name: @user_name, container_name: container_name, generate: true)).to include(:data)
     end
   end
 
@@ -29,7 +29,7 @@ describe Superhosting::Controller::User do
   it 'passwd' do
     with_container do |container_name|
       with_user do |user_name|
-        user_passwd_with_exps(name: user_name, container_name: container_name, generate: true)
+        expect(user_passwd_with_exps(name: user_name, container_name: container_name, generate: true)).to include(:data)
       end
     end
   end

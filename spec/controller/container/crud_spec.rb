@@ -17,8 +17,23 @@ describe Superhosting::Controller::Container do
   end
 
   it 'reconfig' do
-    with_container do |container_name|
-      container_reconfigure_with_exps(name: container_name)
+    with_container(model: 'test') do |container_name|
+      with_site do |site_name|
+        container_reconfigure_with_exps(name: container_name)
+      end
+    end
+  end
+
+  it 'update', :docker do
+    begin
+      with_container(model: 'test') do |container_name|
+        command('docker tag superhosting/mux superhosting/test')
+        container_update_with_exps(name: container_name)
+        expect(docker_api.container_image?(@container_name, 'sx-base')).to be_falsey
+        expect(docker_api.container_image?(@container_name, 'superhosting/mux')).to be_truthy
+      end
+    ensure
+      command('docker tag sx-base superhosting/test')
     end
   end
 
@@ -82,6 +97,28 @@ describe Superhosting::Controller::Container do
     end
   end
 
+  it 'add:no_docker_image_specified_in_model_or_mux' do
+    begin
+      image_mapper = self.config.models.test.container.docker.image
+      image = image_mapper.value
+      image_mapper.delete!
+      container_add_with_exps(name: @container_name, model: 'test', code: :no_docker_image_specified_in_model_or_mux)
+    ensure
+      image_mapper.put!(image)
+    end
+  end
+
+  it 'add:docker_command_not_found' do
+    begin
+      command_mapper = self.config.models.test.container.docker.command
+      command = command_mapper.value
+      command_mapper.delete!
+      container_add_with_exps(name: @container_name, model: 'test', code: :docker_command_not_found)
+    ensure
+      command_mapper.put!(command)
+    end
+  end
+
   # other
 
   it 'add#mux', :docker do
@@ -100,7 +137,7 @@ describe Superhosting::Controller::Container do
       expect(docker_api.container_running?(name)).to be_truthy
     end
 
-    with_container(model: 'test_model') do |container_name|
+    with_container do |container_name|
       docker_api.container_stop!(container_name)
       up_docker(container_name)
 
@@ -118,19 +155,65 @@ describe Superhosting::Controller::Container do
     end
   end
 
-  it 'reconfig@system_users' do
-    with_container do |container_name|
+  it 'reconfig@system_users', :docker do
+    with_container(model: 'fcgi_m') do |container_name|
       self.config.containers.f(container_name).system_users.put!('test_system_user')
       container_reconfigure_with_exps(name: container_name)
+      self.user_delete_exps(name: 'fcgi', container_name: container_name)
       self.user_add_exps(name: 'test_system_user', container_name: container_name, shell: '/usr/sbin/nologin')
     end
   end
 
-  it 'recreate container' do
+  it 'reconfig@signature', :docker do
+    with_container(model: 'test') do |container_name|
+      signature_path = self.container_lib(container_name).signature.path
+      expect_file_mtime signature_path do
+        begin
+          memory_mapper = self.config.models.test.container.docker.memory
+          memory = memory_mapper.value
+          memory_mapper.delete!
+
+          container_reconfigure_with_exps(name: container_name)
+        ensure
+          memory_mapper.put!(memory)
+        end
+      end
+    end
+  end
+
+  it 'reconfig@config.rb', :docker do
+    with_container(model: 'test') do |container_name|
+      with_site do |site_name|
+        registry_mapper = self.container_lib(container_name).registry
+        expect_file_mtime registry_mapper.container.path, registry_mapper.sites.f(site_name).path do
+          begin
+            (container_config_rb_mapper = self.config.models.test.container.f('config.rb')).append_line!('mkdir "#{container.web.path}/logs/test"')
+            (site_config_rb_mapper = self.config.models.test.site.f('config.rb')).append_line!('mkdir "#{site.web.path}/logs/test"')
+            container_reconfigure_with_exps(name: container_name)
+            expect_dir("/web/#{container_name}/logs/test")
+            expect_dir("/web/#{container_name}/#{site_name}/logs/test")
+          ensure
+            container_config_rb_mapper.remove_line!('mkdir "#{container.web.path}/logs/test"')
+            site_config_rb_mapper.remove_line!('mkdir "#{site.web.path}/logs/test"')
+          end
+        end
+      end
+    end
+  end
+
+  it 'add@override_image_by_mux', :docker do
+    test_image = self.config.models.test.container.docker.image.value
+    mux_image  = self.config.muxs.test.container.docker.image.value
+    container_add_with_exps(name: @container_name, model: 'test_with_mux')
+    expect(docker_api.container_image?(@container_name, test_image)).to be_falsey
+    expect(docker_api.container_image?(@container_name, mux_image)).to be_truthy
+  end
+
+  it 'recreate@container' do
     2.times.each { with_container }
   end
 
-  it 'recreate container admin' do
+  it 'recreate@container_admin' do
     2.times.each { with_container_admin }
   end
 end

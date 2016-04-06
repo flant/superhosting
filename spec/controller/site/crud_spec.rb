@@ -12,19 +12,46 @@ describe Superhosting::Controller::Site do
     end
   end
 
+  it 'name' do
+    with_container do |container_name|
+      with_site do |site_name|
+        expect(site_name_with_exps(name: site_name)[:data]).to eq site_name
+      end
+    end
+  end
+
+  it 'name by alias' do
+    with_site_alias do |container_name, site_name, alias_name|
+      expect(site_name_with_exps(name: alias_name)[:data]).to eq site_name
+    end
+  end
+
+  it 'container' do
+    with_container do |container_name|
+      with_site do |site_name|
+        expect(site_container_with_exps(name: site_name)[:data]).to eq container_name
+      end
+    end
+  end
+
+  it 'container by alias' do
+    with_site_alias do |container_name, site_name, alias_name|
+      expect(site_container_with_exps(name: alias_name)[:data]).to eq container_name
+    end
+  end
+
   it 'delete' do
     with_container do |container_name|
       with_site
     end
   end
 
-  xit 'delete by alias' do # TODO
+  it 'delete by alias' do # TODO
     with_container do |container_name|
       site_add_with_exps(name: @site_name, container_name: container_name)
       alias_name = "alias-#{@site_name}"
       site_alias_add_with_exps(name: alias_name)
-      site_delete(name: alias_name)
-      site_delete_exps(name: @site_name)
+      site_delete_with_exps(name: alias_name)
     end
   end
 
@@ -36,11 +63,38 @@ describe Superhosting::Controller::Site do
     end
   end
 
+  it 'rename by alias' do
+    with_container do |container_name|
+      site_add_with_exps(name: @site_name, container_name: container_name)
+      alias_name = "alias-#{@site_name}"
+      site_alias_add_with_exps(name: alias_name)
+      new_name = "new.#{@site_name}"
+      site_rename_with_exps(name: alias_name, new_name: new_name)
+    end
+  end
+
+  it 'rename alias save name' do
+    with_container do |container_name|
+      site_add_with_exps(name: @site_name, container_name: container_name)
+      alias_name = "alias-#{@site_name}"
+      site_alias_add_with_exps(name: alias_name)
+      site_rename_with_exps(name: @site_name, new_name: alias_name, alias_name: true)
+      expect_in_file(self.site_aliases(container_name, alias_name), @site_name)
+      not_expect_in_file(self.site_aliases(container_name, alias_name), alias_name)
+    end
+  end
+
   it 'reconfig' do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
         site_reconfigure_with_exps(name: site_name)
       end
+    end
+  end
+
+  it 'reconfig by alias' do
+    with_site_alias do |container_name, site_name, alias_name|
+      site_reconfigure_with_exps(name: alias_name)
     end
   end
 

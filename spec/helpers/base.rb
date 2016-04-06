@@ -21,6 +21,42 @@ module SpecHelpers
         PathMapper.new('/web')
       end
 
+      def site_web(container_name, site_name)
+        self.container_web(container_name).f(site_name)
+      end
+
+      def container_web(container_name)
+        self.web.f(container_name)
+      end
+
+      def site_etc(container_name, site_name)
+        self.container_etc(container_name).sites.f(site_name)
+      end
+
+      def container_etc(container_name)
+        self.config.containers.f(container_name)
+      end
+
+      def site_lib(container_name, site_name)
+        self.container_lib(container_name).web.f(site_name)
+      end
+
+      def container_lib(container_name)
+        self.lib.containers.f(container_name)
+      end
+
+      def site_aliases(container_name, site_name)
+        self.container_lib(container_name).sites.f(site_name).aliases
+      end
+
+      def site_state(container_name, site_name)
+        self.container_lib(container_name).sites.f(site_name).state
+      end
+
+      def container_state(container_name)
+        self.container_lib(container_name).state
+      end
+
       def docker_api
         @docker_api ||= if @with_docker
           Superhosting::DockerApi.new

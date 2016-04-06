@@ -8,7 +8,7 @@ describe Superhosting::Controller::Admin do
   # positive
 
   it 'add' do
-    admin_add_with_exps(name: @admin_name, generate: true)
+    expect(admin_add_with_exps(name: @admin_name, generate: true)).to include(:data)
   end
 
   it 'delete' do
@@ -17,7 +17,7 @@ describe Superhosting::Controller::Admin do
 
   it 'passwd' do
     with_admin do |admin_name|
-      admin_passwd_with_exps(name: admin_name, generate: true)
+      expect(admin_passwd_with_exps(name: admin_name, generate: true)).to include(:data)
     end
   end
 

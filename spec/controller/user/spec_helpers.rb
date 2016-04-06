@@ -34,7 +34,7 @@ module SpecHelpers
 
       def user_base(**kwargs)
         container_name = kwargs[:container_name] || @container_name
-        container_lib_mapper = self.lib.containers.f(container_name)
+        container_lib_mapper = self.container_lib(container_name)
         name = "#{container_name}_#{kwargs[:name] || @user_name}"
 
         yield name, container_name, container_lib_mapper

@@ -45,12 +45,14 @@ module SpecHelpers
         expect(resp.net_status_normalize).to include(:message)
       end
 
-      def expect_dir(path_mapper)
-        expect(File.directory? path_mapper.path).to be_truthy
+      def expect_dir(maybe_path)
+        maybe_path = maybe_path.path if maybe_path.respond_to? :path
+        expect(File.directory? maybe_path).to be_truthy
       end
 
-      def expect_file(path_mapper)
-        expect(File.file? path_mapper.path).to be_truthy
+      def expect_file(maybe_path)
+        maybe_path = maybe_path.path if maybe_path.respond_to? :path
+        expect(File.file? maybe_path).to be_truthy
       end
 
       def expect_in_file(path_mapper, line)
@@ -65,9 +67,10 @@ module SpecHelpers
         expect { Etc.getpwnam(name) }.not_to raise_error
       end
 
-      def expect_file_owner(path_mapper, owner_name)
+      def expect_file_owner(maybe_path, owner_name)
+        maybe_path = maybe_path.path if maybe_path.respond_to? :path
         owner = Etc.getgrnam(owner_name)
-        expect(File.stat(path_mapper.path).gid).to be owner.gid
+        expect(File.stat(maybe_path).gid).to be owner.gid
       end
 
       def expect_net_status(hash, code: nil)
