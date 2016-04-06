@@ -9,6 +9,11 @@ services:
 
 before_script:
 - sudo cp -r bootstrap/* /
+- docker build -t sx-base .
+- docker tag sx-base:latest superhosting/fcgi
+- docker tag sx-base:latest superhosting/php:5.3
+- docker tag sx-base:latest superhosting/php:5.5
+- docker tag sx-base:latest superhosting/php:5.6
 script:
 - sudo -E su --preserve-environment -lc 'bundle exec rake spec'
 
