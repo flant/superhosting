@@ -10,6 +10,9 @@ services:
 before_script:
 - sudo cp -r bootstrap/* /
 script:
+- echo '------------------------'
+- echo $(id)
+- echo '------------------------'
 - sudo -E /bin/bash -lec "bundle exec rake spec"
 
 deploy:
