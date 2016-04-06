@@ -14,9 +14,7 @@ script:
 - echo $(id)
 - echo $(which bundle)
 - echo '------------------------'
-- sudo -E /bin/bash -lec  'env'
-- sudo -E /bin/bash -lec  'which bundle'
-- sudo -E /bin/bash -lec  'bundle exec sx'
+- sudo -E su --preserve-environment -lc 'env'
 - echo '------------------------'
 
 deploy:
