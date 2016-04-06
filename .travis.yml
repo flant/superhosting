@@ -10,7 +10,7 @@ services:
 before_script:
 - sudo cp -r bootstrap/* /
 script:
-- sudo bundle exec rake
+- sudo -E /bin/bash -lec "bundle exec rake spec"
 
 deploy:
   provider: rubygems
