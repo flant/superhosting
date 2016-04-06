@@ -16,6 +16,7 @@ before_script:
 - docker tag sx-base:latest superhosting/php:5.6
 script:
 - sudo -E su --preserve-environment -lc 'bundle exec rake spec'
+- docker ps -a
 
 deploy:
   provider: rubygems
