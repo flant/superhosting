@@ -12,6 +12,7 @@ before_script:
 script:
 - echo '------------------------'
 - echo $(id)
+- echo $(which bundle)
 - echo '------------------------'
 - sudo -E /bin/bash -lec "bundle exec rake spec"
 
