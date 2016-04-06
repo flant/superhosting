@@ -30,16 +30,33 @@ module Superhosting
 
       def add(name:, container_name:)
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? and
-            (resp = self.not_existing_validation(name: name)).net_status_ok?
+            (resp = self.adding_validation(name: name)).net_status_ok?
           resp = self._reconfigure(name: name, container_name: container_name)
         end
         resp
       end
 
+      def name(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          { data: self.index[name][:mapper].name }
+        else
+          resp
+        end
+      end
+
+      def container(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          { data: self.index[name][:container_mapper].name }
+        else
+          resp
+        end
+      end
+
       def delete(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           lib_sites_mapper = self.index[name][:container_mapper].lib.sites
-          state_mapper = lib_sites_mapper.f(name)
+          actual_name = self.index[name][:mapper].name
+          state_mapper = lib_sites_mapper.f(actual_name)
 
           states = {
               up: { action: :unapply, undo: :apply, next: :configured },
@@ -47,31 +64,46 @@ module Superhosting
               data_installed: { action: :uninstall_data },
           }
 
-          self.on_state(state_mapper: state_mapper, states: states, name: name)
+          self.on_state(state_mapper: state_mapper, states: states, name: actual_name)
         end
         resp
       end
 
-      def rename(name:, new_name:)
+      def rename(name:, new_name:, alias_name: false)
         if (resp = self.existing_validation(name: name)).net_status_ok? and
-            (resp = self.adding_validation(name: new_name)).net_status_ok?
-          mapper = self.index[name][:mapper]
-          container_mapper = self.index[name][:container_mapper]
-          sites_mapper = container_mapper.sites
-          new_site_mapper = sites_mapper.f(new_name)
-          renaming_mapper = sites_mapper.f("renaming_#{mapper.name}")
-          new_site_lib_mapper = container_mapper.lib.web.f(new_name)
-          renaming_lib_mapper = container_mapper.lib.web.f("renaming_#{name}")
+            ((resp = self.adding_validation(name: new_name)).net_status_ok? or
+                (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
+          begin
+            mapper = self.index[name][:mapper]
+            container_mapper = self.index[name][:container_mapper]
+            actual_name = mapper.name
+            renaming_mapper = mapper.etc.parent.f("renaming_#{mapper.name}")
+            renaming_lib_mapper = mapper.lib.parent.f("renaming_#{actual_name}")
 
-          mapper.rename!(renaming_mapper.path)
-          mapper.create!
-          mapper.lib.rename!(renaming_lib_mapper.path)
-          mapper.lib.create!
+            mapper.aliases_mapper.remove_line!(new_name) if defined? is_alias and is_alias
+            mapper.aliases_mapper.append_line!(name) if alias_name
 
-          if (resp = self.add(name: new_name, container_name: container_mapper.name)).net_status_ok?
-            renaming_mapper.rename!(new_site_mapper.path)
-            renaming_lib_mapper.rename!(new_site_lib_mapper.path)
-            resp = self.delete(name: name)
+            mapper.rename!(renaming_mapper.path)
+            mapper.create!
+            mapper.lib.rename!(renaming_lib_mapper.path)
+            mapper.lib.create!
+
+            self.reindex_site(name: actual_name, container_name: container_mapper.name)
+
+            if (resp = self._reconfigure(name: new_name, container_name: container_mapper.name)).net_status_ok?
+              new_site_mapper = self.index[new_name][:mapper]
+              renaming_mapper.rename!(new_site_mapper.etc.path, logger: false)
+              renaming_lib_mapper.rename!(new_site_mapper.lib.path, logger: false)
+              mapper.aliases_mapper.rename!(new_site_mapper.aliases_mapper.path, logger: false)
+              resp = self.delete(name: actual_name)
+            end
+          ensure
+            unless resp.net_status_ok?
+              renaming_mapper.delete!(logger: false)
+              renaming_lib_mapper.delete!(logger: false)
+              mapper.aliases_mapper.append_line!(new_name) if defined? is_alias and is_alias
+              mapper.aliases_mapper.remove_line!(name) if alias_name
+            end
           end
         end
         resp
@@ -79,8 +111,9 @@ module Superhosting
 
       def reconfigure(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          self.set_state(name: name, state: :data_installed)
-          self._reconfigure(name: name)
+          actual_name = self.index[name][:mapper].name
+          self.set_state(name: actual_name, state: :data_installed)
+          self._reconfigure(name: actual_name)
         end
         resp
       end
@@ -115,6 +148,10 @@ module Superhosting
         self.index[name].nil? ? { error: :logical_error, code: :site_does_not_exists, data: { name: name } } : {}
       end
 
+      def alias_existing_validation(name:, alias_name:)
+        self.index[name][:mapper].aliases.include?(alias_name)
+      end
+
       def not_existing_validation(name:)
         self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :site_exists, data: { name: name} } : {}
       end
@@ -140,6 +177,7 @@ module Superhosting
 
       def reindex_site(name:, container_name:)
         @@index ||= {}
+        @@index[name][:aliases].each{|n| @@index.delete(n) } if @@index[name]
 
         container_mapper = @container_controller.index[container_name][:mapper]
         etc_mapper = container_mapper.sites.f(name)
@@ -164,7 +202,7 @@ module Superhosting
                                         data: { site1: @@index[name][:mapper].path, site2: mapper.path } }
         end
 
-        ([mapper.name] + mapper.aliases).each {|name| @@index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper } }
+        ([mapper.name] + mapper.aliases).each {|name| @@index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, aliases: [mapper.name] + mapper.aliases } }
       end
     end
   end

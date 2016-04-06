@@ -9,13 +9,14 @@ module Superhosting
 
           site = @site_controller.index[name]
           @site_mapper = site[:mapper]
+          @aliases_mapper = site[:mapper].aliases_mapper
           @container_mapper = site[:container_mapper]
         end
 
         def add(name:)
           if (resp = self.not_existing_validation(name: name)).net_status_ok? and
             (resp = @site_controller.adding_validation(name: name)).net_status_ok?
-            @site_mapper.f('aliases').append_line!(name)
+            @aliases_mapper.append_line!(name)
             @site_controller.reconfigure(name: @site_mapper.name)
 
             @site_controller.reindex_site(name: @site_mapper.name, container_name: @container_mapper.name)
@@ -25,8 +26,7 @@ module Superhosting
 
         def delete(name:)
           if (resp = self.existing_validation(name: name)).net_status_ok?
-            aliases_mapper = @site_mapper.f('aliases')
-            aliases_mapper.remove_line!(name)
+            @aliases_mapper.remove_line!(name)
             @site_controller.reconfigure(name: @site_mapper.name)
 
             @site_controller.reindex_site(name: @site_mapper.name, container_name: @container_mapper.name)
@@ -35,7 +35,7 @@ module Superhosting
         end
 
         def existing_validation(name:)
-          @site_mapper.aliases.include?(name) ?  {} : { error: :logical_error, code: :alias_does_not_exists, data: { name: name } }
+          @aliases_mapper.lines.include?(name) ?  {} : { error: :logical_error, code: :alias_does_not_exists, data: { name: name } }
         end
 
         def not_existing_validation(name:)

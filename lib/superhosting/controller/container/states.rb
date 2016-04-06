@@ -161,21 +161,19 @@ module Superhosting
 
       def run(name:)
         mapper = self.index[name][:mapper]
-        model = mapper.f('model', default: @config.default_model)
 
-        return { error: :input_error, code: :no_docker_image_specified_in_model, data: { model: model } } if (image = mapper.docker.image).nil?
+        if (resp = self._collect_docker_options(mapper: mapper)).net_status_ok?
+          command_options, image, command = resp[:data]
+          dump_command_option = (command_options + [command]).join("\n")
+          dummy_signature_md5 = Digest::MD5.new.digest(dump_command_option)
 
-        command_options, command = self._docker_options(mapper: mapper)
-        dump_command_option = Marshal.dump(command_options + [command])
-        dummy_signature_md5 = Digest::MD5.new.digest(dump_command_option)
+          restart = (!image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5))
 
-        restart = (!image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5))
-
-        if (resp = self._run_docker(name: name, options: command_options, image: image, command: command, restart: restart)).net_status_ok?
-          mapper.lib.image.put!(image, logger: false)
-          mapper.lib.signature.put!(dump_command_option, logger: false)
+          if (resp = self._safe_run_docker(command_options, image, command, name: name, restart: restart)).net_status_ok?
+            mapper.lib.image.put!(image, logger: false)
+            mapper.lib.signature.put!(dump_command_option, logger: false)
+          end
         end
-
         resp
       end
 
@@ -200,18 +198,14 @@ module Superhosting
           mux_name = "mux-#{mux_mapper.value}"
           mux_controller = self.get_controller(Mux)
           mux_controller.index_pop(mux_name, name)
-          unless mux_controller.index.include?(mux_name)
-            @docker_api.container_kill!(mux_name)
-            @docker_api.container_rm!(mux_name)
-          end
+          self._delete_docker(name: mux_name) unless mux_controller.index.include?(mux_name)
         end
 
         {}
       end
 
       def stop(name:)
-        @docker_api.container_kill!(name)
-        @docker_api.container_rm!(name)
+        self._delete_docker(name: name)
         self.get_controller(Mux).reindex
         {}
       end
@@ -236,29 +230,31 @@ module Superhosting
         }
       end
 
-      def _docker_options(mapper:)
-        all_options = mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n] }.to_h
-        command_options = @docker_api.grab_container_options(all_options)
-
-        volume_opts = []
-        mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
-        volume_opts.each {|val| command_options << "--volume #{val}" }
-
-        [command_options, all_options[:command].value]
-      end
-
-      def _run_docker(name:, options:, image:, command:, restart: false)
-        return { error: :logical_error, code: :docker_command_not_found } if command.nil?
-
-        if restart
+      def _delete_docker(name:)
+        if @docker_api.container_exists?(name)
+          @docker_api.container_unpause!(name) if @docker_api.container_paused?(name)
           @docker_api.container_kill!(name)
           @docker_api.container_rm!(name)
-          @docker_api.container_run(name, options, image, command)
+        end
+      end
+
+      def _recreate_docker(*docker_options, name:)
+        docker_options ||= self._collect_docker_options(mapper: self.index[name][:mapper]).net_status_ok!
+        self._delete_docker(name: name)
+        self._run_docker(*docker_options, name: name)
+      end
+
+      def _run_docker(*docker_options, name:)
+        docker_options = self._collect_docker_options(mapper: self.index[name][:mapper]).net_status_ok![:data] if docker_options.empty?
+        @docker_api.container_run(name, *docker_options)
+      end
+
+      def _safe_run_docker(*docker_options, name:, restart: false)
+        if restart
+          self._recreate_docker(*docker_options, name: name)
         elsif @docker_api.container_exists?(name)
           if @docker_api.container_dead?(name)
-            @docker_api.container_kill!(name)
-            @docker_api.container_rm!(name)
-            @docker_api.container_run(name, options, image, command)
+            self._recreate_docker(*docker_options, name: name)
           elsif @docker_api.container_exited?(name)
             @docker_api.container_start!(name)
           elsif @docker_api.container_paused?(name)
@@ -270,9 +266,24 @@ module Superhosting
             end
           end
         else
-          @docker_api.container_run(name, options, image, command)
+          self._run_docker(*docker_options, name: name)
         end
         self.running_validation(name: name)
+      end
+
+      def _collect_docker_options(mapper:, model_or_mux: nil)
+        model_or_mux ||= mapper.f('model', default: @config.default_model)
+        return { error: :input_error, code: :no_docker_image_specified_in_model_or_mux, data: { name: model_or_mux } } if (image = mapper.docker.image).nil?
+
+        all_options = mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n.value] }.to_h
+        return { error: :logical_error, code: :docker_command_not_found } if (command = all_options[:command]).nil?
+
+        command_options = @docker_api.grab_container_options(all_options)
+        volume_opts = []
+        mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
+        volume_opts.each {|val| command_options << "--volume #{val}" }
+
+        { data: [command_options, image, command] }
       end
 
       def _each_site(name:)

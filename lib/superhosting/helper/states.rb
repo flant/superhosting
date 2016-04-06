@@ -53,14 +53,16 @@ module Superhosting
       def set_state(name:, state:)
         state_mapper = self.state(name: name)
         old_state = state_mapper.value
-        self.with_logger(logger: false) do
-          if state.nil?
-            state_mapper.delete!(full: full)
-          else
-            state_mapper.put!(state)
+        self.debug_operation(desc: { code: :change_state, data: { obj: name, from: old_state, to: state } }) do |&b|
+          self.with_logger(logger: false) do
+            if state.nil?
+              state_mapper.delete!(full: full)
+            else
+              state_mapper.put!(state)
+            end
           end
+          b.call(code: :ok)
         end
-        self.debug(desc: { code: :change_state, data: { obj: name, from: old_state, to: state } })
       end
     end
   end

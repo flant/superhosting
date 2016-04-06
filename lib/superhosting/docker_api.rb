@@ -146,7 +146,7 @@ module Superhosting
       end
     end
 
-    def container_image_actual?(name, image)
+    def container_image?(name, image)
       container = container_info(name)
       image = image_info(image)
 

@@ -46,7 +46,7 @@ describe Superhosting::Controller::Site do
     end
   end
 
-  it 'delete by alias' do # TODO
+  it 'delete by alias' do
     with_container do |container_name|
       site_add_with_exps(name: @site_name, container_name: container_name)
       alias_name = "alias-#{@site_name}"

@@ -4,17 +4,14 @@ module Superhosting
       include Helper::States
 
       def install_data(name:, container_name:)
-        if (resp = self.adding_validation(name: name)).net_status_ok? and
-            (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
-          container_mapper = @container_controller.index[container_name][:mapper]
-          container_mapper.sites.f(name).create!
-          site_lib_mapper = container_mapper.lib.web.f(name).create!
+        container_mapper = @container_controller.index[container_name][:mapper]
+        container_mapper.sites.f(name).create!
+        site_lib_mapper = container_mapper.lib.web.f(name).create!
 
-          chown_r!(container_name, container_name, site_lib_mapper.path)
+        chown_r!(container_name, container_name, site_lib_mapper.path)
 
-          self.reindex_site(name: name, container_name: container_name)
-        end
-        resp
+        self.reindex_site(name: name, container_name: container_name)
+        {}
       end
 
       def uninstall_data(name:)
@@ -22,6 +19,7 @@ module Superhosting
           container_mapper = self.index[name][:container_mapper]
           container_mapper.sites.f(name).delete!
           container_mapper.lib.web.f(name).delete!
+          container_mapper.lib.sites.f(name).aliases.delete!
 
           self.reindex_site(name: name, container_name: container_mapper.name)
         end

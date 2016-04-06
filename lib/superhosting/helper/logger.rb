@@ -66,7 +66,7 @@ module Superhosting
         status = :failed
         diff = nil
         resp = b.call do |resp|
-          status = resp[:code]
+          status = resp[:code] || :ok
           diff = resp[:diff]
         end
 

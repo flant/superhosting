@@ -7,6 +7,10 @@ module Superhosting
                :long  => '--new-name NAME',
                :required => true
 
+        option :alias_name,
+               :long  => '--alias-name',
+               :bollean => true
+
         def self.has_required_param?
           true
         end

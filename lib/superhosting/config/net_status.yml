@@ -1,7 +1,6 @@
 en:
   net_status:
     no_model_given: 'No model given.'
-    no_docker_image_specified_in_model: "No container/docker/image specified in model '%{model}'."
     docker_command_not_found: "No container/docker/command specified in model."
     unable_to_run_docker_container: 'Unable to run docker container.'
     option_admin_mail_required: 'Admin mail required.'
@@ -43,7 +42,7 @@ en:
     base_mux_should_not_be_abstract: "Base mux '%{name}' should not be abstract."
     mapper_type_not_supported: "Mapper type '%{name}' not supported."
 
-    no_docker_image_specified_in_mux: "No docker_image specified in mux '%{mux}'."
+    no_docker_image_specified_in_model_or_mux: "No container/docker/image specified in model|mux '%{name}'."
 
     erb_error: "Erb has executed with error: '%{error}'."
     file_does_not_exists: "File '%{path}' does not exist."
@@ -106,7 +105,9 @@ en:
     failed: "FAILED"
     ok: "OK"
 
-    change_state: "State of '%{obj}' change from '%{from}' to '%{to}' OK"
+    change_state:
+      ok: "State of '%{obj}' change from '%{from}' to '%{to}' OK"
+      failed: "State of '%{obj}' change from '%{from}' to '%{to}' FAILED"
 
     chown_r:
       failed: "Command: chown -r '%{user}' '%{group}' '%{path}'... FAILED"

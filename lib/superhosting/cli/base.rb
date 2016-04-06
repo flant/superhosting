@@ -76,8 +76,8 @@ module Superhosting
           net_status ||= {}
 
           raise Error::Controller, net_status unless net_status[:error].nil?
-          @logger.info(net_status[:data]) unless net_status[:data].nil?
           @logger.debug('Done!')
+          @logger.info(net_status[:data]) unless net_status[:data].nil?
         rescue NetStatus::Exception => e
           raise Error::Controller, e.net_status
         end

@@ -14,6 +14,7 @@ require 'unicode'
 require 'punycode'
 require 'digest/md5'
 require 'polling'
+require 'strong_password'
 
 require 'path_mapper'
 require 'net_status'

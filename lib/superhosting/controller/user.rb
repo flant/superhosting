@@ -29,9 +29,7 @@ module Superhosting
             shell = ftp_only ? '/usr/sbin/nologin' : '/bin/bash'
             if (resp = self._add(name: name, container_name: container_name, home_dir: home_dir, shell: shell)).net_status_ok?
               if generate
-                if (resp = self.passwd(name: user_name, generate: generate)).net_status_ok?
-                  resp = { data: resp[:data] }
-                end
+                resp = self.passwd(name: name, container_name: container_name, generate: generate)
               end
             end
           end
@@ -44,7 +42,7 @@ module Superhosting
           user_name = "#{container_name}_#{name}"
           passwords = self._create_password(generate: generate)
           self._update_password(name: user_name, encrypted_password: passwords[:encrypted_password])
-          generate ? { data: { password: passwords[:password], encrypted_password: passwords[:encrypted_password] } } : {}
+          generate ? { data: passwords[:password] } : {}
         else
           resp
         end
@@ -140,10 +138,15 @@ module Superhosting
         password = if generate
           SecureRandom.hex
         else
-          begin
-            pass = ask('Enter password: ') { |q| q.echo = false }
-            re_pass = ask('Repeat password: ') { |q| q.echo = false }
-          end until pass == re_pass and !pass.empty?
+          while 1
+            if (pass = ask('Enter password: ') { |q| q.echo = false }) != ask('Repeat password: ') { |q| q.echo = false }
+              self.info('Passwords does not match')
+            elsif !StrongPassword::StrengthChecker.new(pass).is_strong?(min_entropy: @config.f('password_strength', default: '15').to_i)
+              self.info('Password is weak')
+            else
+              break
+            end
+          end
           pass
         end
         encrypted_password = UnixCrypt::SHA512.build(password)

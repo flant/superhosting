@@ -13,13 +13,12 @@ module Superhosting
           mux_name = name[/(?<=mux-).*/]
           mapper = MapperInheritance::Mux.new(@config.muxs.f(mux_name)).set_inheritors
 
-          # image
-          return { error: :input_error, code: :no_docker_image_specified_in_mux, data: { mux: mux_name } } if (image = mapper.docker.image).nil?
-
           # docker
           mapper.erb_options = { mux: mapper }
-          command_options, command = @container_controller._docker_options(mapper: mapper)
-          @container_controller._run_docker(name: name, options: command_options, image: image, command: command)
+          if (resp = @container_controller._collect_docker_options(mapper: mapper, model_or_mux: mux_name)).net_status_ok?
+            docker_options = resp[:data]
+            @container_controller._safe_run_docker(*docker_options, name: name )
+          end
         else
           resp
         end

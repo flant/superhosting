@@ -41,7 +41,7 @@ module Superhosting
       def run_commands
         self.commands.each do |cmd|
           if cmd == :container_restart
-            self.docker_api.container_restart!(self.container.name)
+            self.container.lib.signature.delete!(logger: false)
           else
             self.command! cmd
           end

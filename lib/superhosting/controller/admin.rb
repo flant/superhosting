@@ -30,8 +30,9 @@ module Superhosting
           self.reindex_admin(name: name)
           self.command!("chmod 640 #{admin_dir.path}")
           self.passwd(name: name, generate: generate)
+        else
+          resp
         end
-        resp
       end
 
       def delete(name:)
@@ -58,7 +59,7 @@ module Superhosting
             user_controller._update_password(name: user_name, encrypted_password: passwords[:encrypted_password])
           end
 
-          { data: passwords }
+          generate ? { data: passwords[:password] } : {}
         else
           resp
         end
