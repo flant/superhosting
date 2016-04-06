@@ -14,8 +14,7 @@ script:
 - echo $(id)
 - echo $(which bundle)
 - echo '------------------------'
-- sudo su
-- which bundle
+- sudo -sE /bin/bash -lec "env && which bundle"
 - echo '------------------------'
 
 deploy:
