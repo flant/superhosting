@@ -6,8 +6,11 @@ rvm:
 - 2.2.1
 services:
 - docker
+
 before_script:
-- cp -r bootstrap/* /
+- sudo cp -r bootstrap/* /
+script:
+- sudo bundle exec rake
 
 deploy:
   provider: rubygems
