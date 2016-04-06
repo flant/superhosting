@@ -1,9 +1,10 @@
+dist: trusty
+sudo: required
+cache: apt
 language: ruby
 rvm:
 - 2.2.1
 
-sudo: required
-cache: apt
 install:
 - sudo apt-get update
 - sudo apt-get install -y apt-transport-https ca-certificates
