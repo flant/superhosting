@@ -14,7 +14,7 @@ script:
 - echo $(id)
 - echo $(which bundle)
 - echo '------------------------'
-- sudo -sE
+- sudo su
 - which bundle
 - echo '------------------------'
 
