@@ -14,7 +14,9 @@ script:
 - echo $(id)
 - echo $(which bundle)
 - echo '------------------------'
-- sudo -E /bin/bash -lec "bundle exec rake spec"
+- sudo -sE
+- which bundle
+- echo '------------------------'
 
 deploy:
   provider: rubygems
