@@ -8,6 +8,9 @@ services:
 - docker
 
 before_script:
+- curl -s https://packagecloud.io/install/repositories/flant/pam_docker/script.deb.sh | sudo bash
+- sudo apt-get update
+- sudo apt-get install -y pam-docker
 - sudo cp -r bootstrap/* /
 - docker build -t sx-base .
 - docker tag sx-base:latest superhosting/fcgi
