@@ -10,12 +10,7 @@ services:
 before_script:
 - sudo cp -r bootstrap/* /
 script:
-- echo '------------------------'
-- echo $(id)
-- echo $(which bundle)
-- echo '------------------------'
-- sudo -E su --preserve-environment -lc 'env'
-- echo '------------------------'
+- sudo -E su --preserve-environment -lc 'bundle exec rake spec'
 
 deploy:
   provider: rubygems
