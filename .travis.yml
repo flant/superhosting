@@ -11,7 +11,7 @@ before_script:
 - curl -s https://packagecloud.io/install/repositories/flant/pam_docker/script.deb.sh | sudo bash
 - sudo apt-get update
 - sudo apt-get install -y pam-docker
-- sudo cp -r /vagrant/bootstrap/* /
+- sudo cp -r bootstrap/* /
 - sudo apt-get install nginx sasl2-bin apache2 -y
 - sudo sed -i 's/Listen 80/Listen 81/g' /etc/apache2/ports.conf
 script:
