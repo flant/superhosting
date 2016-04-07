@@ -17,7 +17,7 @@ module Superhosting
           mapper.erb_options = { mux: mapper }
           if (resp = @container_controller._collect_docker_options(mapper: mapper, model_or_mux: mux_name)).net_status_ok?
             docker_options = resp[:data]
-            @container_controller._safe_run_docker(*docker_options, name: name )
+            @container_controller._safe_run_docker(*docker_options, name: name ).net_status_ok!
           end
         else
           resp

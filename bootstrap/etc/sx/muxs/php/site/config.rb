@@ -7,4 +7,4 @@ config "/etc/nginx/sites/#{conf_name}", source: "nginx_vhost"
 on_reconfig "nginx -t && service nginx reload"
 
 # TODO config "#{mux.config_path}/pools/#{conf_name}", source: "php_fpm_pool"
-on_reconfig "docker exec #{mux.name} service php5-fpm reload"
+on_reconfig "docker exec #{mux_name} service php5-fpm reload"

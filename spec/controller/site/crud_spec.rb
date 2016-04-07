@@ -73,7 +73,7 @@ describe Superhosting::Controller::Site do
     end
   end
 
-  it 'rename alias save name' do
+  it 'rename by alias save name' do
     with_container do |container_name|
       site_add_with_exps(name: @site_name, container_name: container_name)
       alias_name = "alias-#{@site_name}"
@@ -84,7 +84,31 @@ describe Superhosting::Controller::Site do
     end
   end
 
-  it 'reconfig' do
+  it 'rename: by alias to alias' do
+    with_container do |container_name|
+      site_add_with_exps(name: @site_name, container_name: container_name)
+      alias_name = "alias-#{@site_name}"
+      site_alias_add_with_exps(name: alias_name)
+      site_rename(name: alias_name, new_name: alias_name, alias_name: true)
+      site_add_exps(name: alias_name)
+      expect_in_file(self.site_aliases(container_name, alias_name), @site_name)
+      not_expect_in_file(self.site_aliases(container_name, alias_name), alias_name)
+    end
+  end
+
+  it 'rename: by alias to another alias' do
+    with_container do |container_name|
+      site_add_with_exps(name: @site_name, container_name: container_name)
+      alias1_name = "alias1-#{@site_name}"
+      alias2_name = "alias2-#{@site_name}"
+      [alias1_name, alias2_name].each {|n| site_alias_add_with_exps(name: n) }
+      site_rename_with_exps(name: alias1_name, new_name: alias2_name, alias_name: true)
+      expect_in_file(self.site_aliases(container_name, alias2_name), @site_name)
+      not_expect_in_file(self.site_aliases(container_name, alias2_name), alias2_name)
+    end
+  end
+
+  it 'reconfig', :docker do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
         site_reconfigure_with_exps(name: site_name)

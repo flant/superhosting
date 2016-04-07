@@ -7,7 +7,7 @@ describe Superhosting::Controller::Mux do
 
   # positive
 
-  it 'reconfig' do
+  it 'reconfig', :docker do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
         mux_reconfigure_with_exps(name: 'mux-php-5.5')

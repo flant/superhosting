@@ -15,7 +15,7 @@ describe Superhosting::Controller::Model do
     expect(model_tree_with_exps).to include(:data) # TODO
   end
 
-  it 'reconfig' do
+  it 'reconfig', :docker do
     with_container(model: 'bitrix_m') do |container_name|
       with_site do |site_name|
         model_reconfigure_with_exps(name: 'bitrix_m')

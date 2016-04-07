@@ -105,6 +105,8 @@ en:
     failed: "FAILED"
     ok: "OK"
 
+    deleting_old_configs: 'Deleting old configs...'
+
     change_state:
       ok: "State of '%{obj}' change from '%{from}' to '%{to}' OK"
       failed: "State of '%{obj}' change from '%{from}' to '%{to}' FAILED"

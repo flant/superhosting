@@ -70,39 +70,50 @@ module Superhosting
       end
 
       def rename(name:, new_name:, alias_name: false)
-        if (resp = self.existing_validation(name: name)).net_status_ok? and
-            ((resp = self.adding_validation(name: new_name)).net_status_ok? or
-                (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
+        if (resp = self.available_validation(name: name)).net_status_ok? and
+          ((resp = self.adding_validation(name: new_name)).net_status_ok? or
+              (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
+
+          mapper = self.index[name][:mapper]
+          container_mapper = self.index[name][:container_mapper]
+          actual_name = mapper.name
+
+          mapper.aliases_mapper.remove_line!(new_name) if defined? is_alias and is_alias
+          self.reindex_container_sites(container_name: container_mapper.name)
+
           begin
-            mapper = self.index[name][:mapper]
-            container_mapper = self.index[name][:container_mapper]
-            actual_name = mapper.name
-            renaming_mapper = mapper.etc.parent.f("renaming_#{mapper.name}")
-            renaming_lib_mapper = mapper.lib.parent.f("renaming_#{actual_name}")
-
-            mapper.aliases_mapper.remove_line!(new_name) if defined? is_alias and is_alias
-            mapper.aliases_mapper.append_line!(name) if alias_name
-
-            mapper.rename!(renaming_mapper.path)
-            mapper.create!
-            mapper.lib.rename!(renaming_lib_mapper.path)
-            mapper.lib.create!
-
-            self.reindex_site(name: actual_name, container_name: container_mapper.name)
-
             if (resp = self._reconfigure(name: new_name, container_name: container_mapper.name)).net_status_ok?
-              new_site_mapper = self.index[new_name][:mapper]
-              renaming_mapper.rename!(new_site_mapper.etc.path, logger: false)
-              renaming_lib_mapper.rename!(new_site_mapper.lib.path, logger: false)
-              mapper.aliases_mapper.rename!(new_site_mapper.aliases_mapper.path, logger: false)
-              resp = self.delete(name: actual_name)
+              new_mapper = self.index[new_name][:mapper]
+              mapper.etc.rename!(new_mapper.etc.path, logger: false)
+              mapper.lib.rename!(new_mapper.lib.path, logger: false)
+              mapper.aliases_mapper.rename!(new_mapper.aliases_mapper.path, logger: false)
+
+              with_logger(logger: false) do
+                self.reconfigure(name: new_name).net_status_ok!
+                self.delete(name: actual_name).net_status_ok!
+              end
+
+              new_mapper.aliases_mapper.append_line!(actual_name) if alias_name
+              self.reindex_container_sites(container_name: container_mapper.name)
             end
+          rescue Exception => e
+            resp = e.net_status
+            raise
           ensure
             unless resp.net_status_ok?
-              renaming_mapper.delete!(logger: false)
-              renaming_lib_mapper.delete!(logger: false)
-              mapper.aliases_mapper.append_line!(new_name) if defined? is_alias and is_alias
-              mapper.aliases_mapper.remove_line!(name) if alias_name
+              unless new_mapper.nil?
+                mapper.aliases_mapper.append_line!(new_name) if defined? is_alias and is_alias
+                mapper.aliases_mapper.remove_line!(name) if alias_name
+
+                new_mapper.etc.rename!(mapper.path, logger: false)
+                new_mapper.lib.rename!(mapper.lib.path, logger: false)
+
+                with_logger(logger: false) do
+                  self.reconfigure(name: name)
+                end
+              end
+
+              self.delete(name: new_name)
             end
           end
         end
@@ -128,7 +139,7 @@ module Superhosting
 
         states = {
             none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-            data_installed: { action: :configure_with_apply, undo: :unconfigure, next: :up },
+            data_installed: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :up },
         }
 
         self.on_state(state_mapper: state_mapper, states: states,
@@ -158,7 +169,7 @@ module Superhosting
 
       def available_validation(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          resp = (self.index[name][:container_mapper].lib.sites.state.value == 'up') ? {} : { error: :logical_error, code: :site_is_not_available, data: { name: name }  }
+          resp = (self.index[name][:state_mapper].value == 'up') ? {} : { error: :logical_error, code: :site_is_not_available, data: { name: name }  }
         end
         resp
       end
@@ -169,11 +180,16 @@ module Superhosting
 
       def reindex
         @config.containers.grep_dirs.each do |container_mapper|
-          container_mapper.sites.grep_dirs.each { |mapper| self.reindex_site(name: mapper.name, container_name: container_mapper.name) }
+          reindex_container_sites(container_name: container_mapper.name)
         end
         @@index ||= {}
       end
 
+      def reindex_container_sites(container_name:)
+        @config.containers.f(container_name).sites.grep_dirs.each do |site_mapper|
+          self.reindex_site(name: site_mapper.name, container_name: container_name)
+        end
+      end
 
       def reindex_site(name:, container_name:)
         @@index ||= {}
@@ -202,7 +218,8 @@ module Superhosting
                                         data: { site1: @@index[name][:mapper].path, site2: mapper.path } }
         end
 
-        ([mapper.name] + mapper.aliases).each {|name| @@index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, aliases: [mapper.name] + mapper.aliases } }
+        names = ([mapper.name] + mapper.aliases)
+        names.each {|name| @@index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, aliases: names } }
       end
     end
   end

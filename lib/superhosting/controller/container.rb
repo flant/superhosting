@@ -56,6 +56,51 @@ module Superhosting
         resp
       end
 
+      def rename(name:, new_name:)
+        if (resp = self.available_validation(name: name)).net_status_ok? and
+            (resp = self.adding_validation(name: new_name)).net_status_ok?
+
+          mapper = self.index[name][:mapper]
+          new_etc_mapper = mapper.etc.parent.f(new_name)
+          model = nil if (model = mapper.f('model').value).nil? # TODO: mail:, admin_mail:
+
+          with_logger(logger: false) do
+            mapper.rename!(new_etc_mapper.path)
+            mapper.create!
+
+            begin
+              if (resp = self._reconfigure(name: new_name, model: model)).net_status_ok?
+                new_mapper = self.index[new_name][:mapper]
+                mapper.lib.web.rename!(new_mapper.lib.web.path)
+                mapper.lib.sites.rename!(new_mapper.lib.sites.path)
+                mapper.lib.registry.sites.rename!(new_mapper.lib.registry.sites.path)
+
+                site_controller = self.get_controller(Site)
+                site_controller.reindex_container_sites(container_name: new_name)
+                site_controller.reindex_container_sites(container_name: name)
+
+                self.reconfigure(name: new_name).net_status_ok!
+                self.delete(name: name).net_status_ok!
+              end
+            rescue Exception => e
+              resp = e.net_status
+              raise
+            ensure
+              unless resp.net_status_ok?
+                unless new_mapper.nil?
+                  new_mapper.lib.web.rename!(mapper.lib.web.path)
+                  new_mapper.lib.sites.rename!(mapper.lib.sites.path)
+                  new_etc_mapper.rename!(mapper.path)
+                  self.reconfigure(name: name)
+                end
+                self.delete(name: new_name)
+              end
+            end
+          end
+        end
+        resp
+      end
+
       def reconfigure(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           self.set_state(name: name, state: :data_installed)

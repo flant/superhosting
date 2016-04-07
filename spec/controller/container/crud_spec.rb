@@ -24,6 +24,15 @@ describe Superhosting::Controller::Container do
     end
   end
 
+  it 'rename' do
+    container_add_with_exps(name: @container_name)
+    site_add_with_exps(name: @site_name, container_name: @container_name)
+    new_name = "new_#{@container_name}"
+    container_rename_with_exps(name: @container_name, new_name: new_name)
+    site_delete_exps(name: @site_name, container_name: @container_name)
+    site_add_exps(name: @site_name, container_name: new_name)
+  end
+
   it 'update', :docker do
     begin
       with_container(model: 'test') do |container_name|
@@ -75,6 +84,24 @@ describe Superhosting::Controller::Container do
 
   it 'add:model_does_not_exists' do
     container_add_with_exps(name: @container_name, model: :incorrect_model_name, code: :model_does_not_exists)
+  end
+
+  it 'rename:no_model_given' do
+    container_add_with_exps(name: @container_name)
+    begin
+      default_model_mapper = self.config.default_model
+      default_model = default_model_mapper.value
+      default_model_mapper.delete!
+
+      new_name = "new_#{@container_name}"
+      container_rename_with_exps(name: @container_name, new_name: new_name, code: :no_model_given)
+    ensure
+      default_model_mapper.put!(default_model)
+    end
+  end
+
+  it 'rename:container_does_not_exists' do
+    container_rename_with_exps(name: @container_name, new_name: 'new_name', code: :container_does_not_exists)
   end
 
   it 'reconfig:container_does_not_exists' do

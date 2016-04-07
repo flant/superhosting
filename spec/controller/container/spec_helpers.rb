@@ -22,6 +22,10 @@ module SpecHelpers
         container_controller.reconfigure(**kwargs)
       end
 
+      def container_rename(**kwargs)
+        container_controller.rename(**kwargs)
+      end
+
       def container_update(**kwargs)
         container_controller.update(**kwargs)
       end
@@ -122,7 +126,7 @@ module SpecHelpers
           # group / user
           not_expect_group(name)
           not_expect_user(name)
-          not_expect_in_file(self.etc.passwd, /#{name}:.*\/usr\/sbin\/nologin/)
+          not_expect_in_file(self.etc.passwd, /^#{name}:.*\/usr\/sbin\/nologin/)
 
           # docker
           not_expect_in_file(self.etc.security.f('docker.conf'), "@#{name} #{name}")
@@ -132,12 +136,17 @@ module SpecHelpers
         end
       end
 
+      def container_rename_exps(**kwargs)
+        container_add_exps(name: kwargs.delete(:new_name))
+        container_delete_exps(name: kwargs.delete(:name))
+      end
+
       def container_admin_add_exps(**kwargs)
-        admin_container_add_exps
+        admin_container_add_exps(**kwargs)
       end
 
       def container_admin_delete_exps(**kwargs)
-        admin_container_delete_exps
+        admin_container_delete_exps(**kwargs)
       end
 
       def container_add_fcgi_m_exps(**kwargs)
@@ -185,22 +194,24 @@ module SpecHelpers
         end
 
         after :each do
-          if @with_docker
-            command("docker ps --filter 'name=test' -a | xargs docker unpause")
-            command("docker ps --filter 'name=test' -a | xargs docker kill")
-            command("docker ps --filter 'name=test' -a | xargs docker rm")
+          %w(new test).each do |prefix|
+            if @with_docker
+              command("docker ps --filter 'name=#{prefix}' -a | xargs docker unpause")
+              command("docker ps --filter 'name=#{prefix}' -a | xargs docker kill")
+              command("docker ps --filter 'name=#{prefix}' -a | xargs docker rm")
+            end
+
+            PathMapper.new('/etc/security/docker.conf').remove_line!("@#{@container_name} #{@container_name}")
+
+            Etc.passwd do |user|
+              command("userdel #{user.name}") if user.name.start_with? prefix
+            end
+
+            command("rm -rf /etc/sx/containers/#{prefix}*")
+            command("rm -rf /var/sx/containers/#{prefix}*")
+            command("rm -rf /web/#{prefix}*")
+            command("rm -rf /etc/postfix/postfwd.cf.d/#{prefix}*")
           end
-
-          PathMapper.new('/etc/security/docker.conf').remove_line!("@#{@container_name} #{@container_name}")
-
-          Etc.passwd do |user|
-            command("userdel #{user.name}") if user.name.start_with? 'test'
-          end
-
-          command('rm -rf /etc/sx/containers/test*')
-          command('rm -rf /var/sx/containers/test*')
-          command('rm -rf /web/test*')
-          command('rm -rf /etc/postfix/postfwd.cf.d/test*')
         end
       end
     end
