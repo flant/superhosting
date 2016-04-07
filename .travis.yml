@@ -8,10 +8,11 @@ services:
 - docker
 
 before_script:
-- sudo source provision/docker.sh
-- sudo cp -r /vagrant/bootstrap/* /
-- sudo apt-get install nginx sasl2-bin apache2 -y
-- sudo sed -i 's/Listen 80/Listen 81/g' /etc/apache2/ports.conf
+- sudo -s
+- source provision/docker.sh
+- cp -r /vagrant/bootstrap/* /
+- apt-get install nginx sasl2-bin apache2 -y
+- sed -i 's/Listen 80/Listen 81/g' /etc/apache2/ports.conf
 script:
 - sudo -E su --preserve-environment -lc 'bundle exec rake spec'
 
