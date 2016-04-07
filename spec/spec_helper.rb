@@ -28,6 +28,6 @@ end
 
 RSpec.configure do |c|
   c.before(:example, :docker) { @with_docker = true }
-  Thread.current[:logger] = logger
+  # Thread.current[:logger] = logger
   # Thread.current[:debug] = true
 end

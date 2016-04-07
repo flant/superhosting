@@ -6,6 +6,6 @@ VAGRANTFILE_API_VERSION = '2'
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = 'ubuntu/trusty64'
-  config.vm.provision :shell, path: 'provistion/docker.sh'
-  config.vm.provision :shell, path: 'provistion/vagrant.sh'
+  config.vm.provision :shell, path: 'provision/vagrant.sh'
+  config.vm.provision :shell, path: 'provision/docker.sh'
 end

@@ -1,8 +1,4 @@
-#!/usr/bin/env /bin/bash
-
-docker build -t sx-base -f dockerfile/base .
-docker build -t sx-almost-base -f dockerfile/almost_base .
-docker build -t sx-mux -f dockerfile/mux .
+#!/usr/bin/env /bin/bash.
 
 docker tag sx-base superhosting/fcgi
 docker tag sx-base superhosting/test

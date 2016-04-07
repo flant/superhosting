@@ -11,11 +11,16 @@ before_script:
 - curl -s https://packagecloud.io/install/repositories/flant/pam_docker/script.deb.sh | sudo bash
 - sudo apt-get update
 - sudo apt-get install -y pam-docker
-- sudo -s source provision/docker.sh
 - sudo cp -r bootstrap/* /
 - sudo apt-get install nginx sasl2-bin apache2 -y
 - sudo sed -i 's/Listen 80/Listen 81/g' /etc/apache2/ports.conf
+- docker build -t sx-base -f dockerfile/base .
+- docker build -t sx-almost-base -f dockerfile/almost_base .
+- docker build -t sx-mux -f dockerfile/mux .
+- sudo -s source provision/docker.sh
 - docker images
+- docker run --detach --name test_container3 --user 0:0 superhosting/mux /bin/bash -lec 'while true ; do date ; sleep 1; done'
+- docker ps -a
 script:
 - sudo -E su --preserve-environment -lc 'bundle exec rake spec'
 
