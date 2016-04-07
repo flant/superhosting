@@ -7,9 +7,9 @@ apt-get install -y docker-engine pam-docker
 gpasswd -a vagrant docker
 service docker restart
 
-docker build -t sx-base -f /vagrant/dockerfile/base /vagrant/
-docker build -t sx-almost-base -f /vagrant/dockerfile/almost_base /vagrant/
-docker build -t sx-mux -f /vagrant/dockerfile/mux /vagrant/
+docker build -t sx-base -f dockerfile/base .
+docker build -t sx-almost-base -f dockerfile/almost_base .
+docker build -t sx-mux -f dockerfile/mux .
 
 docker tag sx-base superhosting/fcgi
 docker tag sx-base superhosting/test
