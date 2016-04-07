@@ -1,5 +1,12 @@
 #!/usr/bin/env /bin/bash
 
+curl -s https://packagecloud.io/install/repositories/flant/pam_docker/script.deb.sh | sudo bash
+apt-get update
+apt-get install -y docker-engine pam-docker
+
+gpasswd -a vagrant docker
+service docker restart
+
 apt-get update
 apt-get install nginx sasl2-bin apache2 -y
 sed -i 's/Listen 80/Listen 81/g' /etc/apache2/ports.conf

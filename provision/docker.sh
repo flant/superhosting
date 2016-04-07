@@ -1,12 +1,5 @@
 #!/usr/bin/env /bin/bash
 
-curl -s https://packagecloud.io/install/repositories/flant/pam_docker/script.deb.sh | sudo bash
-apt-get update
-apt-get install -y docker-engine pam-docker
-
-gpasswd -a vagrant docker
-service docker restart
-
 docker build -t sx-base -f dockerfile/base .
 docker build -t sx-almost-base -f dockerfile/almost_base .
 docker build -t sx-mux -f dockerfile/mux .
