@@ -69,7 +69,7 @@ module Superhosting
       def _save_registry!(registry_mapper, registry_files)
         old_configs = registry_mapper.lines
         unless (old_configs = old_configs - registry_files).empty?
-          self.debug('Deleting old configs...')
+          self.debug('Deleting old configs...') # TODO
           old_configs.each { |file| PathMapper.new(file).delete! }
         end
         registry_mapper.override!(registry_files.join("\n"))

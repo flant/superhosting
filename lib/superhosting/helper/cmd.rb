@@ -11,16 +11,16 @@ module Superhosting
         self._command(command_args, **kwargs)
       end
 
-      def _command(*command_args, debug: true, logger: nil)
+      def _command(*command_args, debug: true, logger: nil, &b)
         self.with_logger(logger: logger) do
           desc = { code: :command, data: { command: command_args.join } }
           if debug
             self.debug_operation(desc: desc) do |&blk|
-              self._command_without_debug(*command_args)
+              self._command_without_debug(*command_args, &b)
               blk.call(code: :ok)
             end
           else
-            self._command_without_debug(*command_args)
+            self._command_without_debug(*command_args, &b)
           end
           {} # net_status
         end

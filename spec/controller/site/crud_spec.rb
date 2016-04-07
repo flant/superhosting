@@ -210,6 +210,12 @@ describe Superhosting::Controller::Site do
     end
   end
 
+  it 'add#mux', :docker do
+    with_container(model: 'bitrix_m') do
+      with_site
+    end
+  end
+
   it 'recreate' do
     with_container do
       2.times.each { with_site }

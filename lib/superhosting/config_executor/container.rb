@@ -1,11 +1,12 @@
 module Superhosting
   module ConfigExecutor
     class Container < Base
-      attr_accessor :container, :mux, :registry_files
+      attr_accessor :container, :mux, :mux_name, :registry_files
 
       def initialize(container:, on_reconfig:, on_config:, mux: nil, **kwargs)
         self.container = container
         self.mux = mux
+        self.mux_name = mux.nil? ? mux : "mux-#{mux.name}"
         self.registry_files = []
         @on_config = on_config
         @on_reconfig = on_reconfig
