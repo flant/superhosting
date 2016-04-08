@@ -107,7 +107,11 @@ module Superhosting
       self.with_dry_run do |dry_run|
         return true if dry_run and self.storage[name] == status
         resp = container_info(name)
-        resp.nil? ? false : resp['State']['Status'] == status
+        if resp.nil?
+          false
+        else
+          resp['State'].include?(status.capitalize) ? resp['State'][status.capitalize] : resp['State']['Status'] == status
+        end
       end
     end
 
