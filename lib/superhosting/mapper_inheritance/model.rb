@@ -83,6 +83,7 @@ module Superhosting
           %w(mux model).each do |t|
             (inherits[t] || []).each do |inheritor|
               if (type_dir_mapper = inheritor.f(@type)).dir?
+                type_dir_mapper.changes_overlay = mapper
                 mapper << type_dir_mapper
               end
             end

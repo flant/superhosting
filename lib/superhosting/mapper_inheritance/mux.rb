@@ -36,7 +36,10 @@ module Superhosting
       def set_inheritance(mapper)
         self.inheritors.sort.each do |k, inheritors|
           inheritors.each do |inheritor|
-            mapper << inheritor if inheritor.dir?
+            if inheritor.dir?
+              inheritor.changes_overlay = mapper
+              mapper << inheritor
+            end
           end
         end
         mapper

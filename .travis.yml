@@ -18,9 +18,8 @@ before_script:
 - docker build -t sx-almost-base -f dockerfile/almost_base .
 - docker build -t sx-mux -f dockerfile/mux .
 - sudo -s source provision/docker.sh
-- docker images
 script:
-- sudo -E su --preserve-environment -lc 'bundle exec rspec --example "Superhosting::Controller::Site add#mux"'
+- sudo -E su --preserve-environment -lc 'bundle exec rake spec'
 
 deploy:
   provider: rubygems

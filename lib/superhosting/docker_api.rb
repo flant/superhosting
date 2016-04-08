@@ -110,7 +110,8 @@ module Superhosting
         if resp.nil?
           false
         else
-          resp['State'].include?(status.capitalize) ? resp['State'][status.capitalize] : resp['State']['Status'] == status
+          ans = resp['State'][status.capitalize] if (ans = (resp['State']['Status'] == status)).nil?
+          ans
         end
       end
     end

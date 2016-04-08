@@ -10,6 +10,12 @@ module Superhosting
           end
         end
 
+        def _safe_put!(content)
+          self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
+            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
+          end
+        end
+
         def _remove_line!(line)
           self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
             super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
