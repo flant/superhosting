@@ -36,13 +36,13 @@ describe Superhosting::Controller::Container do
   it 'update', :docker do
     begin
       with_container(model: 'test') do |container_name|
-        command('docker tag superhosting/almostbase superhosting/test')
+        command!('docker tag -f superhosting/almostbase superhosting/test')
         container_update_with_exps(name: container_name)
         expect(docker_api.container_image?(@container_name, 'sx-base')).to be_falsey
         expect(docker_api.container_image?(@container_name, 'superhosting/almostbase')).to be_truthy
       end
     ensure
-      command('docker tag sx-base superhosting/test')
+      command!('docker tag -f sx-base superhosting/test')
     end
   end
 

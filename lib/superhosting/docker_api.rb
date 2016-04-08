@@ -110,18 +110,20 @@ module Superhosting
         if resp.nil?
           false
         else
-          if resp['State']['Status'].nil?
-            resp['State'][status.capitalize]
-          else
-            resp['State']['Status'] == status
-          end
+          resp['State'][status.capitalize]
         end
       end
     end
 
     def container_running?(name)
-      container_status?(name, 'running').tap do |resp|
-        self.info(container_info(name).inspect) unless resp.nil? # TODO: remove later
+      self.with_dry_run do |dry_run|
+        return true if dry_run and self.storage[name] == status
+        resp = container_info(name)
+        if resp.nil?
+          false
+        else
+          resp['State']['Running'] and %w(Restarting Paused OOMKilled Dead).all? {|c| !resp['State'][c] }
+        end
       end
     end
 
