@@ -1,4 +1,4 @@
-#!/usr/bin/env /bin/bash.
+#!/usr/bin/env /bin/bash
 
 docker tag sx-base superhosting/fcgi
 docker tag sx-base superhosting/test

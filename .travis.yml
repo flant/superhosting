@@ -19,10 +19,8 @@ before_script:
 - docker build -t sx-mux -f dockerfile/mux .
 - sudo -s source provision/docker.sh
 - docker images
-- docker run --detach --name test_container3 --user 0:0 superhosting/mux /bin/bash -lec 'while true ; do date ; sleep 1; done'
-- docker ps -a
 script:
-- sudo -E su --preserve-environment -lc 'bundle exec rake spec'
+- sudo -E su --preserve-environment -lc 'bundle exec rspec --example "Superhosting::Controller::Site add#mux"'
 
 deploy:
   provider: rubygems

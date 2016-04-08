@@ -112,7 +112,9 @@ module Superhosting
     end
 
     def container_running?(name)
-      container_status?(name, 'running')
+      container_status?(name, 'running').tap do |resp|
+        self.info(container_info(name).inspect) unless resp.nil? # TODO: remove later
+      end
     end
 
     def container_not_running?(name)

@@ -7,7 +7,7 @@ GIT
 
 GIT
   remote: https://github.com/flant/path_mapper.git
-  revision: cbc703c041ee7afc4726b9b4594f483a53f63f8a
+  revision: f67a112e8d3e9079830c72ed3b0858a863211d5e
   specs:
     path_mapper (0.0.2)
       diffy (~> 3.1)
@@ -42,7 +42,7 @@ GEM
     backports (3.6.8)
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
-    byebug (8.2.2)
+    byebug (8.2.3)
     coderay (1.1.1)
     debug_inspector (0.0.2)
     diff-lcs (1.2.5)
