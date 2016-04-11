@@ -117,7 +117,7 @@ module Superhosting
 
     def container_running?(name)
       self.with_dry_run do |dry_run|
-        return true if dry_run and self.storage[name] == status
+        return true if dry_run and self.storage[name] == 'running'
         resp = container_info(name)
         if resp.nil?
           false
