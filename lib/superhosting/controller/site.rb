@@ -48,8 +48,9 @@ module Superhosting
 
       def inspect(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
+          actual_name = self.index[name][:mapper].name
           container_mapper = self.index[name][:container_mapper]
-          { data: self._list(container_name: container_mapper.name)[name] }
+          { data: self._list(container_name: container_mapper.name)[actual_name] }
         else
           resp
         end
