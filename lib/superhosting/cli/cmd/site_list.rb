@@ -6,6 +6,18 @@ module Superhosting
                :short => '-c NAME',
                :long  => '--container NAME',
                :required => true
+
+        option :state,
+               :long  => '--state',
+               :boolean => true
+
+        option :json,
+               :long  => '--json',
+               :boolean => true
+
+        def list_handler?
+          true
+        end
       end
     end
   end

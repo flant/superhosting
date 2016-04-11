@@ -48,7 +48,14 @@ describe Superhosting::Controller::Container do
 
   it 'list' do
     with_container do |container_name|
-      expect(container_list_with_exps[:data].first).to include(:name, :state)
+      expect(container_list_with_exps[:data]).to include(container_name)
+      expect(container_list_with_exps[:data][container_name]).to include(:state, :docker, :configs)
+    end
+  end
+
+  it 'inspect' do
+    with_container do |container_name|
+      expect(container_inspect_with_exps(name: container_name)[:data]).to include(:state, :docker, :configs)
     end
   end
 

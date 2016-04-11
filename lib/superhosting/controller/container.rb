@@ -14,10 +14,34 @@ module Superhosting
         # sx = @config.containers.grep_dirs.map {|n| n.name }.compact.to_set
         # containers = (docker & sx)
 
-        containers = @config.containers.grep_dirs.map do |n|
-          { name: n.name, state: self.state(name: n.name).value } if self.index.key? n.name and self.index[n.name][:mapper].lib.state.file?
-        end.compact
+        containers = self._list
         { data: containers }
+      end
+
+      def _list
+        def data(name)
+          mapper = self.index[name][:mapper]
+          docker_options = mapper.docker.grep_files.map {|f| [f.name, f.value] }.to_h
+          configs = mapper.f('config.rb', overlay: false).reverse.map {|f| f.value }
+          { docker: docker_options, configs: configs }
+        end
+
+        containers = {}
+        @config.containers.grep_dirs.map do |n|
+          name = n.name
+          containers[name] = {
+              state: self.state(name: name).value
+          }.merge(data(name)) if self.index.key? name and self.index[name][:mapper].lib.state.file?
+        end
+        containers
+      end
+
+      def inspect(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          { data: self._list[name] }
+        else
+          resp
+        end
       end
 
       def add(name:, mail: 'model', admin_mail: nil, model: nil)

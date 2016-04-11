@@ -58,8 +58,7 @@ module Superhosting
 
       def reindex
         @@index ||= {}
-        @container_controller.list[:data].each do |container|
-          container_name = container[:name]
+        @container_controller._list.map do |container_name, data|
           container_mapper = @container_controller.index[container_name][:mapper]
           if (mux_mapper = container_mapper.mux).file?
             mux_name = "mux-#{mux_mapper.value}"

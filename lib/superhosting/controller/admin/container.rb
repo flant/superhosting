@@ -14,18 +14,14 @@ module Superhosting
         end
 
         def list
-          if (resp = @container_controller.list).net_status_ok?
-            containers = resp[:data]
-            container_users = containers.map do |container|
-              unless @user_controller._get(name: "#{container[:name]}_admin_#{@admin_name}").nil?
-                { container: container[:name], user: "#{container[:name]}_admin_#{@admin_name}" }
-              end
-            end.compact
+          containers = @container_controller._list
+          container_users = containers.map do |container_name, data|
+            unless @user_controller._get(name: "#{container_name}_admin_#{@admin_name}").nil?
+              { container: container_name, user: "#{container_name}_admin_#{@admin_name}" }
+            end
+          end.compact
 
-            { data: container_users }
-          else
-            resp
-          end
+          { data: container_users }
         end
 
         def add(name:)

@@ -34,6 +34,10 @@ module SpecHelpers
         container_controller.list
       end
 
+      def container_inspect(**kwargs)
+        container_controller.inspect(**kwargs)
+      end
+
       def container_admin_add(**kwargs)
         container_controller.admin(name: @container_name).add(**kwargs)
       end

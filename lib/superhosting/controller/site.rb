@@ -18,14 +18,31 @@ module Superhosting
       end
 
       def _list(container_name:)
+        def data(name)
+          mapper = self.index[name][:mapper]
+          docker_options = mapper.docker.grep_files.map {|f| [f.name, f.value] }.to_h
+          configs = mapper.f('config.rb', overlay: false).reverse.map {|f| f.value }
+          { docker: docker_options, configs: configs }
+        end
+
         container_mapper = @container_controller.index[container_name][:mapper]
-        sites = []
+        sites = {}
         container_mapper.sites.grep_dirs.each do |mapper|
-          if (state = container_mapper.lib.sites.f(mapper.name).state).file?
-            sites << { name: mapper.name, state: state.value }
+          name = mapper.name
+          if (state = container_mapper.lib.sites.f(name).state).file?
+            sites[name] = { state: state.value }.merge(data(name))
           end
         end
         sites
+      end
+
+      def inspect(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          container_mapper = self.index[name][:container_mapper]
+          { data: self._list(container_name: container_mapper.name)[name] }
+        else
+          resp
+        end
       end
 
       def add(name:, container_name:)

@@ -42,6 +42,7 @@ module Superhosting
         end
 
         @node = node
+        @node_class = node.values.first
 
         @logger = Logger.new(STDOUT)
         @logger.level = (config[:debug] or config[:dry_run] or config[:verbose]) ? Logger::DEBUG : Logger::INFO
@@ -71,13 +72,30 @@ module Superhosting
       end
 
       def run
+        def show_list(data)
+          data.each do |k,v|
+            if config[:state]
+              @logger.info("#{k} #{v[:state]}")
+            elsif config[:json]
+              @logger.info(name: k, state: v[:state])
+            else
+              @logger.info(k)
+            end
+          end
+        end
+
         begin
           net_status = action
           net_status ||= {}
 
           raise Error::Controller, net_status unless net_status[:error].nil?
           @logger.debug('Done!')
-          @logger.info(net_status[:data]) unless net_status[:data].nil?
+
+          if @node_class.list_handler?
+            show_list(net_status[:data]) unless net_status[:data].nil?
+          else
+            @logger.info(net_status[:data])
+          end
         rescue NetStatus::Exception => e
           raise Error::Controller, e.net_status
         end
@@ -172,6 +190,10 @@ module Superhosting
         end
 
         def has_required_param?
+          false
+        end
+
+        def list_handler?
           false
         end
 

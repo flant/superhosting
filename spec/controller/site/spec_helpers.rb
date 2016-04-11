@@ -38,6 +38,10 @@ module SpecHelpers
         site_controller.list(**kwargs)
       end
 
+      def site_inspect(**kwargs)
+        site_controller.inspect(**kwargs)
+      end
+
       def site_alias_add(**kwargs)
         site_controller.alias(name: @site_name).add(**kwargs)
       end

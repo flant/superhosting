@@ -66,11 +66,11 @@ module Superhosting
 
       def index
         index = {}
-        @container_controller.list[:data].each do |container|
-          container_mapper = @container_controller.index[container[:name]][:mapper]
+        @container_controller._list.each do |container_name, data|
+          container_mapper = @container_controller.index[container_name][:mapper]
           model = container_mapper.f('model', default: @config.default_model).value
 
-          (index[model] ||= []) << container[:name]
+          (index[model] ||= []) << container_name
         end
         index
       end
