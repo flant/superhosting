@@ -17,16 +17,15 @@ module Superhosting
 
         def self.after_action(data, config, logger)
           data.each do |k,v|
-            if config[:state]
-              logger.info("#{k} #{v[:state]}")
-            elsif config[:json]
+            output = []
+            output << v[:container] unless config[:container_name]
+            output << k
+            output << v[:state] if config[:state]
+
+            if config[:json]
               logger.info(name: k, state: v[:state], aliases: v[:aliases], container: v[:container])
             else
-              if config[:container_name]
-                logger.info(k)
-              else
-                logger.info("#{v[:container]} #{k}")
-              end
+              logger.info(output.join(' '))
             end
           end
         end
