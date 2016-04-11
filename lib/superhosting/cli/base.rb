@@ -72,18 +72,6 @@ module Superhosting
       end
 
       def run
-        def show_list(data)
-          data.each do |k,v|
-            if config[:state]
-              @logger.info("#{k} #{v[:state]}")
-            elsif config[:json]
-              @logger.info(name: k, state: v[:state])
-            else
-              @logger.info(k)
-            end
-          end
-        end
-
         begin
           net_status = action
           net_status ||= {}
@@ -91,10 +79,12 @@ module Superhosting
           raise Error::Controller, net_status unless net_status[:error].nil?
           @logger.debug('Done!')
 
-          if @node_class.list_handler?
-            show_list(net_status[:data]) unless net_status[:data].nil?
-          else
-            @logger.info(net_status[:data])
+          unless (data = net_status[:data]).nil?
+            if @node_class.respond_to? :after_action
+              @node_class.after_action(data, config, @logger)
+            else
+              @logger.info(data)
+            end
           end
         rescue NetStatus::Exception => e
           raise Error::Controller, e.net_status
@@ -190,10 +180,6 @@ module Superhosting
         end
 
         def has_required_param?
-          false
-        end
-
-        def list_handler?
           false
         end
 

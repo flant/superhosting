@@ -29,8 +29,11 @@ module Superhosting
         containers = {}
         @config.containers.grep_dirs.map do |n|
           name = n.name
+          user_controller = self.get_controller(User)
           containers[name] = {
-              state: self.state(name: name).value
+              state: self.state(name: name).value,
+              users: user_controller._list(container_name: name),
+              admins: self.admin(name: name)._list
           }.merge(data(name)) if self.index.key? name and self.index[name][:mapper].lib.state.file?
         end
         containers
@@ -88,37 +91,37 @@ module Superhosting
           new_etc_mapper = mapper.etc.parent.f(new_name)
           model = nil if (model = mapper.f('model').value).nil? # TODO: mail:, admin_mail:
 
-          with_logger(logger: false) do
-            mapper.rename!(new_etc_mapper.path)
-            mapper.create!
+          mapper.rename!(new_etc_mapper.path)
+          mapper.create!
 
-            begin
-              if (resp = self._reconfigure(name: new_name, model: model)).net_status_ok?
-                new_mapper = self.index[new_name][:mapper]
-                mapper.lib.web.rename!(new_mapper.lib.web.path)
-                mapper.lib.sites.rename!(new_mapper.lib.sites.path)
-                mapper.lib.registry.sites.rename!(new_mapper.lib.registry.sites.path)
+          begin
+            self.stop(name: name).net_status_ok!
+            self.unconfigure_with_unapply(name: name).net_status_ok!
+            if (resp = self._reconfigure(name: new_name, model: model)).net_status_ok?
+              new_mapper = self.index[new_name][:mapper]
+              mapper.lib.web.rename!(new_mapper.lib.web.path)
+              mapper.lib.sites.rename!(new_mapper.lib.sites.path)
+              mapper.lib.registry.sites.rename!(new_mapper.lib.registry.sites.path)
 
-                site_controller = self.get_controller(Site)
-                site_controller.reindex_container_sites(container_name: new_name)
-                site_controller.reindex_container_sites(container_name: name)
+              site_controller = self.get_controller(Site)
+              site_controller.reindex_container_sites(container_name: new_name)
+              site_controller.reindex_container_sites(container_name: name)
 
-                self.reconfigure(name: new_name).net_status_ok!
-                self.delete(name: name).net_status_ok!
+              self.reconfigure(name: new_name).net_status_ok!
+              self.delete(name: name).net_status_ok!
+            end
+          rescue Exception => e
+            resp = e.net_status
+            raise
+          ensure
+            unless resp.net_status_ok?
+              unless new_mapper.nil?
+                new_mapper.lib.web.rename!(mapper.lib.web.path)
+                new_mapper.lib.sites.rename!(mapper.lib.sites.path)
+                new_etc_mapper.rename!(mapper.path)
+                self.reconfigure(name: name)
               end
-            rescue Exception => e
-              resp = e.net_status
-              raise
-            ensure
-              unless resp.net_status_ok?
-                unless new_mapper.nil?
-                  new_mapper.lib.web.rename!(mapper.lib.web.path)
-                  new_mapper.lib.sites.rename!(mapper.lib.sites.path)
-                  new_etc_mapper.rename!(mapper.path)
-                  self.reconfigure(name: name)
-                end
-                self.delete(name: new_name)
-              end
+              self.delete(name: new_name)
             end
           end
         end

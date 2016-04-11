@@ -22,7 +22,7 @@ module Superhosting
           mapper = self.index[name][:mapper]
           docker_options = mapper.docker.grep_files.map {|f| [f.name, f.value] }.to_h
           configs = mapper.f('config.rb', overlay: false).reverse.map {|f| f.value }
-          { docker: docker_options, configs: configs }
+          { docker: docker_options, configs: configs, aliases: self.index[name][:aliases]-[name] }
         end
 
         container_mapper = @container_controller.index[container_name][:mapper]
@@ -30,7 +30,7 @@ module Superhosting
         container_mapper.sites.grep_dirs.each do |mapper|
           name = mapper.name
           if (state = container_mapper.lib.sites.f(name).state).file?
-            sites[name] = { state: state.value }.merge(data(name))
+            sites[name] = { state: state.value, container: container_name }.merge(data(name))
           end
         end
         sites
@@ -99,16 +99,15 @@ module Superhosting
           self.reindex_container_sites(container_name: container_mapper.name)
 
           begin
+            self.unconfigure_with_unapply(name: actual_name).net_status_ok!
             if (resp = self._reconfigure(name: new_name, container_name: container_mapper.name)).net_status_ok?
               new_mapper = self.index[new_name][:mapper]
-              mapper.etc.rename!(new_mapper.etc.path, logger: false)
-              mapper.lib.rename!(new_mapper.lib.path, logger: false)
-              mapper.aliases_mapper.rename!(new_mapper.aliases_mapper.path, logger: false)
+              mapper.etc.rename!(new_mapper.etc.path)
+              mapper.lib.rename!(new_mapper.lib.path)
+              mapper.aliases_mapper.rename!(new_mapper.aliases_mapper.path)
 
-              with_logger(logger: false) do
-                self.reconfigure(name: new_name).net_status_ok!
-                self.delete(name: actual_name).net_status_ok!
-              end
+              self.reconfigure(name: new_name).net_status_ok!
+              self.delete(name: actual_name).net_status_ok!
 
               new_mapper.aliases_mapper.append_line!(actual_name) if alias_name
               self.reindex_container_sites(container_name: container_mapper.name)
@@ -122,12 +121,10 @@ module Superhosting
                 mapper.aliases_mapper.append_line!(new_name) if defined? is_alias and is_alias
                 mapper.aliases_mapper.remove_line!(name) if alias_name
 
-                new_mapper.etc.rename!(mapper.path, logger: false)
-                new_mapper.lib.rename!(mapper.lib.path, logger: false)
+                new_mapper.etc.rename!(mapper.path)
+                new_mapper.lib.rename!(mapper.lib.path)
 
-                with_logger(logger: false) do
-                  self.reconfigure(name: name)
-                end
+                self.reconfigure(name: name)
               end
 
               self.delete(name: new_name)

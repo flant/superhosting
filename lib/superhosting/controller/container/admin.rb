@@ -10,10 +10,14 @@ module Superhosting
         end
 
         def list
-          container_admins = self._list_users.map do |user|
+          container_admins = self._list
+          { data: container_admins }
+        end
+
+        def _list
+          self._list_users.map do |user|
             { admin: user[/(?<=#{@container_name}_admin_)(.*)/], user: user }
           end
-          { data: container_admins }
         end
 
         def add(name:)

@@ -10,10 +10,14 @@ module Superhosting
 
       def list(container_name:)
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
-          { data: self._group_get_users_names(name: container_name) }
+          { data: self._list(container_name: container_name) }
         else
           resp
         end
+      end
+
+      def _list(container_name:)
+        self._group_get_users_names(name: container_name)
       end
 
       def add(name:, container_name:, ftp_dir: nil, ftp_only: false, generate: false)

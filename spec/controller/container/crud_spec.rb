@@ -33,6 +33,17 @@ describe Superhosting::Controller::Container do
     site_add_exps(name: @site_name, container_name: new_name)
   end
 
+  xit 'rename check users' do
+    container_add_with_exps(name: @container_name)
+    user_add_with_exps(name: @user_name, container_name: @container_name, generate: true)
+    admin_add_with_exps(name: @admin_name, generate: true)
+    admin_container_add_with_exps(name: @container_name)
+    new_name = "new_#{@container_name}"
+    container_rename_with_exps(name: @container_name, new_name: new_name)
+    user_add_exps(name: @user_name, container_name: new_name)
+    admin_container_add_exps(name: new_name)
+  end
+
   it 'update', :docker do
     begin
       with_container(model: 'test') do |container_name|
@@ -49,13 +60,13 @@ describe Superhosting::Controller::Container do
   it 'list' do
     with_container do |container_name|
       expect(container_list_with_exps[:data]).to include(container_name)
-      expect(container_list_with_exps[:data][container_name]).to include(:state, :docker, :configs)
+      expect(container_list_with_exps[:data][container_name]).to include(:state, :docker, :configs, :users, :admins)
     end
   end
 
   it 'inspect' do
     with_container do |container_name|
-      expect(container_inspect_with_exps(name: container_name)[:data]).to include(:state, :docker, :configs)
+      expect(container_inspect_with_exps(name: container_name)[:data]).to include(:state, :docker, :configs, :users, :admins)
     end
   end
 

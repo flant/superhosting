@@ -15,8 +15,16 @@ module Superhosting
                :long  => '--json',
                :boolean => true
 
-        def self.list_handler?
-          true
+        def self.after_action(data, config, logger)
+          data.each do |k,v|
+            if config[:state]
+              logger.info("#{k} #{v[:state]}")
+            elsif config[:json]
+              logger.info(name: k, state: v[:state], aliases: v[:aliases])
+            else
+              logger.info(k)
+            end
+          end
         end
       end
     end

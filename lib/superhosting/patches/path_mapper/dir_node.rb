@@ -11,7 +11,7 @@ module Superhosting
         end
 
         def _rename!(new_path)
-          self.debug_operation(desc: { code: :directory, data: { path: @path } }) do |&blk|
+          self.debug_operation(desc: { code: :directory, data: { path: @path, to: new_path } }) do |&blk|
             super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
           end
         end

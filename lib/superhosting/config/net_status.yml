@@ -68,14 +68,14 @@ en:
       ok: "Group '%{name}': OK"
     file:
       created: "File '%{path}': CREATED"
-      renamed: "File '%{path}': RENAMED"
+      renamed: "File '%{path}' > '%{to}': RENAMED"
       modified: "File '%{path}': MODIFIED"
       deleted: "File '%{path}': DELETED"
       failed: "File '%{path}': FAILED"
       ok: "File '%{path}': OK"
     directory:
       created: "Directory '%{path}': CREATED"
-      renamed: "Directory '%{path}': RENAMED"
+      renamed: "Directory '%{path}' > '%{to}': RENAMED"
       deleted: "Directory '%{path}': DELETED"
       failed: "Directory '%{path}': FAILED"
       ok: "Directory '%{path}': OK"
