@@ -10,7 +10,7 @@ module Superhosting
                :long  => '--json',
                :boolean => true
 
-        def list_handler?
+        def self.list_handler?
           true
         end
       end
