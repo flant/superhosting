@@ -9,15 +9,15 @@ module Superhosting
         self.index
       end
 
-      def list(container_name:)
-        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
+      def list(container_name: nil)
+        if container_name.nil? or (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           { data: self._list(container_name: container_name) }
         else
           resp
         end
       end
 
-      def _list(container_name:)
+      def _list(container_name: nil)
         def data(name)
           mapper = self.index[name][:mapper]
           docker_options = mapper.docker.grep_files.map {|f| [f.name, f.value] }.to_h
@@ -25,14 +25,24 @@ module Superhosting
           { docker: docker_options, configs: configs, aliases: self.index[name][:aliases]-[name] }
         end
 
-        container_mapper = @container_controller.index[container_name][:mapper]
         sites = {}
-        container_mapper.sites.grep_dirs.each do |mapper|
-          name = mapper.name
-          if (state = container_mapper.lib.sites.f(name).state).file?
-            sites[name] = { state: state.value, container: container_name }.merge(data(name))
+        if container_name
+          container_mapper = @container_controller.index[container_name][:mapper]
+          container_mapper.sites.grep_dirs.each do |mapper|
+            name = mapper.name
+            if (state = container_mapper.lib.sites.f(name).state).file?
+              sites[name] = { state: state.value, container: container_name }.merge(data(name))
+            end
+          end
+        else
+          self.index.values.each do |index|
+            name = index[:mapper].name
+            if (state = index[:state_mapper]).file?
+              sites[name] = { state: state.value, container: index[:container_mapper].name }.merge(data(name))
+            end
           end
         end
+
         sites
       end
 

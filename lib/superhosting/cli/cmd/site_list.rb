@@ -5,7 +5,7 @@ module Superhosting
         option :container_name,
                :short => '-c NAME',
                :long  => '--container NAME',
-               :required => true
+               :required => false
 
         option :state,
                :long  => '--state',
@@ -20,7 +20,7 @@ module Superhosting
             if config[:state]
               logger.info("#{k} #{v[:state]}")
             elsif config[:json]
-              logger.info(name: k, state: v[:state], aliases: v[:aliases])
+              logger.info(name: k, state: v[:state], aliases: v[:aliases], container: v[:container])
             else
               logger.info(k)
             end
