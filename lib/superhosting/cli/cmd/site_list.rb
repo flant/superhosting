@@ -22,7 +22,11 @@ module Superhosting
             elsif config[:json]
               logger.info(name: k, state: v[:state], aliases: v[:aliases], container: v[:container])
             else
-              logger.info(k)
+              if config[:container_name]
+                logger.info(k)
+              else
+                logger.info("#{v[:container]} #{k}")
+              end
             end
           end
         end
