@@ -13,11 +13,11 @@ module Superhosting
         def self.after_action(data, config)
           data.each do |k,v|
             if config[:state]
-              logger.info("#{k} #{v[:state]}")
+              self.info("#{k} #{v[:state]}")
             elsif config[:json]
-              logger.info(name: k, state: v[:state])
+              self.info(name: k, state: v[:state])
             else
-              logger.info(k)
+              self.info(k)
             end
           end
         end

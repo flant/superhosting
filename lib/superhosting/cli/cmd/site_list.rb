@@ -23,9 +23,9 @@ module Superhosting
             output << v[:state] if config[:state]
 
             if config[:json]
-              logger.info(name: k, state: v[:state], aliases: v[:aliases], container: v[:container])
+              self.info(name: k, state: v[:state], aliases: v[:aliases], container: v[:container])
             else
-              logger.info(output.join(' '))
+              self.info(output.join(' '))
             end
           end
         end

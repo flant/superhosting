@@ -8,7 +8,7 @@ module Superhosting
                :required => true
 
         def self.after_action(data, config)
-          logger.info(data)
+          self.info(data)
         end
       end
     end
