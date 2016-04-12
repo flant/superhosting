@@ -173,7 +173,7 @@ module Superhosting
       cmd = "docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}"
       self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
         self.with_dry_run do |dry_run|
-          self.storage[name] = :running if dry_run
+          self.storage[name] = 'running' if dry_run
         end
 
         self.command!(cmd).tap do
