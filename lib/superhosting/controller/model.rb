@@ -19,28 +19,11 @@ module Superhosting
       end
 
       def tree(name:)
-        def show_tree(node, type='model')
-          node.each do |k, hash|
-            self.info("#{"#{type}: " if type == 'mux'}#{k.name}")
-            self.indent_step
-            %w(mux model).each do |type|
-              (hash[type] || []).each {|v| self.show_tree(v, type) } if !hash[type].nil? and !hash[type].empty?
-            end
-            self.indent_step_back
-          end
-        end
-
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          # TODO
-          old = self.indent
-          inheritance = MapperInheritance::Model.new(@config.models.f(name))
-          inheritance.collect_inheritors_tree
-          self.show_tree(inheritance.inheritors_tree)
-          self.indent = old
-
-          resp = {}
+          { data: MapperInheritance::Model.new(@config.models.f(name)).collect_inheritors_tree }
+        else
+          resp
         end
-        resp
       end
 
       def reconfigure(name:)

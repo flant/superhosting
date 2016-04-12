@@ -4,6 +4,8 @@ module Superhosting
     class Base
       include Mixlib::CLI
       extend Helper::I18n
+      include Helper::Logger
+      extend Helper::Logger
 
       COMMANDS_MODULE = Cmd
       CONTROLLERS_MODULE = Superhosting::Controller
@@ -47,6 +49,7 @@ module Superhosting
         @logger = Logger.new(STDOUT)
         @logger.level = (config[:debug] or config[:dry_run] or config[:verbose]) ? Logger::DEBUG : Logger::INFO
         @logger.formatter = proc {|severity, datetime, progname, msg| sprintf("%s\n", msg.to_s) }
+        self.__logger = @logger
 
         self.help if config[:help] or self.class == Base
       end
@@ -66,7 +69,7 @@ module Superhosting
           end
         end
 
-        @logger.info("#{opt_parser.to_s}\n#{get_childs_banners(@node) if self.class == Base}")
+        self.info("#{opt_parser.to_s}\n#{get_childs_banners(@node) if self.class == Base}")
 
         exit 1
       end
@@ -77,14 +80,10 @@ module Superhosting
           net_status ||= {}
 
           raise Error::Controller, net_status unless net_status[:error].nil?
-          @logger.debug('Done!')
+          self.debug('Done!')
 
           unless (data = net_status[:data]).nil?
-            if @node_class.respond_to? :after_action
-              @node_class.after_action(data, config, @logger)
-            else
-              @logger.info(data)
-            end
+            @node_class.after_action(data, config) if @node_class.respond_to? :after_action
           end
         rescue NetStatus::Exception => e
           raise Error::Controller, e.net_status
@@ -97,7 +96,7 @@ module Superhosting
         method.parameters.each do |req, name|
           if req.to_s.start_with? 'key'
             opt = config[name]
-            self.help unless opt = @pos_args.shift if name == :name
+            self.help unless (opt = @pos_args.shift) if name == :name
             opts.merge!(name => opt)
           end
         end
@@ -128,7 +127,7 @@ module Superhosting
           end
 
           CONTROLLER_BASE_OPTIONS.each { |opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
-          opts.merge!(logger: @logger)
+          opts.merge!(logger: self.__logger)
           node.new(**opts).method(m_name)
         end
 

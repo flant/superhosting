@@ -10,7 +10,7 @@ module Superhosting
                :long  => '--json',
                :boolean => true
 
-        def self.after_action(data, config, logger)
+        def self.after_action(data, config)
           data.each do |k,v|
             if config[:state]
               logger.info("#{k} #{v[:state]}")

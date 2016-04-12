@@ -15,7 +15,7 @@ module Superhosting
                :long  => '--json',
                :boolean => true
 
-        def self.after_action(data, config, logger)
+        def self.after_action(data, config)
           data.each do |k,v|
             output = []
             output << v[:container] unless config[:container_name]
