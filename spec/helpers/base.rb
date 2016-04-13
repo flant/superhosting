@@ -57,6 +57,16 @@ module SpecHelpers
         self.container_lib(container_name).state
       end
 
+      def cli(*args)
+        begin
+          Superhosting::Cli::Base.start(args)
+        rescue Exception => e
+          net_status = e.net_status.net_status_normalize
+          $stderr.puts(net_status[:message] || [net_status[:error], net_status[:code]].compact.join(": "))
+          raise
+        end
+      end
+
       def docker_api
         @docker_api ||= if @with_docker
           Superhosting::DockerApi.new

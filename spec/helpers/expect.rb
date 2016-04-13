@@ -18,6 +18,7 @@ module SpecHelpers
 
       def method_with_expectation(controller_method, *args, &block)
         expectation_method = "#{controller_method}_exps"
+        cli_method = "#{controller_method}_cli"
 
         kwargs = args.extract_options!
         code = kwargs.delete(:code)
