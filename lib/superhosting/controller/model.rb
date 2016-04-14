@@ -43,25 +43,6 @@ module Superhosting
         end
         resp
       end
-
-      def useable_validation(name:)
-        self.index.include?(name) ? {} : { error: :logical_error, code: :model_does_not_used, data: { name: name } }
-      end
-
-      def existing_validation(name:)
-        self._list.include?(name) ? {} : { error: :logical_error, code: :model_does_not_exists, data: { name: name } }
-      end
-
-      def index
-        index = {}
-        @container_controller._list.each do |container_name, data|
-          container_mapper = @container_controller.index[container_name][:mapper]
-          model = container_mapper.f('model', default: @config.default_model).value
-
-          (index[model] ||= []) << container_name
-        end
-        index
-      end
     end
   end
 end

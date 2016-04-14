@@ -146,11 +146,11 @@ module SpecHelpers
       end
 
       def container_admin_add_exps(**kwargs)
-        admin_container_add_exps(**kwargs)
+        admin_container_add_exps(container_name: kwargs[:name])
       end
 
       def container_admin_delete_exps(**kwargs)
-        admin_container_delete_exps(**kwargs)
+        admin_container_delete_exps(container_name: kwargs[:name])
       end
 
       def container_add_fcgi_m_exps(**kwargs)
@@ -194,7 +194,7 @@ module SpecHelpers
 
       included do
         before :each do
-          @container_name = "testC#{SecureRandom.hex[0..5]}"
+          @container_name = "testC#{SecureRandom.hex[0..4]}"
         end
 
         after :each do

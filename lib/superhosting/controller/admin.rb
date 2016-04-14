@@ -1,11 +1,6 @@
 module Superhosting
   module Controller
     class Admin < Base
-      def initialize(**kwargs)
-        super(**kwargs)
-        @admins_mapper = @config.admins
-      end
-
       def list
         admins = {}
         @admins_mapper.grep_dirs.map do |dir_name|
@@ -67,34 +62,6 @@ module Superhosting
 
       def container(name:)
         self.get_controller(Container, name: name)
-      end
-
-      def existing_validation(name:)
-        (@admins_mapper.f(name)).nil? ? { error: :logical_error, code: :admin_does_not_exists, data: { name: name } } : {}
-      end
-
-      def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :admin_exists, data: { name: name } } : {}
-      end
-
-      def index
-        @@index ||= self.reindex
-      end
-
-      def reindex
-        @@index = {}
-        @admins_mapper.grep_dirs.each {|dir_name| self.reindex_admin(name: dir_name.name) }
-        @@index
-      end
-
-      def reindex_admin(name:)
-        @@index ||= {}
-        if @admins_mapper.f(name).nil?
-          @@index.delete(name)
-        else
-          admin_container_controller = self.get_controller(Admin::Container, name: name)
-          @@index[name] = admin_container_controller._users_list.net_status_ok![:data] || []
-        end
       end
     end
   end

@@ -16,7 +16,7 @@ module Superhosting
             if state[:next].nil?
               state_mapper.state.delete!(full: true, logger: false)
             else
-              self.set_state(name: options[:name], state: state[:next])
+              self.set_state(state: state[:next], state_mapper: state_mapper.state)
             end
           end
           break if (current_state = state[:next]).nil?
@@ -50,10 +50,9 @@ module Superhosting
         self.index[name][:state_mapper]
       end
 
-      def set_state(name:, state:)
-        state_mapper = self.state(name: name)
+      def set_state(state_mapper:, state:)
         old_state = state_mapper.value
-        self.debug_operation(desc: { code: :change_state, data: { obj: name, from: old_state, to: state } }) do |&b|
+        self.debug_operation(desc: { code: :change_state, data: { obj: state_mapper.parent.name, from: old_state, to: state } }) do |&b|
           self.with_logger(logger: false) do
             if state.nil?
               state_mapper.delete!(full: full)

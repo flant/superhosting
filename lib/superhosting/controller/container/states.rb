@@ -71,8 +71,8 @@ module Superhosting
 
         # user / group
         user_controller = self.get_controller(User)
-        user_controller._group_pretty_add(name: name)
-        unless (resp = user_controller._pretty_add_custom(name: name, group: name)).net_status_ok?
+        user_controller._group_add(name: name)
+        unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?
           return resp
         end
         user = user_controller._get(name: name)
@@ -99,7 +99,7 @@ module Superhosting
         del_users.each do |u|
           user_name = "#{name}_#{u.strip}"
           user = user_controller._get(name: user_name)
-          unless (resp = user_controller._del(name: user_name)).net_status_ok?
+          unless (resp = user_controller._del(name: user_name, group: name)).net_status_ok?
             return resp
           end
           mapper.lib.config.f('etc-passwd').remove_line!(/^#{user_name}:.*/)
@@ -122,7 +122,7 @@ module Superhosting
         end
 
         user_controller._group_del_users(name: name)
-        user_controller._group_pretty_del(name: name)
+        user_controller._group_del(name: name)
 
         # docker
         PathMapper.new('/etc/security/docker.conf').remove_line!("@#{name} #{name}")

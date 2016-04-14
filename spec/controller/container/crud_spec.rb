@@ -31,7 +31,7 @@ describe Superhosting::Controller::Container do
     site_add_exps(name: @site_name, container_name: new_name)
   end
 
-  xit 'rename check users' do
+  it 'rename check users' do
     container_add_with_exps(name: @container_name)
     user_add_with_exps(name: @user_name, container_name: @container_name, generate: true)
     admin_add_with_exps(name: @admin_name, generate: true)
@@ -97,6 +97,10 @@ describe Superhosting::Controller::Container do
   it 'add:invalid_container_name' do
     invalid_names = [:s, :'!incorrectsymbol']
     invalid_names.each {|name| container_add_with_exps(name: name, code: :invalid_container_name) }
+  end
+
+  it 'add:invalid_container_name_by_user_format' do
+    container_add_with_exps(name: '123asd', code: :invalid_container_name_by_user_format)
   end
 
   it 'add:model_does_not_exists' do

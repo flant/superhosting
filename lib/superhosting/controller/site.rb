@@ -1,14 +1,6 @@
 module Superhosting
   module Controller
     class Site < Base
-      DOMAIN_NAME_FORMAT = /^((?!-)[А-Яа-яA-Za-z0-9-]{1,63}(?<!-)\.)+[А-Яа-яA-Za-z]{2,6}$/
-
-      def initialize(**kwargs)
-        super(**kwargs)
-        @container_controller = self.get_controller(Container)
-        self.index
-      end
-
       def list(container_name: nil)
         if container_name.nil? or (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           { data: self._list(container_name: container_name) }
@@ -148,7 +140,7 @@ module Superhosting
       def reconfigure(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           actual_name = self.index[name][:mapper].name
-          self.set_state(name: actual_name, state: :data_installed)
+          self.set_state(state: :data_installed, state_mapper: self.state(name: actual_name))
           self._reconfigure(name: actual_name)
         end
         resp
@@ -173,78 +165,6 @@ module Superhosting
 
       def alias(name:)
         self.get_controller(Alias, name: name)
-      end
-
-      def adding_validation(name:)
-        return { error: :input_error, code: :invalid_site_name, data: { name: name, regex: DOMAIN_NAME_FORMAT } } if name !~ DOMAIN_NAME_FORMAT
-        self.not_existing_validation(name: name)
-      end
-
-      def existing_validation(name:)
-        self.index[name].nil? ? { error: :logical_error, code: :site_does_not_exists, data: { name: name } } : {}
-      end
-
-      def alias_existing_validation(name:, alias_name:)
-        self.index[name][:mapper].aliases.include?(alias_name)
-      end
-
-      def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :site_exists, data: { name: name} } : {}
-      end
-
-      def available_validation(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          resp = (self.index[name][:state_mapper].value == 'up') ? {} : { error: :logical_error, code: :site_is_not_available, data: { name: name }  }
-        end
-        resp
-      end
-
-      def index
-        @@index ||= self.reindex
-      end
-
-      def reindex
-        @config.containers.grep_dirs.each do |container_mapper|
-          reindex_container_sites(container_name: container_mapper.name)
-        end
-        @@index ||= {}
-      end
-
-      def reindex_container_sites(container_name:)
-        @config.containers.f(container_name).sites.grep_dirs.each do |site_mapper|
-          self.reindex_site(name: site_mapper.name, container_name: container_name)
-        end
-      end
-
-      def reindex_site(name:, container_name:)
-        @@index ||= {}
-        @@index[name][:aliases].each{|n| @@index.delete(n) } if @@index[name]
-
-        container_mapper = @container_controller.index[container_name][:mapper]
-        etc_mapper = container_mapper.sites.f(name)
-        lib_mapper = container_mapper.lib.web.f(name)
-        web_mapper = container_mapper.web.f(name)
-        state_mapper = container_mapper.lib.sites.f(name).state
-
-        if etc_mapper.nil?
-          @@index.delete(name)
-          return
-        end
-
-        model_name = container_mapper.f('model', default: @config.default_model)
-        model_mapper = @config.models.f(model_name)
-        etc_mapper = MapperInheritance::Model.new(model_mapper).set_inheritors(etc_mapper)
-
-        mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
-        etc_mapper.erb_options = { site: mapper, container: mapper }
-
-        if @@index.key? name and @@index[name][:mapper].path != mapper.path
-          raise NetStatus::Exception, { code: :container_site_name_conflict,
-                                        data: { site1: @@index[name][:mapper].path, site2: mapper.path } }
-        end
-
-        names = ([mapper.name] + mapper.aliases)
-        names.each {|name| @@index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, aliases: names } }
       end
     end
   end

@@ -1,19 +1,7 @@
 module Superhosting
   module Controller
     class Container < Base
-      CONTAINER_NAME_FORMAT = /^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/
-
-      def initialize(**kwargs)
-        super
-        self.index
-      end
-
       def list
-        # TODO
-        # docker = @docker_api.container_list.map {|c| c['Names'].first.slice(1..-1) }.to_set
-        # sx = @config.containers.grep_dirs.map {|n| n.name }.compact.to_set
-        # containers = (docker & sx)
-
         containers = self._list
         { data: containers }
       end
@@ -92,51 +80,32 @@ module Superhosting
       def rename(name:, new_name:)
         if (resp = self.available_validation(name: name)).net_status_ok? and
             (resp = self.adding_validation(name: new_name)).net_status_ok?
-
           mapper = self.index[name][:mapper]
-          new_etc_mapper = mapper.etc.parent.f(new_name)
+          status_name = "#{name}_to_#{new_name}"
+          state_mapper = @lib.process_status.f(status_name).create!
           model = nil if (model = mapper.f('model').value).nil? # TODO: mail:, admin_mail:
 
-          mapper.rename!(new_etc_mapper.path)
-          mapper.create!
+          states = {
+              none: { action: :stop, undo: :run, next: :stopped },
+              stopped: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
+              unconfigured: { action: :copy_etc, next: :copied_etc },
+              copied_etc: { action: :new_run, next: :new_runned },
+              new_runned: { action: :copy_var, next: :copied_var },
+              copied_var: { action: :copy_users, next: :copied_users },
+              copied_users: { action: :new_reconfigure, next: :new_reconfigured },
+              new_reconfigured: { action: :delete }
+          }
 
-          begin
-            self.stop(name: name).net_status_ok!
-            self.unconfigure_with_unapply(name: name).net_status_ok!
-            if (resp = self._reconfigure(name: new_name, model: model)).net_status_ok?
-              new_mapper = self.index[new_name][:mapper]
-              mapper.lib.web.rename!(new_mapper.lib.web.path)
-              mapper.lib.sites.rename!(new_mapper.lib.sites.path)
-              mapper.lib.registry.sites.rename!(new_mapper.lib.registry.sites.path)
-
-              site_controller = self.get_controller(Site)
-              site_controller.reindex_container_sites(container_name: new_name)
-              site_controller.reindex_container_sites(container_name: name)
-
-              self.reconfigure(name: new_name).net_status_ok!
-              self.delete(name: name).net_status_ok!
-            end
-          rescue Exception => e
-            resp = e.net_status
-            raise
-          ensure
-            unless resp.net_status_ok?
-              unless new_mapper.nil?
-                new_mapper.lib.web.rename!(mapper.lib.web.path)
-                new_mapper.lib.sites.rename!(mapper.lib.sites.path)
-                new_etc_mapper.rename!(mapper.path)
-                self.reconfigure(name: name)
-              end
-              self.delete(name: new_name)
-            end
-          end
+          self.on_state(state_mapper: state_mapper, states: states,
+                        name: name, new_name: new_name, model: model)
+        else
+          resp
         end
-        resp
       end
 
       def reconfigure(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          self.set_state(name: name, state: :data_installed)
+          self.set_state(state: :data_installed, state_mapper: self.state(name: name))
           resp = self._reconfigure(name: name)
         end
         resp
@@ -167,76 +136,6 @@ module Superhosting
 
       def admin(name:)
         self.get_controller(Admin, name: name)
-      end
-
-      def base_validation(name:)
-        @docker_api.container_rm_inactive!(name)
-        (name !~ CONTAINER_NAME_FORMAT) ? { error: :input_error, code: :invalid_container_name, data: { name: name, regex: CONTAINER_NAME_FORMAT } } : {}
-      end
-
-      def adding_validation(name:)
-        if (resp = self.base_validation(name: name)).net_status_ok?
-          resp = self.not_running_validation(name: name)
-        end
-        resp
-      end
-
-      def running_validation(name:)
-        @docker_api.container_running?(name) ? {}: { error: :logical_error, code: :container_is_not_running, data: { name: name } }
-      end
-
-      def not_running_validation(name:)
-        @docker_api.container_not_running?(name) ? {} : { error: :logical_error, code: :container_is_running, data: { name: name } }
-      end
-
-      def existing_validation(name:)
-        self.index.include?(name) ? {} : { error: :logical_error, code: :container_does_not_exists, data: { name: name }  }
-      end
-
-      def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_exists, data: { name: name }  } : {}
-      end
-
-      def available_validation(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          resp = (self.index[name][:mapper].lib.state.value == 'up') ? {} : { error: :logical_error, code: :container_is_not_available, data: { name: name }  }
-        end
-        resp
-      end
-
-      def index
-        @@index ||= self.reindex
-      end
-
-      def reindex
-        @config.containers.grep_dirs.each {|mapper| self.reindex_container(name: mapper.name) }
-        @@index ||= {}
-      end
-
-      def reindex_container(name:)
-        @@index ||= {}
-        etc_mapper = @config.containers.f(name)
-        web_mapper = PathMapper.new('/web').f(name)
-        lib_mapper = @lib.containers.f(name)
-        state_mapper = lib_mapper.state
-
-        if etc_mapper.nil?
-          @@index.delete(name)
-          return
-        end
-
-        model_name = etc_mapper.f('model', default: @config.default_model)
-        model_mapper = @config.models.f(model_name)
-        etc_mapper = MapperInheritance::Model.new(model_mapper).set_inheritors(etc_mapper)
-
-        mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
-
-        etc_mapper.erb_options = { container: mapper }
-        mux_mapper = if (mux_file_mapper = etc_mapper.mux).file?
-          MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).set_inheritors
-        end
-
-        @@index[name] = { mapper: mapper, mux_mapper: mux_mapper, state_mapper: state_mapper }
       end
     end
   end

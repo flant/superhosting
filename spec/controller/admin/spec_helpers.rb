@@ -75,12 +75,12 @@ module SpecHelpers
        end
 
       def admin_container_add_exps(**kwargs)
-        user_add_exps(name: "admin_#{@admin_name}")
-        user_passwd_exps(name: "admin_#{@admin_name}")
+        user_add_exps(name: "admin_#{@admin_name}", container_name: kwargs[:name])
+        user_passwd_exps(name: "admin_#{@admin_name}", container_name: kwargs[:name])
       end
 
       def admin_container_delete_exps(**kwargs)
-        user_delete_exps(name: "admin_#{@admin_name}")
+        user_delete_exps(name: "admin_#{@admin_name}", container_name: kwargs[:name])
       end
 
       # other
