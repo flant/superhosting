@@ -19,7 +19,8 @@ docker tag -f sx-almost-base superhosting/almostbase
 docker tag -f sx-almost-base superhosting/cphp:5.3
 docker tag -f sx-almost-base superhosting/cphp:5.5
 docker tag -f sx-almost-base superhosting/cphp:5.6
+docker tag -f sx-almost-base superhosting/ctestmux
 docker tag -f sx-mux superhosting/php:5.3
 docker tag -f sx-mux superhosting/php:5.5
 docker tag -f sx-mux superhosting/php:5.6
-docker tag -f sx-mux superhosting/mux
+docker tag -f sx-mux superhosting/testmux
