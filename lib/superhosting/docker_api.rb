@@ -169,7 +169,7 @@ module Superhosting
       end
     end
 
-    def container_run(name, options, image, command)
+    def container_run(name, options, image, command) # TODO
       cmd = "docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}"
       self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
         self.with_dry_run do |dry_run|
@@ -178,6 +178,20 @@ module Superhosting
 
         self.command!(cmd).tap do
           blk.call(code: :added)
+        end
+      end
+    end
+
+    def image_pull(image) # TODO
+      cmd = "docker pull #{image}"
+      self.debug_operation(desc: { code: :image_pull, data: { name: image } }) do |&blk|
+        self.with_dry_run do |dry_run|
+          begin
+            self.command!(cmd, logger: false) unless dry_run
+            blk.call(code: :pulled)
+          rescue Exception => e
+            blk.call(code: :not_found)
+          end
         end
       end
     end

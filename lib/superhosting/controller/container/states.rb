@@ -162,15 +162,17 @@ module Superhosting
         mapper = self.index[name][:mapper]
 
         if (resp = self._collect_docker_options(mapper: mapper)).net_status_ok?
-          command_options, image, command = resp[:data]
+          docker_options = resp[:data]
+          command_options, image, command = docker_options
           dump_command_option = (command_options + [command]).join("\n")
           dummy_signature_md5 = Digest::MD5.new.digest(dump_command_option)
 
-          restart = (!image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5))
+          restart = (!mapper.docker.image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5))
 
           if (resp = self._safe_run_docker(command_options, image, command, name: name, restart: restart)).net_status_ok?
             mapper.lib.image.put!(image, logger: false)
             mapper.lib.signature.put!(dump_command_option, logger: false)
+            mapper.lib.docker_options.put!(Marshal.dump(docker_options))
           end
         end
         resp
@@ -181,7 +183,7 @@ module Superhosting
         mapper = self.index[name][:mapper]
 
         if (mux_mapper = mapper.mux).file?
-          mux_name = "mux-#{mux_mapper.value}"
+          mux_name = mux_mapper.value
           mux_controller = self.get_controller(Mux)
           resp = mux_controller.add(name: mux_name) if mux_controller.not_running_validation(name: mux_name).net_status_ok?
           mux_controller.index_push(mux_name, name)
@@ -191,16 +193,17 @@ module Superhosting
       end
 
       def stop_mux(name:)
+        resp = {}
         mapper = self.index[name][:mapper]
 
         if (mux_mapper = mapper.mux).file?
-          mux_name = "mux-#{mux_mapper.value}"
+          mux_name = mux_mapper.value
           mux_controller = self.get_controller(Mux)
           mux_controller.index_pop(mux_name, name)
-          self._delete_docker(name: mux_name) unless mux_controller.index.include?(mux_name)
+          mux_controller._delete(name: mux_name) unless mux_controller.index.include?(mux_name)
         end
 
-        {}
+        resp
       end
 
       def stop(name:)
@@ -282,7 +285,7 @@ module Superhosting
         mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
         volume_opts.each {|val| command_options << "--volume #{val}" }
 
-        { data: [command_options, image, command] }
+        { data: [command_options, image.value, command] }
       end
 
       def _each_site(name:)

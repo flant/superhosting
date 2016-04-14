@@ -1,5 +1,3 @@
-require_relative 'spec_helpers'
-
 describe Superhosting::Controller::Container do
   include SpecHelpers::Controller::Admin
   include SpecHelpers::Controller::User
@@ -47,10 +45,11 @@ describe Superhosting::Controller::Container do
   it 'update', :docker do
     begin
       with_container(model: 'test') do |container_name|
-        command!('docker tag -f superhosting/almostbase superhosting/test')
+        expect(docker_api.container_image?(@container_name, 'sx-base')).to be_truthy
+        command!('docker tag -f sx-almost-base superhosting/test')
         container_update_with_exps(name: container_name)
         expect(docker_api.container_image?(@container_name, 'sx-base')).to be_falsey
-        expect(docker_api.container_image?(@container_name, 'superhosting/almostbase')).to be_truthy
+        expect(docker_api.container_image?(@container_name, 'sx-almost-base')).to be_truthy
       end
     ensure
       command!('docker tag -f sx-base superhosting/test')
@@ -167,12 +166,12 @@ describe Superhosting::Controller::Container do
   # other
 
   it 'add#mux', :docker do
-    with_container(model: 'bitrix_m') do
-      expect(docker_api.container_running?('mux-php-5.5')).to be_truthy
-      with_container(name: "#{@container_name}2", model: 'bitrix_m')
-      expect(docker_api.container_running?('mux-php-5.5')).to be_truthy
+    with_container(model: 'test_with_mux') do
+      expect(docker_api.container_running?('mux-test')).to be_truthy
+      with_container(name: "#{@container_name}2", model: 'test_with_mux')
+      expect(docker_api.container_running?('mux-test')).to be_truthy
     end
-    expect(docker_api.container_running?('mux-php-5.5')).to be_falsey
+    expect(docker_api.container_running?('mux-test')).to be_falsey
   end
 
   it 'reconfig@up_docker', :docker do

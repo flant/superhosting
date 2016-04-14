@@ -5,7 +5,7 @@ module SpecHelpers
       include SpecHelpers::Base
 
       def user_controller
-        @user_controller ||= Superhosting::Controller::User.new
+        @user_controller ||= Superhosting::Controller::User.new(docker_api: docker_api)
       end
 
       # methods

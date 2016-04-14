@@ -77,10 +77,16 @@ module Superhosting
       def update(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok? and @docker_api.container_exists?(name)
           mapper = self.index[name][:mapper]
-          image = mapper.lib.image.value
-          self._recreate_docker(name: name) unless @docker_api.container_image?(name, image)
+          docker_options = mapper.lib.docker_options.value
+          self._update(name: name, docker_options: Marshal.load(docker_options))
         end
         resp
+      end
+
+      def _update(name:, docker_options:, with_pull: true)
+        command_options, image, command = docker_options
+        @docker_api.image_pull(image) if with_pull
+        self._recreate_docker(command_options, image, command, name: name) unless @docker_api.container_image?(name, image)
       end
 
       def rename(name:, new_name:)

@@ -36,7 +36,12 @@ module Superhosting
       end
 
       def update(name:)
-
+        if (resp = self.useable_validation(name: name)).net_status_ok?
+          self.index[name].each do |container_name|
+            break unless (resp = @container_controller.update(name: container_name)).net_status_ok?
+          end
+        end
+        resp
       end
 
       def useable_validation(name:)

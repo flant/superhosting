@@ -1,5 +1,3 @@
-require_relative 'spec_helpers'
-
 describe Superhosting::Controller::Site do
   include SpecHelpers::Controller::Container
   include SpecHelpers::Controller::Site
@@ -109,7 +107,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'reconfig', :docker do
-    with_container(model: 'bitrix_m') do |container_name|
+    with_container(model: 'test_with_mux') do |container_name|
       with_site do |site_name|
         site_reconfigure_with_exps(name: site_name)
       end
@@ -244,7 +242,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'add#mux', :docker do
-    with_container(model: 'bitrix_m') do
+    with_container(model: 'test_with_mux') do
       with_site
     end
   end

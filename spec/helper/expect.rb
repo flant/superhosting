@@ -1,5 +1,5 @@
 module SpecHelpers
-  module Helpers
+  module Helper
     module Expect
       def method_missing(m, *args, &block)
         if m.to_s.start_with? 'not_'
@@ -18,7 +18,6 @@ module SpecHelpers
 
       def method_with_expectation(controller_method, *args, &block)
         expectation_method = "#{controller_method}_exps"
-        cli_method = "#{controller_method}_cli"
 
         kwargs = args.extract_options!
         code = kwargs.delete(:code)

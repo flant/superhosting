@@ -12,8 +12,8 @@ require 'superhosting'
 
 Superhosting::Helper::I18n.i18n_initialize
 
-require 'helpers/base'
-require 'helpers/expect'
+require 'helper/base'
+require 'helper/expect'
 require 'controller/spec_helpers'
 
 require 'controller/container/spec_helpers'
@@ -33,6 +33,6 @@ end
 
 RSpec.configure do |c|
   c.before(:example, :docker) { @with_docker = true }
-  Thread.current[:logger] = logger
-  Thread.current[:debug] = true
+  # Thread.current[:logger] = logger
+  # Thread.current[:debug] = true
 end

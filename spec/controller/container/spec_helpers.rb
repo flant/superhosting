@@ -198,6 +198,8 @@ module SpecHelpers
         end
 
         after :each do
+          container_delete(name: @container_name)
+
           %w(new test).each do |prefix|
             if @with_docker
               command("docker ps --filter 'name=#{prefix}' -a | xargs docker unpause")
@@ -216,6 +218,16 @@ module SpecHelpers
             command("rm -rf /web/#{prefix}*")
             command("rm -rf /etc/postfix/postfwd.cf.d/#{prefix}*")
           end
+
+          # mux
+          command('docker unpause mux-test')
+          command('docker kill mux-test')
+          command('docker rm mux-test')
+          command('docker unpause ctestmux')
+          command('docker kill ctestmux')
+          command('docker rm ctestmux')
+
+          command('rm -rf /var/sx/containers/muxs/test')
         end
       end
     end

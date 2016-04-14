@@ -1,5 +1,3 @@
-require_relative 'spec_helpers'
-
 describe Superhosting::Controller::Mux do
   include SpecHelpers::Controller::Mux
   include SpecHelpers::Controller::Container
@@ -8,16 +6,35 @@ describe Superhosting::Controller::Mux do
   # positive
 
   it 'reconfig', :docker do
-    with_container(model: 'bitrix_m') do |container_name|
+    with_container(model: 'test_with_mux') do |container_name|
       with_site do |site_name|
-        mux_reconfigure_with_exps(name: 'mux-php-5.5')
+        mux_reconfigure_with_exps(name: 'test')
       end
+    end
+  end
+
+  it 'update', :docker do
+    begin
+      with_container(model: 'test_with_mux') do |container_name|
+        expect(docker_api.container_image?(container_name, 'sx-almost-base')).to be_truthy
+        expect(docker_api.container_image?('mux-test', 'sx-mux')).to be_truthy
+        command!('docker tag -f sx-base superhosting/ctestmux')
+        command!('docker tag -f sx-base superhosting/testmux')
+        mux_update_with_exps(name: 'test')
+        expect(docker_api.container_image?(container_name, 'sx-almost-base')).to be_falsey
+        expect(docker_api.container_image?('mux-test', 'sx-mux')).to be_falsey
+        expect(docker_api.container_image?(container_name, 'sx-base')).to be_truthy
+        expect(docker_api.container_image?('mux-test', 'sx-base')).to be_truthy
+      end
+    ensure
+      command!('docker tag -f sx-almost-base superhosting/ctestmux')
+      command!('docker tag -f sx-mux superhosting/testmux')
     end
   end
 
   # negative
 
   it 'reconfig:mux_does_not_exists' do
-    mux_reconfigure_with_exps(name: 'mux-php-5.5', code: :mux_does_not_exists)
+    mux_reconfigure_with_exps(name: 'test', code: :mux_does_not_exists)
   end
 end

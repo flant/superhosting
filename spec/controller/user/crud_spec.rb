@@ -1,5 +1,3 @@
-require_relative 'spec_helpers'
-
 describe Superhosting::Controller::User do
   include SpecHelpers::Controller::Container
   include SpecHelpers::Controller::User

@@ -10,18 +10,23 @@ module Superhosting
 
       def add(name:)
         if (resp = self.adding_validation(name: name))
-          mux_name = name[/(?<=mux-).*/]
-          mapper = MapperInheritance::Mux.new(@config.muxs.f(mux_name)).set_inheritors
+          mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).set_inheritors
 
           # docker
           mapper.erb_options = { mux: mapper }
-          if (resp = @container_controller._collect_docker_options(mapper: mapper, model_or_mux: mux_name)).net_status_ok?
+          if (resp = @container_controller._collect_docker_options(mapper: mapper, model_or_mux: name)).net_status_ok?
             docker_options = resp[:data]
-            @container_controller._safe_run_docker(*docker_options, name: name ).net_status_ok!
+            @lib.muxs.f(name).docker_options.put!(Marshal.dump(docker_options))
+            @container_controller._safe_run_docker(*docker_options, name: self._container_name(name: name) ).net_status_ok!
           end
         else
           resp
         end
+      end
+
+      def _delete(name:)
+        @lib.muxs.f(name).delete!
+        @container_controller._delete_docker(name: self._container_name(name: name))
       end
 
       def reconfigure(name:)
@@ -33,9 +38,27 @@ module Superhosting
         resp
       end
 
+      def update(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mux_mapper = @container_controller.index[self.index[name].first][:mux_mapper]
+          docker_options = @lib.muxs.f(name).docker_options.value
+          @container_controller._update(name: self._container_name(name: name), docker_options: Marshal.load(docker_options))
+          @docker_api.image_pull(mux_mapper.container.docker.image.value)
+          self.index[name].each do |container_name|
+            docker_options = Marshal.load(@container_controller.index[container_name][:mapper].lib.docker_options.value)
+            @container_controller._update(name: container_name, docker_options: docker_options, with_pull: false)
+          end
+        end
+        resp
+      end
+
+      def _container_name(name:)
+        "mux-#{name}"
+      end
+
       def adding_validation(name:)
         if (resp = @container_controller.base_validation(name: name)).net_status_ok?
-          resp = self.not_running_validation(name: name)
+          resp = self.not_running_validation(name: self._container_name(name: name))
         end
         resp
       end
@@ -45,11 +68,11 @@ module Superhosting
       end
 
       def not_running_validation(name:)
-        @container_controller.not_running_validation(name: name).net_status_ok? ? {} : { error: :logical_error, code: :mux_is_running, data: { name: name } }
+        @container_controller.not_running_validation(name: self._container_name(name: name)).net_status_ok? ? {} : { error: :logical_error, code: :mux_is_running, data: { name: name } }
       end
 
       def running_validation(name:)
-        @container_controller.running_validation(name: name).net_status_ok? ? {} : { error: :logical_error, code: :mux_is_not_running, data: { name: name } }
+        @container_controller.running_validation(name: self._container_name(name: name)).net_status_ok? ? {} : { error: :logical_error, code: :mux_is_not_running, data: { name: name } }
       end
 
       def index
@@ -61,7 +84,7 @@ module Superhosting
         @container_controller._list.map do |container_name, data|
           container_mapper = @container_controller.index[container_name][:mapper]
           if (mux_mapper = container_mapper.mux).file?
-            mux_name = "mux-#{mux_mapper.value}"
+            mux_name = mux_mapper.value
             if @container_controller.running_validation(name: container_name).net_status_ok?
               self.index_push(mux_name, container_name)
             else

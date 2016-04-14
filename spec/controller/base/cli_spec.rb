@@ -4,4 +4,8 @@ describe 'Superhosting::Controller::Base (cli)' do
   it 'repair' do
     expect { self.cli('repair') }.to_not raise_error
   end
+
+  it 'update' do
+    expect { self.cli('update') }.to_not raise_error
+  end
 end

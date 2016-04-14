@@ -3,12 +3,16 @@ describe 'Superhosting::Controller::Admin (cli)' do
   include SpecHelpers::Controller::Container
   include SpecHelpers::Controller::Admin
 
+  def add_admin
+    self.cli('admin', 'add', '-g', @admin_name)
+  end
+  
   it 'admin add' do
-    expect { self.cli('admin', 'add', '-g', @admin_name) }.to_not raise_error
+    expect { add_admin }.to_not raise_error
   end
 
   it 'admin delete' do
-    self.cli('admin', 'add', '-g', @admin_name)
+    add_admin
     expect { self.cli('admin', 'delete', @admin_name) }.to_not raise_error
   end
 
@@ -17,7 +21,7 @@ describe 'Superhosting::Controller::Admin (cli)' do
   end
 
   it 'admin passwd' do
-    self.cli('admin', 'add', '-g', @admin_name)
+    add_admin
     expect { self.cli('admin', 'passwd', '-g', @admin_name) }.to_not raise_error
   end
 

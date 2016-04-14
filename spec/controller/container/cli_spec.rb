@@ -2,6 +2,10 @@ describe 'Superhosting::Controller::Container (cli)' do
   include SpecHelpers::Controller::Admin
   include SpecHelpers::Controller::Container
 
+  def add_container
+    self.container_add(name: @container_name)
+  end
+  
   it 'container add' do
     expect { self.cli('container', 'add', @container_name) }.to_not raise_error
   end
@@ -13,7 +17,7 @@ describe 'Superhosting::Controller::Container (cli)' do
   end
 
   it 'container delete' do
-    self.cli('container', 'add', @container_name)
+    add_container
     expect { self.cli('container', 'delete', @container_name) }.to_not raise_error
   end
 
@@ -34,7 +38,7 @@ describe 'Superhosting::Controller::Container (cli)' do
   end
 
   it 'container rename' do
-    self.cli('container', 'add', @container_name)
+    add_container
     expect { self.cli('container', 'rename', @container_name, '-r', 'test_container_name') }.to_not raise_error
   end
 

@@ -95,6 +95,9 @@ en:
       unpaused: "Container '%{name}': UNPAUSED"
       failed: "Container '%{name}': FAILED"
       ok: "Container '%{name}': OK"
+    image_pull:
+      pulled: "docker pull '%{name}': PULLED"
+      not_found: "docker pull '%{name}': NOT FOUND"
     command:
       failed: "Command: '%{command}': executing... FAILED"
       ok: "Command: '%{command}': executing... OK"

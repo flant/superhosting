@@ -1,8 +1,8 @@
 module SpecHelpers
   module Base
     include Superhosting::Helpers
-    include Helpers::Base
-    include Helpers::Expect
+    include Helper::Base
+    include Helper::Expect
 
     def with_base(action, default: {}, to_yield: [], to_delete: {}, **options)
       opts = default.merge!(options)

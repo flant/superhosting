@@ -13,10 +13,12 @@ describe 'Superhosting::Controller::Model (cli)' do
   end
 
   it 'model tree' do
-    expect { self.cli('model', 'tree', 'bitrix_m') }.to_not raise_error
+    expect { self.cli('model', 'tree', 'test_with_mux') }.to_not raise_error
   end
 
   it 'model update' do
-    expect { self.cli('model', 'update', 'bitrix_m') }.to_not raise_error
+    with_container do
+      expect { self.cli('model', 'update', 'fcgi_m') }.to_not raise_error
+    end
   end
 end

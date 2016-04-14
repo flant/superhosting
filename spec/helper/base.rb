@@ -1,5 +1,5 @@
 module SpecHelpers
-  module Helpers
+  module Helper
     module Base
       def controller
         @controller ||= Superhosting::Base.new
@@ -58,8 +58,21 @@ module SpecHelpers
       end
 
       def cli(*args)
+        def with_thread_options
+          old_logger = Thread.current[:logger]
+          old_dry_run = Thread.current[:debug]
+          old_verbose = Thread.current[:verbose]
+          yield
+        ensure
+          Thread.current[:logger] = old_logger
+          Thread.current[:debug] = old_dry_run
+          Thread.current[:verbose] = old_verbose
+        end
+
         begin
-          Superhosting::Cli::Base.start(args)
+          with_thread_options do
+            Superhosting::Cli::Base.start(args)
+          end
         rescue Exception => e
           net_status = e.net_status.net_status_normalize
           $stderr.puts(net_status[:message] || [net_status[:error], net_status[:code]].compact.join(": "))

@@ -82,7 +82,10 @@ module Superhosting
 
       def _add(name:, container_name:, shell: '/usr/sbin/nologin', home_dir: "/web/#{container_name}")
         user = self._get(name: container_name)
-        self._add_custom(name: "#{container_name}_#{name}", group: container_name, shell: shell, home_dir: home_dir, uid: user.uid)
+        self.with_dry_run do |dry_run|
+          user_uid = dry_run ? 'XXXX' : user.uid
+          self._add_custom(name: "#{container_name}_#{name}", group: container_name, shell: shell, home_dir: home_dir, uid: user_uid)
+        end
       end
 
       def _add_system_user(name:, container_name:, shell: '/usr/sbin/nologin', home_dir: "/web/#{container_name}")

@@ -5,7 +5,7 @@ module SpecHelpers
       include SpecHelpers::Base
 
       def model_controller
-        @model_controller ||= Superhosting::Controller::Model.new
+        @model_controller ||= Superhosting::Controller::Model.new(docker_api: docker_api)
       end
 
       # methods
@@ -20,6 +20,10 @@ module SpecHelpers
 
       def model_reconfigure(**kwargs)
         model_controller.reconfigure(**kwargs)
+      end
+
+      def model_update(**kwargs)
+        model_controller.update(**kwargs)
       end
     end
   end

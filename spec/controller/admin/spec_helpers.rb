@@ -5,7 +5,7 @@ module SpecHelpers
       include SpecHelpers::Base
 
       def admin_controller
-        @admin_controller ||= Superhosting::Controller::Admin.new
+        @admin_controller ||= Superhosting::Controller::Admin.new(docker_api: docker_api)
       end
 
       # methods
