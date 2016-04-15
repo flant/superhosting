@@ -14,11 +14,12 @@ module Superhosting
           { docker: docker_options, configs: configs }
         end
 
-        containers = {}
+        containers = []
         @config.containers.grep_dirs.map do |n|
           name = n.name
           user_controller = self.get_controller(User)
-          containers[name] = {
+          containers << {
+              name: name,
               state: self.state(name: name).value,
               users: user_controller._list(container_name: name),
               admins: self.admin(name: name)._list
@@ -27,7 +28,7 @@ module Superhosting
         containers
       end
 
-      def inspect(name:)
+      def inspect(name:, inheritance: false)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           { data: self._list[name] }
         else
