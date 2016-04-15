@@ -89,8 +89,8 @@ module Superhosting
               none: { action: :stop, undo: :run, next: :stopped },
               stopped: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
               unconfigured: { action: :copy_etc, next: :copied_etc },
-              copied_etc: { action: :new_run, next: :new_runned },
-              new_runned: { action: :copy_var, next: :copied_var },
+              copied_etc: { action: :new_up, next: :new_upped },
+              new_upped: { action: :copy_var, next: :copied_var },
               copied_var: { action: :copy_users, next: :copied_users },
               copied_users: { action: :new_reconfigure, next: :new_reconfigured },
               new_reconfigured: { action: :delete }

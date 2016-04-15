@@ -89,52 +89,31 @@ module Superhosting
         resp
       end
 
-      def rename(name:, new_name:, alias_name: false)
+      def rename(name:, new_name:, keep_name_as_alias: false)
         if (resp = self.available_validation(name: name)).net_status_ok? and
-          ((resp = self.adding_validation(name: new_name)).net_status_ok? or
-              (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
-
+            ((resp = self.adding_validation(name: new_name)).net_status_ok? or
+                (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
           mapper = self.index[name][:mapper]
-          container_mapper = self.index[name][:container_mapper]
+          status_name = "#{name}_to_#{new_name}"
+          state_mapper = @lib.process_status.f(status_name).create!
           actual_name = mapper.name
+          container_name = self.index[name][:container_mapper].name
 
-          mapper.aliases_mapper.remove_line!(new_name) if defined? is_alias and is_alias
-          self.reindex_container_sites(container_name: container_mapper.name)
+          states = {
+              none: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
+              unconfigured: { action: :new_up, next: :new_upped },
+              new_upped: { action: :copy, next: :copied },
+              copied: { action: :new_reconfigure, next: :new_reconfigured },
+              new_reconfigured: { action: :delete, next: :deleted },
+              deleted: { action: :keep_name_as_alias }
+          }
 
-          begin
-            self.unconfigure_with_unapply(name: actual_name).net_status_ok!
-            if (resp = self._reconfigure(name: new_name, container_name: container_mapper.name)).net_status_ok?
-              new_mapper = self.index[new_name][:mapper]
-              mapper.etc.rename!(new_mapper.etc.path)
-              mapper.lib.rename!(new_mapper.lib.path)
-              mapper.aliases_mapper.rename!(new_mapper.aliases_mapper.path)
-
-              self.reconfigure(name: new_name).net_status_ok!
-              self.delete(name: actual_name).net_status_ok!
-
-              new_mapper.aliases_mapper.append_line!(actual_name) if alias_name
-              self.reindex_container_sites(container_name: container_mapper.name)
-            end
-          rescue Exception => e
-            resp = e.net_status
-            raise
-          ensure
-            unless resp.net_status_ok?
-              unless new_mapper.nil?
-                mapper.aliases_mapper.append_line!(new_name) if defined? is_alias and is_alias
-                mapper.aliases_mapper.remove_line!(name) if alias_name
-
-                new_mapper.etc.rename!(mapper.path)
-                new_mapper.lib.rename!(mapper.lib.path)
-
-                self.reconfigure(name: name)
-              end
-
-              self.delete(name: new_name)
-            end
-          end
+          self.on_state(state_mapper: state_mapper, states: states,
+                        name: actual_name, new_name: new_name, container_name: container_name,
+                        is_alias: is_alias, keep_name_as_alias: keep_name_as_alias)
+        else
+          resp
         end
-        resp
       end
 
       def reconfigure(name:)

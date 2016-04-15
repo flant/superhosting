@@ -36,9 +36,12 @@ module Superhosting
       def undo_copy_var(name:, new_name:)
         mapper = self.index[name][:mapper]
         new_mapper = self.index[new_name][:mapper]
-        new_mapper.lib.web.rename!(mapper.lib.web.path)
-        new_mapper.lib.sites.rename!(mapper.lib.sites.path)
-        new_mapper.lib.registry.sites.rename!(mapper.lib.registry.sites.path)
+
+        unless new_mapper.nil?
+          new_mapper.lib.web.safe_rename!(mapper.lib.web.path)
+          new_mapper.lib.sites.safe_rename!(mapper.lib.sites.path)
+          new_mapper.lib.registry.sites.safe_rename!(mapper.lib.registry.sites.path)
+        end
 
         site_controller = self.get_controller(Site)
         site_controller.reindex_container_sites(container_name: name)
@@ -73,11 +76,11 @@ module Superhosting
         {}
       end
 
-      def new_run(new_name:, model:)
+      def new_up(new_name:, model:)
         self._reconfigure(name: new_name, model: model)
       end
 
-      def undo_new_run(new_name:)
+      def undo_new_up(new_name:)
         self.delete(name: new_name)
       end
 

@@ -21,6 +21,20 @@ module Superhosting
       resp_if_success raw_connection.request(method: :get, path: "/images/#{name}/json")
     end
 
+    def image_pull(name) # TODO
+      cmd = "docker pull #{name}"
+      self.debug_operation(desc: { code: :image_pull, data: { name: name } }) do |&blk|
+        self.with_dry_run do |dry_run|
+          begin
+            self.command!(cmd, logger: false) unless dry_run
+            blk.call(code: :pulled)
+          rescue Exception => e
+            blk.call(code: :not_found)
+          end
+        end
+      end
+    end
+
     def container_info(name)
       resp_if_success raw_connection.request(method: :get, path: "/containers/#{name}/json")
     end
@@ -178,20 +192,6 @@ module Superhosting
 
         self.command!(cmd).tap do
           blk.call(code: :added)
-        end
-      end
-    end
-
-    def image_pull(image) # TODO
-      cmd = "docker pull #{image}"
-      self.debug_operation(desc: { code: :image_pull, data: { name: image } }) do |&blk|
-        self.with_dry_run do |dry_run|
-          begin
-            self.command!(cmd, logger: false) unless dry_run
-            blk.call(code: :pulled)
-          rescue Exception => e
-            blk.call(code: :not_found)
-          end
         end
       end
     end
