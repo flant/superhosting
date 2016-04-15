@@ -35,8 +35,22 @@ module Superhosting
         end
       end
 
-      def on_reconfig(cmd)
-        self.commands << cmd if @on_reconfig
+      def on_reconfig(cmd, **kwargs)
+        if @on_reconfig
+          in_option = kwargs[:in]
+          cmd = if in_option
+            container = case in_option
+              when :container then container.name
+              when :mux then mux_name
+              else raise NetStatus::Exception.new(error: :error, code: :on_reconfig_not_supported_option_value, data: { value: in_option, option: 'in' })
+            end
+
+            "docker exec #{container} #{cmd}"
+          else cmd
+          end
+
+          self.commands << cmd
+        end
       end
 
       def run_commands

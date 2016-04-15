@@ -15,8 +15,8 @@ pm.min_spare_servers = <%= site.php.pm_min_spare_servers %>
 pm.max_spare_servers = <%= site.php.pm_max_spare_servers %>
 <% end %>
 
-<% %w{admin_value admin_flag value flag}.select{|p| site.php.f(p) }.each do |param_type|
-  site.php.f(param_type).lines {|l| l.split /\s*=\s*/, 2 }.each do |param_name, param_value| %>
+<% %w{admin_value admin_flag value flag}.select{|p| site.php.send(p) }.each do |param_type|
+  site.php.send(param_type).lines {|l| l.split /\s*=\s*/, 2 }.each do |param_name, param_value| %>
 php_<%= param_type %>[<%= param_name %>] = <%= param_value %>
 <% end
 end %>
