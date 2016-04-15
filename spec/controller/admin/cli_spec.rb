@@ -4,11 +4,11 @@ describe 'Superhosting::Controller::Admin (cli)' do
   include SpecHelpers::Controller::Admin
 
   def add_admin
-    self.cli('admin', 'add', '-g', @admin_name)
+    self.admin_add(name: @admin_name, generate: true)
   end
   
   it 'admin add' do
-    expect { add_admin }.to_not raise_error
+    expect { self.cli('admin', 'add', '-g', @admin_name) }.to_not raise_error
   end
 
   it 'admin delete' do

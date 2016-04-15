@@ -8,8 +8,12 @@ module Superhosting
         resp
       end
 
+      def useable_validation(name:)
+        self.index.include?(name) ? {} : { error: :logical_error, code: :mux_does_not_used, data: { name: name } }
+      end
+
       def existing_validation(name:)
-        self.index.include?(name) ? {} : { error: :logical_error, code: :mux_does_not_exists, data: { name: name } }
+        @config.muxs.f(name).dir? ? {} : { error: :logical_error, code: :mux_does_not_exists, data: { name: name } }
       end
 
       def not_running_validation(name:)

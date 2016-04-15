@@ -50,6 +50,10 @@ module SpecHelpers
         site_controller.alias(name: @site_name).delete(**kwargs)
       end
 
+      def site_alias_list(**kwargs)
+        site_controller.alias(name: @site_name).list
+      end
+
       # expectations
 
       def site_base(**kwargs)

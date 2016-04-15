@@ -156,6 +156,16 @@ describe Superhosting::Controller::Site do
     end
   end
 
+  it 'alias_list' do
+    with_container do |container_name|
+      with_site do |site_name|
+        alias_name = "alias-#{site_name}"
+        site_alias_add_with_exps(name: alias_name)
+        expect(site_alias_list_with_exps[:data]).to eq [alias_name]
+      end
+    end
+  end
+
   # negative
 
   INVALID_SITE_NAMES = ['a', '-site.com', 'site.s', 'sub.site.longregion', 'my_site.com']

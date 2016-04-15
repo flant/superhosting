@@ -1,12 +1,7 @@
 module Superhosting
   module Cli
     module Cmd
-      class AdminAdd < Base
-        option :generate,
-               :short => '-g',
-               :long  => '--generate',
-               :boolean => true
-
+      class ContainerModel < Base
         def self.has_required_param?
           true
         end

@@ -17,6 +17,10 @@ module SpecHelpers
       def mux_update(**kwargs)
         mux_controller.update(**kwargs)
       end
+
+      def mux_tree(**kwargs)
+        mux_controller.tree(**kwargs)
+      end
     end
   end
 end

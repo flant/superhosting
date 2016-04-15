@@ -126,6 +126,24 @@ module Superhosting
                       name: name, **kwargs)
       end
 
+      def model(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          { data: self.index[name][:model_name] }
+        else
+          resp
+        end
+      end
+
+      def tree(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          model_controller = self.get_controller(Model)
+          tree = model_controller.tree(name: self.index[name][:model_name]).net_status_ok![:data]
+          { data: tree }
+        else
+          resp
+        end
+      end
+
       def save(name:, to:)
 
       end

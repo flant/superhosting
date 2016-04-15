@@ -13,4 +13,8 @@ describe 'Superhosting::Controller::Mux (cli)' do
       expect { self.cli('mux', 'update', 'test') }.to_not raise_error
     end
   end
+
+  it 'mux tree', :docker do
+    expect { self.cli('mux', 'tree', 'test') }.to_not raise_error
+  end
 end

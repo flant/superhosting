@@ -6,7 +6,7 @@ en:
     option_admin_mail_required: 'Admin mail required.'
 
     invalid_container_name: "Invalid site name '%{name}' only '%{regex}' are allowed."
-    invalid_container_name_by_user_format: "Invalid container name '%{name}': user name requirements has not passed for user '%{name}', only '%{regex}' are allowed"
+    invalid_container_name_by_user_format: "Invalid container name '%{name}': user name requirements has not passed for user '%{name}', only '%{regex}' are allowed."
     container_is_not_running: "Container '%{name}' isn\'t running."
     container_is_running: "Container '%{name}' is already running."
     container_does_not_exists: "Container '%{name}' doesn't exists."
@@ -31,6 +31,7 @@ en:
 
     mux_is_running: "Mux '%{name}' is already running."
     mux_is_not_running: "Mux '%{name}' isn\'t running."
+    mux_does_not_used: "Mux '%{name}' doesn't used."
     mux_does_not_exists: "Mux '%{name}' doesn't exists."
 
     option_ftp_only_is_required: "Option 'ftp-only' is required if specified 'ftp-dir'."
@@ -53,7 +54,9 @@ en:
 
     invalid_cli_option: "%{message}"
 
-    missing_translation: "Missing translation for code: '%{code}'"
+    missing_translation: "Missing translation for code: '%{code}'."
+
+    on_reconfig_not_supported_option_value: "Config.rb: value '%{value}' of option '%{option}' not supported."
 
   debug:
     user:

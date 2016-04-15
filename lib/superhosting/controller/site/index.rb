@@ -26,9 +26,10 @@ module Superhosting
 
       def reindex_site(name:, container_name:)
         @@index ||= {}
-        @@index[name][:aliases].each{|n| @@index.delete(n) } if @@index[name]
+        @@index[name][:names].each{|n| @@index.delete(n) } if @@index[name]
 
         container_mapper = @container_controller.index[container_name][:mapper]
+        model_name = @container_controller.index[container_name][:model_name]
         etc_mapper = container_mapper.sites.f(name)
         lib_mapper = container_mapper.lib.web.f(name)
         web_mapper = container_mapper.web.f(name)
@@ -39,7 +40,6 @@ module Superhosting
           return
         end
 
-        model_name = container_mapper.f('model', default: @config.default_model)
         model_mapper = @config.models.f(model_name)
         etc_mapper = MapperInheritance::Model.new(model_mapper).set_inheritors(etc_mapper)
 
@@ -52,7 +52,7 @@ module Superhosting
         end
 
         names = ([mapper.name] + mapper.aliases)
-        names.each {|name| @@index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, aliases: names } }
+        names.each {|name| @@index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, names: names } }
       end
     end
   end

@@ -17,14 +17,14 @@ module Superhosting
       end
 
       def collect_inheritors(m=@mapper, depth=0)
-        depth += 1
-
         m.inherit.lines.each do |name|
           inherit_mapper = @muxs_mapper.f(name)
           raise NetStatus::Exception, { error: :logical_error, code: :mux_does_not_exists, data: { name: name } } unless inherit_mapper.dir?
 
           collect_inheritors(inherit_mapper, depth)
         end
+
+        depth += 1
 
         collect_inheritor(m, depth) unless m == @mapper
       end

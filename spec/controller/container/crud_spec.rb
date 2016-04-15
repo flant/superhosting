@@ -69,6 +69,18 @@ describe Superhosting::Controller::Container do
     end
   end
 
+  it 'model' do
+    with_container(model: 'test') do |container_name|
+      expect(container_model_with_exps(name: container_name)[:data]).to eq 'test'
+    end
+  end
+
+  it 'tree' do
+    with_container(model: 'test') do |container_name|
+      expect(container_tree_with_exps(name: container_name)).to include(:data)
+    end
+  end
+
   it 'admin_add' do
     with_admin do |admin_name|
       with_container do |container_name|

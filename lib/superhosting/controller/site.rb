@@ -14,7 +14,8 @@ module Superhosting
           mapper = self.index[name][:mapper]
           docker_options = mapper.docker.grep_files.map {|f| [f.name, f.value] }.to_h
           configs = mapper.f('config.rb', overlay: false).reverse.map {|f| f.value }
-          { docker: docker_options, configs: configs, aliases: self.index[name][:aliases]-[name] }
+          alias_controller = self.get_controller(Alias, name: name)
+          { docker: docker_options, configs: configs, aliases: alias_controller._list }
         end
 
         sites = {}

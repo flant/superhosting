@@ -34,6 +34,14 @@ module SpecHelpers
         container_controller.list
       end
 
+      def container_model(**kwargs)
+        container_controller.model(**kwargs)
+      end
+
+      def container_tree(**kwargs)
+        container_controller.tree(**kwargs)
+      end
+
       def container_inspect(**kwargs)
         container_controller.inspect(**kwargs)
       end

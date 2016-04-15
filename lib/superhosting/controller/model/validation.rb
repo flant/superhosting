@@ -6,7 +6,7 @@ module Superhosting
       end
 
       def existing_validation(name:)
-        self._list.include?(name) ? {} : { error: :logical_error, code: :model_does_not_exists, data: { name: name } }
+        @config.models.f(name).dir? ? {} : { error: :logical_error, code: :model_does_not_exists, data: { name: name } }
       end
     end
   end

@@ -27,7 +27,7 @@ module Superhosting
           return
         end
 
-        model_name = etc_mapper.f('model', default: @config.default_model)
+        model_name = etc_mapper.f('model', default: @config.default_model).value
         model_mapper = @config.models.f(model_name)
         etc_mapper = MapperInheritance::Model.new(model_mapper).set_inheritors(etc_mapper)
 
@@ -38,7 +38,7 @@ module Superhosting
           MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).set_inheritors
         end
 
-        @@index[name] = { mapper: mapper, mux_mapper: mux_mapper, state_mapper: state_mapper }
+        @@index[name] = { mapper: mapper, mux_mapper: mux_mapper, state_mapper: state_mapper, model_name: model_name }
       end
     end
   end

@@ -4,9 +4,7 @@ module Superhosting
       def index
         index = {}
         @container_controller._list.each do |container_name, data|
-          container_mapper = @container_controller.index[container_name][:mapper]
-          model = container_mapper.f('model', default: @config.default_model).value
-
+          model = @container_controller.index[container_name][:model_name]
           (index[model] ||= []) << container_name
         end
         index

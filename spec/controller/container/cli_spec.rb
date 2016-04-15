@@ -21,6 +21,16 @@ describe 'Superhosting::Controller::Container (cli)' do
     expect { self.cli('container', 'delete', @container_name) }.to_not raise_error
   end
 
+  it 'container model' do
+    add_container
+    expect { self.cli('container', 'model', @container_name) }.to_not raise_error
+  end
+
+  it 'container tree' do
+    add_container
+    expect { self.cli('container', 'tree', @container_name) }.to_not raise_error
+  end
+
   it 'container inspect' do
     with_container do |container_name|
       expect { self.cli('container', 'inspect', container_name) }.to_not raise_error

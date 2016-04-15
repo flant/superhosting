@@ -13,6 +13,14 @@ module Superhosting
           @container_mapper = site[:container_mapper]
         end
 
+        def list
+          { data: self._list }
+        end
+
+        def _list
+          @aliases_mapper.lines
+        end
+
         def add(name:)
           if (resp = self.not_existing_validation(name: name)).net_status_ok? and
             (resp = @site_controller.adding_validation(name: name)).net_status_ok?

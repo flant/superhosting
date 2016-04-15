@@ -4,11 +4,17 @@ describe 'Superhosting::Controller::Site (cli)' do
 
   def add_site
     container_add(name: @container_name)
-    self.cli('site', 'add', @site_name, '-c', @container_name)
+    site_add(name: @site_name, container_name: @container_name)
+  end
+
+  def add_alias
+    add_site
+    site_alias_add(name: "new.#{@site_name}")
   end
 
   it 'site add' do
-    expect { add_site }.to_not raise_error
+    container_add(name: @container_name)
+    expect { self.cli('site', 'add', @site_name, '-c', @container_name) }.to_not raise_error
   end
 
   it 'site container' do
@@ -51,8 +57,12 @@ describe 'Superhosting::Controller::Site (cli)' do
   end
 
   it 'site alias delete' do
-    add_site
-    self.cli('site', 'alias', 'add', "new.#{@site_name}", '-s', @site_name)
+    add_alias
     expect { self.cli('site', 'alias', 'delete', "new.#{@site_name}", '-s', @site_name) }.to_not raise_error
+  end
+
+  it 'site alias list' do
+    add_alias
+    expect { self.cli('site', 'alias', 'list', '-s', @site_name) }.to_not raise_error
   end
 end

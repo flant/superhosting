@@ -32,9 +32,13 @@ describe Superhosting::Controller::Mux do
     end
   end
 
+  it 'tree', :docker do
+    expect(mux_tree_with_exps(name: 'test')).to include(:data)
+  end
+
   # negative
 
-  it 'reconfig:mux_does_not_exists' do
-    mux_reconfigure_with_exps(name: 'test', code: :mux_does_not_exists)
+  it 'reconfig:mux_does_not_used' do
+    mux_reconfigure_with_exps(name: 'test', code: :mux_does_not_used)
   end
 end
