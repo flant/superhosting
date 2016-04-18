@@ -7,7 +7,7 @@ GIT
 
 GIT
   remote: https://github.com/flant/path_mapper.git
-  revision: 83ebfc08248ad020647269f4bbc6107e17818b0f
+  revision: ca0b2c71bd00c87c2de4f5533147567a3e9c8260
   specs:
     path_mapper (0.0.3)
       diffy (~> 3.1)
@@ -148,6 +148,3 @@ DEPENDENCIES
   rspec (~> 3.4, >= 3.4.0)
   superhosting!
   travis (~> 1.8, >= 1.8.2)
-
-BUNDLED WITH
-   1.12.0.pre.1
