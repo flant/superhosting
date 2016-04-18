@@ -15,34 +15,45 @@ module Superhosting
         containers
       end
 
-      def inspect(name:, inheritance: false)
+      def inspect(name:, inheritance: false, erb: false)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           if inheritance
             mapper = self.index[name][:mapper]
-            data = without_inheritance(mapper: mapper) do |mapper, inheritors|
-              inheritors.inject([self._inspect(name: mapper.name)]) do |inheritance, m|
-                inheritance << { 'type' => get_type(mapper: m.parent), 'name' => get_name(mapper: m), 'options' => m.to_hash }
+            data = separate_inheritance(mapper) do |mapper, inheritors|
+              inheritors.inject([self._inspect(name: mapper.name, erb: erb)]) do |inheritance, m|
+                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => m.to_hash(eval_erb: erb) }
               end
             end
             { data: data }
           else
-            { data: self._inspect(name: name) }
+            { data: self._inspect(name: name, erb: erb) }
           end
         else
           resp
         end
       end
 
-      def _inspect(name:)
+      def _inspect(name:, erb: false)
         mapper = self.index[name][:mapper]
+        model_name = self.index[name][:model_name]
         user_controller = self.get_controller(User)
         {
             'name' => name,
             'state' => self.state(name: name).value,
+            'model' => model_name,
             'users' => user_controller._list(container_name: name),
             'admins' => self.admin(name: name)._list,
-            'options' => mapper.to_hash
+            'options' => mapper.to_hash(eval_erb: erb)
         }
+      end
+
+      def inheritance(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = self.index[name][:mapper]
+          { data: mapper.inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
+        else
+          resp
+        end
       end
 
       def add(name:, mail: 'model', admin_mail: nil, model: nil)

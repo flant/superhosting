@@ -27,6 +27,7 @@ require 'superhosting/helper/i18n'
 require 'superhosting/helper/logger'
 require 'superhosting/helper/states'
 require 'superhosting/helper/config'
+require 'superhosting/helper/mapper'
 require 'superhosting/helpers'
 
 require 'superhosting/patches/string/punycode'

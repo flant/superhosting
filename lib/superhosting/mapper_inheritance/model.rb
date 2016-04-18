@@ -15,9 +15,8 @@ module Superhosting
         raise NetStatus::Exception, { error: :input_error, code: :model_does_not_exists, data: { name: @mapper.name } } unless @mapper.dir?
         raise NetStatus::Exception, { error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: @mapper.name } } if @mapper.abstract?
 
-        @type = case type = mapper.parent.name
-          when 'containers' then 'container'
-          when 'sites' then 'site'
+        @type = case type = get_mapper_type(mapper)
+          when 'container', 'site', 'model' then type
           else raise NetStatus::Exception, { error: :logical_error, code: :mapper_type_not_supported, data: { name: type } }
         end
 
@@ -58,7 +57,13 @@ module Superhosting
         self.inheritors.sort.each do |k, inherits|
           %w(mux model).each do |t|
             (inherits[t] || []).each do |inheritor|
-              if (type_dir_mapper = inheritor.f(@type)).dir?
+              type_dir_mapper = if @type == 'model'
+                inheritor
+              else
+                inheritor.f(@type)
+              end
+
+              if type_dir_mapper.dir?
                 type_dir_mapper.changes_overlay = mapper
                 mapper << type_dir_mapper
               end

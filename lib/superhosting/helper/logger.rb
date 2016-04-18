@@ -49,6 +49,10 @@ module Superhosting
         {} # net_status
       end
 
+      def info_pretty_json(as_json)
+        self.info(JSON.pretty_generate(as_json))
+      end
+
       def debug(msg=nil, indent: true, desc: nil, &b)
         unless self.__logger.nil?
           unless desc.nil?

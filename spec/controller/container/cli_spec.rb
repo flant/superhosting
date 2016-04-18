@@ -37,6 +37,12 @@ describe 'Superhosting::Controller::Container (cli)' do
     end
   end
 
+  it 'container inheritance' do
+    with_container do |container_name|
+      expect { self.cli('container', 'inheritance', container_name) }.to_not raise_error
+    end
+  end
+
   it 'container list' do
     expect { self.cli('container', 'list') }.to_not raise_error
   end

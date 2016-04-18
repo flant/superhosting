@@ -14,8 +14,7 @@ module Superhosting
         end
 
         def list
-          containers = @container_controller._list
-          container_users = containers.map do |container_info|
+          container_users = @container_controller._list.map do |container_info|
             container_name = container_info['name']
             unless @user_controller._get(name: "#{container_name}_admin_#{@admin_name}").nil?
               { container: container_name, user: "#{container_name}_admin_#{@admin_name}" }

@@ -48,7 +48,7 @@ module Superhosting
         etc_mapper = MapperInheritance::Model.new(model_mapper).set_inheritors(etc_mapper)
 
         mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
-        etc_mapper.erb_options = { site: mapper, container: mapper }
+        etc_mapper.erb_options = { site: mapper, container: mapper, etc: @config, lib: @lib }
 
         if @@index.key? name and @@index[name][:mapper].path != mapper.path
           raise NetStatus::Exception, { code: :container_site_name_conflict,

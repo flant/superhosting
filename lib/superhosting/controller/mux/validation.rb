@@ -2,10 +2,8 @@ module Superhosting
   module Controller
     class Mux
       def adding_validation(name:)
-        if (resp = @container_controller.base_validation(name: name)).net_status_ok?
-          resp = self.not_running_validation(name: self._container_name(name: name))
-        end
-        resp
+        @docker_api.container_rm_inactive!(name)
+        self.not_running_validation(name: self._container_name(name: name))
       end
 
       def useable_validation(name:)

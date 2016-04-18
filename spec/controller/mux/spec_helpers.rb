@@ -21,6 +21,14 @@ module SpecHelpers
       def mux_tree(**kwargs)
         mux_controller.tree(**kwargs)
       end
+
+      def mux_inspect(**kwargs)
+        mux_controller.inspect(**kwargs)
+      end
+
+      def mux_inheritance(**kwargs)
+        mux_controller.inheritance(**kwargs)
+      end
     end
   end
 end

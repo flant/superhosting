@@ -33,7 +33,7 @@ module Superhosting
 
         mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
 
-        etc_mapper.erb_options = { container: mapper }
+        etc_mapper.erb_options = { container: mapper, etc: @config, lib: @lib }
         mux_mapper = if (mux_file_mapper = etc_mapper.mux).file?
           MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).set_inheritors
         end

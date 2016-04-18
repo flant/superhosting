@@ -1,13 +1,9 @@
 module Superhosting
   module Cli
     module Cmd
-      class ContainerInspect < Base
+      class ModelInspect < Base
         option :inheritance,
                :long  => '--inheritance',
-               :boolean => true
-
-        option :erb,
-               :long  => '--erb',
                :boolean => true
 
         def self.has_required_param?

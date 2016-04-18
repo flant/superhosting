@@ -14,7 +14,15 @@ describe 'Superhosting::Controller::Mux (cli)' do
     end
   end
 
-  it 'mux tree', :docker do
+  it 'mux tree' do
     expect { self.cli('mux', 'tree', 'test') }.to_not raise_error
+  end
+
+  it 'mux inspect' do
+    expect { self.cli('mux', 'inspect', 'test') }.to_not raise_error
+  end
+
+  it 'mux inheritance' do
+    expect { self.cli('mux', 'inheritance', 'test') }.to_not raise_error
   end
 end

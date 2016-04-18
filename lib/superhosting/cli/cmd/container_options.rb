@@ -1,7 +1,7 @@
 module Superhosting
   module Cli
     module Cmd
-      class ContainerInspect < Base
+      class ContainerOptions < Base
         option :inheritance,
                :long  => '--inheritance',
                :boolean => true

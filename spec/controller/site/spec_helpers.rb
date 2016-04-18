@@ -42,6 +42,10 @@ module SpecHelpers
         site_controller.inspect(**kwargs)
       end
 
+      def site_inheritance(**kwargs)
+        site_controller.inheritance(**kwargs)
+      end
+
       def site_alias_add(**kwargs)
         site_controller.alias(name: @site_name).add(**kwargs)
       end

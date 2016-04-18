@@ -54,6 +54,33 @@ module Superhosting
         end
       end
 
+      def inspect(name:, inheritance: false)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).set_inheritors
+          if inheritance
+            data = separate_inheritance(mapper) do |mapper, inheritors|
+              ([mapper] + inheritors).inject([]) do |inheritance, m|
+                inheritance << { 'name' => get_mapper_name(m), 'options' => m.to_hash }
+              end
+            end
+            { data: data }
+          else
+            { data: { 'name' => mapper.name, 'options' => mapper.to_hash } }
+          end
+        else
+          resp
+        end
+      end
+
+      def inheritance(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).set_inheritors
+          { data: mapper.inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
+        else
+          resp
+        end
+      end
+
       def _container_name(name:)
         "mux-#{name}"
       end

@@ -15,7 +15,15 @@ module SpecHelpers
       end
 
       def model_tree(**kwargs)
-        model_controller.list
+        model_controller.tree(**kwargs)
+      end
+
+      def model_inspect(**kwargs)
+        model_controller.inspect(**kwargs)
+      end
+
+      def model_inheritance(**kwargs)
+        model_controller.inheritance(**kwargs)
       end
 
       def model_reconfigure(**kwargs)

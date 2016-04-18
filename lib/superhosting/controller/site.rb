@@ -19,25 +19,25 @@ module Superhosting
         sites
       end
 
-      def inspect(name:, inheritance: false)
+      def inspect(name:, inheritance: false, erb: false)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           if inheritance
             mapper = self.index[name][:mapper]
-            data = without_inheritance(mapper: mapper) do |mapper, inheritors|
-              inheritors.inject([self._inspect(name: mapper.name)]) do |inheritance, m|
-                inheritance << { 'type' => get_type(mapper: m.parent), 'name' => get_name(mapper: m), 'options' => m.to_hash }
+            data = separate_inheritance(mapper) do |mapper, inheritors|
+              inheritors.inject([self._inspect(name: mapper.name, erb: erb)]) do |inheritance, m|
+                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => m.to_hash(eval_erb: erb) }
               end
             end
             { data: data }
           else
-            { data: self._inspect(name: name) }
+            { data: self._inspect(name: name, erb: erb) }
           end
         else
           resp
         end
       end
 
-      def _inspect(name:)
+      def _inspect(name:, erb: false)
         mapper = self.index[name][:mapper]
         actual_name = mapper.name
         container_mapper = self.index[actual_name][:container_mapper]
@@ -47,8 +47,17 @@ module Superhosting
             'container' => container_mapper.name,
             'state' => self.state(name: actual_name).value,
             'aliases' => alias_controller._list,
-            'options' => mapper.to_hash
+            'options' => mapper.to_hash(eval_erb: erb)
         }
+      end
+
+      def inheritance(name:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = self.index[name][:mapper]
+          { data: mapper.inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
+        else
+          resp
+        end
       end
 
       def add(name:, container_name:)

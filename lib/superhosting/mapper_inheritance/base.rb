@@ -1,6 +1,8 @@
 module Superhosting
   module MapperInheritance
     module Base
+      include Helper::Mapper
+
       attr_accessor :inheritors, :inheritors_tree
 
       def initialize

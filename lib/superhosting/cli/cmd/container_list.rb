@@ -11,13 +11,15 @@ module Superhosting
                :boolean => true
 
         def self.after_action(data, config)
-          data.each do |k,v|
-            if config[:state]
-              self.info("#{k} #{v[:state]}")
+          data.each do |container_info|
+            name = container_info['name']
+            state = container_info['state']
+            if config['state']
+              self.info([name, state].join(' '))
             elsif config[:json]
-              self.info(name: k, state: v[:state])
+              self.info_pretty_json('name' => name, 'state' => state)
             else
-              self.info(k)
+              self.info(name)
             end
           end
         end

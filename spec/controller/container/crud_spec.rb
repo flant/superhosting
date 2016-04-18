@@ -58,13 +58,19 @@ describe Superhosting::Controller::Container do
 
   it 'list' do
     with_container do |container_name|
-      expect(container_list_with_exps[:data].first).to include('name', 'state', 'options', 'users', 'admins')
+      expect(container_list_with_exps[:data].first).to include('name', 'state', 'model', 'options', 'users', 'admins')
     end
   end
 
   it 'inspect' do
     with_container do |container_name|
-      expect(container_inspect_with_exps(name: container_name)[:data]).to include('name', 'state', 'options', 'users', 'admins')
+      expect(container_inspect_with_exps(name: container_name)[:data]).to include('name', 'state', 'model', 'options', 'users', 'admins')
+    end
+  end
+
+  it 'inheritance' do
+    with_container do |container_name|
+      expect(container_inheritance_with_exps(name: container_name)).to include(:data)
     end
   end
 

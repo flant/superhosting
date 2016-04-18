@@ -32,8 +32,16 @@ describe Superhosting::Controller::Mux do
     end
   end
 
-  it 'tree', :docker do
+  it 'tree' do
     expect(mux_tree_with_exps(name: 'test')).to include(:data)
+  end
+
+  it 'inspect' do
+    expect(mux_inspect_with_exps(name: 'test')).to include(:data)
+  end
+
+  it 'inheritance' do
+    expect(mux_inheritance_with_exps(name: 'test')).to include(:data)
   end
 
   # negative

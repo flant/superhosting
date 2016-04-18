@@ -136,12 +136,19 @@ describe Superhosting::Controller::Site do
     end
   end
 
+  it 'inheritance' do
+    with_container do |container_name|
+      with_site do |site_name|
+        expect(site_inheritance_with_exps(name: site_name)).to include(:data)
+      end
+    end
+  end
+
   it 'alias_add' do
     with_container do |container_name|
       with_site do |site_name|
         alias_name = "alias-#{site_name}"
         site_alias_add_with_exps(name: alias_name)
-        p
       end
     end
   end
