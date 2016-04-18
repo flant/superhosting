@@ -21,6 +21,10 @@ describe Superhosting::Controller::Model do
     expect(model_inheritance_with_exps(name: 'test')).to include(:data) # TODO
   end
 
+  it 'options' do
+    expect(model_options_with_exps(name: 'test')).to include(:data) # TODO
+  end
+
   it 'reconfig', :docker do
     with_container(model: 'test_with_mux') do |container_name|
       with_site do |site_name|

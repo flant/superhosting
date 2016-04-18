@@ -32,12 +32,30 @@ module Superhosting
           if inheritance
             data = separate_inheritance(mapper) do |mapper, inheritors|
               (inheritors).inject([]) do |inheritance, m|
-                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => m.to_hash }
+                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => get_mapper_options(m) }
               end
             end
             { data: data }
           else
-            { data: { 'name' => mapper.name, 'options' => mapper.to_hash } }
+            { data: { 'name' => mapper.name, 'options' => get_mapper_options(mapper) } }
+          end
+        else
+          resp
+        end
+      end
+
+      def options(name:, inheritance: false)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = MapperInheritance::Model.new(@config.models.f(name)).set_inheritors(@config.models.f(name))
+          if inheritance
+            data = separate_inheritance(mapper) do |mapper, inheritors|
+              (inheritors).inject([]) do |inheritance, m|
+                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => get_mapper_options_pathes(m) }
+              end
+            end
+            { data: data }
+          else
+            { data: { 'name' => mapper.name, 'options' => get_mapper_options_pathes(mapper) } }
           end
         else
           resp

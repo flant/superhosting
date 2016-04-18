@@ -29,6 +29,10 @@ module SpecHelpers
       def mux_inheritance(**kwargs)
         mux_controller.inheritance(**kwargs)
       end
+
+      def mux_options(**kwargs)
+        mux_controller.options(**kwargs)
+      end
     end
   end
 end

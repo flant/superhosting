@@ -43,6 +43,12 @@ describe 'Superhosting::Controller::Container (cli)' do
     end
   end
 
+  it 'container options' do
+    with_container do |container_name|
+      expect { self.cli('container', 'options', container_name) }.to_not raise_error
+    end
+  end
+
   it 'container list' do
     expect { self.cli('container', 'list') }.to_not raise_error
   end

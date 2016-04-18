@@ -25,7 +25,7 @@ module Superhosting
             mapper = self.index[name][:mapper]
             data = separate_inheritance(mapper) do |mapper, inheritors|
               inheritors.inject([self._inspect(name: mapper.name, erb: erb)]) do |inheritance, m|
-                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => m.to_hash(eval_erb: erb) }
+                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
               end
             end
             { data: data }
@@ -47,7 +47,7 @@ module Superhosting
             'container' => container_mapper.name,
             'state' => self.state(name: actual_name).value,
             'aliases' => alias_controller._list,
-            'options' => mapper.to_hash(eval_erb: erb)
+            'options' => get_mapper_options(mapper, erb: erb)
         }
       end
 
@@ -55,6 +55,24 @@ module Superhosting
         if (resp = self.existing_validation(name: name)).net_status_ok?
           mapper = self.index[name][:mapper]
           { data: mapper.inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
+        else
+          resp
+        end
+      end
+
+      def options(name:, inheritance: false, erb: false)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = self.index[name][:mapper]
+          if inheritance
+            data = separate_inheritance(mapper) do |mapper, inheritors|
+              ([mapper] + inheritors).inject([]) do |inheritance, m|
+                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => get_mapper_options_pathes(m, erb: erb) }
+              end
+            end
+            { data: data }
+          else
+            { data: get_mapper_options_pathes(mapper, erb: erb) }
+          end
         else
           resp
         end

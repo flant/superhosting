@@ -44,6 +44,10 @@ describe Superhosting::Controller::Mux do
     expect(mux_inheritance_with_exps(name: 'test')).to include(:data)
   end
 
+  it 'options' do
+    expect(mux_options_with_exps(name: 'test')).to include(:data)
+  end
+
   # negative
 
   it 'reconfig:mux_does_not_used' do

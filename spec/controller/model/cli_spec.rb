@@ -33,4 +33,10 @@ describe 'Superhosting::Controller::Model (cli)' do
       expect { self.cli('model', 'inheritance', 'fcgi_m') }.to_not raise_error
     end
   end
+
+  it 'model options' do
+    with_container do
+      expect { self.cli('model', 'options', 'fcgi_m') }.to_not raise_error
+    end
+  end
 end

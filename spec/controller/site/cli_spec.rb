@@ -37,6 +37,11 @@ describe 'Superhosting::Controller::Site (cli)' do
     expect { self.cli('site', 'inheritance', @site_name) }.to_not raise_error
   end
 
+  it 'site options' do
+    add_site
+    expect { self.cli('site', 'options', @site_name) }.to_not raise_error
+  end
+
   it 'site list' do
     expect { self.cli('site', 'list') }.to_not raise_error
   end

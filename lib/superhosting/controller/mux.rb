@@ -60,12 +60,30 @@ module Superhosting
           if inheritance
             data = separate_inheritance(mapper) do |mapper, inheritors|
               ([mapper] + inheritors).inject([]) do |inheritance, m|
-                inheritance << { 'name' => get_mapper_name(m), 'options' => m.to_hash }
+                inheritance << { 'name' => get_mapper_name(m), 'options' => get_mapper_options(m) }
               end
             end
             { data: data }
           else
-            { data: { 'name' => mapper.name, 'options' => mapper.to_hash } }
+            { data: { 'name' => mapper.name, 'options' => get_mapper_options(mapper) } }
+          end
+        else
+          resp
+        end
+      end
+
+      def options(name:, inheritance: false)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).set_inheritors
+          if inheritance
+            data = separate_inheritance(mapper) do |mapper, inheritors|
+              ([mapper] + inheritors).inject([]) do |inheritance, m|
+                inheritance << { 'name' => get_mapper_name(m), 'options' => get_mapper_options_pathes(m) }
+              end
+            end
+            { data: data }
+          else
+            { data: { 'name' => mapper.name, 'options' => get_mapper_options_pathes(mapper) } }
           end
         else
           resp

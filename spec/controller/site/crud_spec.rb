@@ -144,6 +144,14 @@ describe Superhosting::Controller::Site do
     end
   end
 
+  it 'options' do
+    with_container do |container_name|
+      with_site do |site_name|
+        expect(site_options_with_exps(name: site_name)).to include(:data)
+      end
+    end
+  end
+
   it 'alias_add' do
     with_container do |container_name|
       with_site do |site_name|

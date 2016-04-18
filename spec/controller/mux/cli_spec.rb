@@ -25,4 +25,8 @@ describe 'Superhosting::Controller::Mux (cli)' do
   it 'mux inheritance' do
     expect { self.cli('mux', 'inheritance', 'test') }.to_not raise_error
   end
+
+  it 'mux options' do
+    expect { self.cli('mux', 'options', 'test') }.to_not raise_error
+  end
 end

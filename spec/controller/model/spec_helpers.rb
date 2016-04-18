@@ -26,6 +26,10 @@ module SpecHelpers
         model_controller.inheritance(**kwargs)
       end
 
+      def model_options(**kwargs)
+        model_controller.options(**kwargs)
+      end
+
       def model_reconfigure(**kwargs)
         model_controller.reconfigure(**kwargs)
       end

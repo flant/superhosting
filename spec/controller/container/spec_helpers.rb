@@ -50,6 +50,10 @@ module SpecHelpers
         container_controller.inheritance(**kwargs)
       end
 
+      def container_options(**kwargs)
+        container_controller.options(**kwargs)
+      end
+
       def container_admin_add(**kwargs)
         container_controller.admin(name: @container_name).add(**kwargs)
       end

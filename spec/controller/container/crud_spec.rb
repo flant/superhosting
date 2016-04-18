@@ -74,6 +74,12 @@ describe Superhosting::Controller::Container do
     end
   end
 
+  it 'options' do
+    with_container do |container_name|
+      expect(container_options_with_exps(name: container_name)).to include(:data)
+    end
+  end
+
   it 'model' do
     with_container(model: 'test') do |container_name|
       expect(container_model_with_exps(name: container_name)[:data]).to eq 'test'
