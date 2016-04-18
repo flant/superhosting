@@ -34,12 +34,12 @@ module SpecHelpers
         container_controller.list
       end
 
-      def container_model(**kwargs)
-        container_controller.model(**kwargs)
+      def container_model_name(**kwargs)
+        container_controller.model(name: @container_name).name
       end
 
-      def container_tree(**kwargs)
-        container_controller.tree(**kwargs)
+      def container_model_tree(**kwargs)
+        container_controller.model(name: @container_name).tree
       end
 
       def container_inspect(**kwargs)

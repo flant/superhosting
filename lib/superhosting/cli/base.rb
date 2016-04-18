@@ -191,7 +191,11 @@ module Superhosting
             node = h
             parts = split_toggle_case_name(k)
             parts.each do |cmd|
-              node = (node[cmd] ||= (cmd == parts.last) ? COMMANDS_MODULE.const_get(k) : {})
+              begin
+                node = (node[cmd] ||= (cmd == parts.last) ? COMMANDS_MODULE.const_get(k) : {})
+              rescue
+                p
+              end
             end
             h
           end
