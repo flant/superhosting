@@ -78,7 +78,7 @@ module Superhosting
           if inheritance
             data = separate_inheritance(mapper) do |mapper, inheritors|
               ([mapper] + inheritors).inject([]) do |inheritance, m|
-                inheritance << { 'name' => get_mapper_name(m), 'options' => get_mapper_options_pathes(m) }
+                inheritance << { get_mapper_name(m) => get_mapper_options_pathes(m) }
               end
             end
             { data: data }

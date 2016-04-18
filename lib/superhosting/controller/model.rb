@@ -50,7 +50,8 @@ module Superhosting
           if inheritance
             data = separate_inheritance(mapper) do |mapper, inheritors|
               (inheritors).inject([]) do |inheritance, m|
-                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => get_mapper_options_pathes(m) }
+                type, name = get_mapper_type(m), get_mapper_name(m)
+                inheritance << { "#{ "#{type}: " if type == 'mux' }#{name}" => get_mapper_options_pathes(m) }
               end
             end
             { data: data }
