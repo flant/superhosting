@@ -290,8 +290,8 @@ module Superhosting
 
       def _each_site(name:)
         site_controller = self.get_controller(Superhosting::Controller::Site)
-        site_controller._list(container_name: name).each do |site_name, data|
-          yield site_controller, site_name, data[:state]
+        site_controller.container_sites(container_name: name).each do |site_name, index|
+          yield site_controller, site_name, index[:state]
         end
       end
     end

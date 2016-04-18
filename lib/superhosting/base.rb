@@ -27,5 +27,30 @@ module Superhosting
     def get_controller(controller, **kwargs)
       controller.new(**self.get_base_controller_options.merge!(kwargs))
     end
+
+    def without_inheritance(mapper:)
+      inheritance = mapper.inheritance
+      mapper.inheritance = []
+      yield mapper, inheritance
+    ensure
+      mapper.inheritance = inheritance
+    end
+
+    def get_type(mapper:)
+      case mapper.name
+        when 'containers' then 'container'
+        when 'web' then 'site'
+        when 'models' then 'model'
+        when 'muxs' then 'mux'
+        else get_type(mapper: mapper.parent)
+      end
+    end
+
+    def get_name(mapper:)
+      case mapper.parent.name
+        when 'containers', 'models', 'muxs' then mapper.name
+        else get_name(mapper: mapper.parent)
+      end
+    end
   end
 end

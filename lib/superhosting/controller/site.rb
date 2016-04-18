@@ -10,43 +10,45 @@ module Superhosting
       end
 
       def _list(container_name: nil)
-        def data(name)
-          mapper = self.index[name][:mapper]
-          docker_options = mapper.docker.grep_files.map {|f| [f.name, f.value] }.to_h
-          configs = mapper.f('config.rb', overlay: false).reverse.map {|f| f.value }
-          alias_controller = self.get_controller(Alias, name: name)
-          { docker: docker_options, configs: configs, aliases: alias_controller._list }
-        end
-
-        sites = {}
-        if container_name
-          container_mapper = @container_controller.index[container_name][:mapper]
-          container_mapper.sites.grep_dirs.each do |mapper|
-            name = mapper.name
-            if (state = container_mapper.lib.sites.f(name).state).file?
-              sites[name] = { state: state.value, container: container_name }.merge(data(name))
-            end
-          end
-        else
-          self.index.values.each do |index|
-            name = index[:mapper].name
-            if (state = index[:state_mapper]).file?
-              sites[name] = { state: state.value, container: index[:container_mapper].name }.merge(data(name))
-            end
-          end
+        sites = []
+        sites_mappers = container_name.nil? ? self.index : self.container_sites(container_name: container_name)
+        sites_mappers.each do |name, _index|
+          sites << self._inspect(name: name) if (state = self.state(name: name)).file?
         end
 
         sites
       end
 
-      def inspect(name:)
+      def inspect(name:, inheritance: false)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          actual_name = self.index[name][:mapper].name
-          container_mapper = self.index[name][:container_mapper]
-          { data: self._list(container_name: container_mapper.name)[actual_name] }
+          if inheritance
+            mapper = self.index[name][:mapper]
+            data = without_inheritance(mapper: mapper) do |mapper, inheritors|
+              inheritors.inject([self._inspect(name: mapper.name)]) do |inheritance, m|
+                inheritance << { 'type' => get_type(mapper: m.parent), 'name' => get_name(mapper: m), 'options' => m.to_hash }
+              end
+            end
+            { data: data }
+          else
+            { data: self._inspect(name: name) }
+          end
         else
           resp
         end
+      end
+
+      def _inspect(name:)
+        mapper = self.index[name][:mapper]
+        actual_name = mapper.name
+        container_mapper = self.index[actual_name][:container_mapper]
+        alias_controller = self.get_controller(Alias, name: actual_name)
+        {
+            'name' => actual_name,
+            'container' => container_mapper.name,
+            'state' => self.state(name: actual_name).value,
+            'aliases' => alias_controller._list,
+            'options' => mapper.to_hash
+        }
       end
 
       def add(name:, container_name:)

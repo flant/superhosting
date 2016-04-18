@@ -24,6 +24,10 @@ module Superhosting
         end
       end
 
+      def container_sites(container_name:)
+        self.index.select {|k,v| v[:container_mapper].name == container_name }
+      end
+
       def reindex_site(name:, container_name:)
         @@index ||= {}
         @@index[name][:names].each{|n| @@index.delete(n) } if @@index[name]

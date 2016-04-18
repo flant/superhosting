@@ -123,8 +123,7 @@ describe Superhosting::Controller::Site do
   it 'list' do
     with_container do |container_name|
       with_site do |site_name|
-        expect(site_list_with_exps(container_name: container_name)[:data]).to include(site_name)
-        expect(site_list_with_exps(container_name: container_name)[:data][site_name]).to include(:state, :configs, :aliases, :container)
+        expect(site_list_with_exps(container_name: container_name)[:data].first).to include('name', 'state', 'aliases', 'options')
       end
     end
   end
@@ -132,7 +131,7 @@ describe Superhosting::Controller::Site do
   it 'inspect' do
     with_container do |container_name|
       with_site do |site_name|
-        expect(site_inspect_with_exps(name: site_name)[:data]).to include(:state, :configs, :aliases, :container)
+        expect(site_inspect_with_exps(name: site_name)[:data].keys).to include('name', 'state', 'aliases', 'options')
       end
     end
   end
@@ -142,6 +141,7 @@ describe Superhosting::Controller::Site do
       with_site do |site_name|
         alias_name = "alias-#{site_name}"
         site_alias_add_with_exps(name: alias_name)
+        p
       end
     end
   end

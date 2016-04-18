@@ -7,33 +7,42 @@ module Superhosting
       end
 
       def _list
-        def data(name)
-          mapper = self.index[name][:mapper]
-          docker_options = mapper.docker.grep_files.map {|f| [f.name, f.value] }.to_h
-          configs = mapper.f('config.rb', overlay: false).reverse.map {|f| f.value }
-          { docker: docker_options, configs: configs }
-        end
-
         containers = []
         @config.containers.grep_dirs.map do |n|
           name = n.name
-          user_controller = self.get_controller(User)
-          containers << {
-              name: name,
-              state: self.state(name: name).value,
-              users: user_controller._list(container_name: name),
-              admins: self.admin(name: name)._list
-          }.merge(data(name)) if self.index.key? name and self.index[name][:mapper].lib.state.file?
+          containers << self._inspect(name: name) if self.index.key? name and self.index[name][:mapper].lib.state.file?
         end
         containers
       end
 
       def inspect(name:, inheritance: false)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          { data: self._list[name] }
+          if inheritance
+            mapper = self.index[name][:mapper]
+            data = without_inheritance(mapper: mapper) do |mapper, inheritors|
+              inheritors.inject([self._inspect(name: mapper.name)]) do |inheritance, m|
+                inheritance << { 'type' => get_type(mapper: m.parent), 'name' => get_name(mapper: m), 'options' => m.to_hash }
+              end
+            end
+            { data: data }
+          else
+            { data: self._inspect(name: name) }
+          end
         else
           resp
         end
+      end
+
+      def _inspect(name:)
+        mapper = self.index[name][:mapper]
+        user_controller = self.get_controller(User)
+        {
+            'name' => name,
+            'state' => self.state(name: name).value,
+            'users' => user_controller._list(container_name: name),
+            'admins' => self.admin(name: name)._list,
+            'options' => mapper.to_hash
+        }
       end
 
       def add(name:, mail: 'model', admin_mail: nil, model: nil)
