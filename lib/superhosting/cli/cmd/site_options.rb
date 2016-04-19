@@ -15,20 +15,18 @@ module Superhosting
         end
 
         def self.after_action(data, config)
-          def self.after_action(data, config)
-            if config[:inheritance]
-              data.each do |elm|
-                elm.each do |name, options|
-                  next if options.empty?
-                  self.info(name)
-                  self.indent_step
-                  options.each {|k,v| self.info("#{k} = \"#{v}\"") }
-                  self.indent_step_back
-                end
+          if config[:inheritance]
+            data.each do |elm|
+              elm.each do |name, options|
+                next if options.empty?
+                self.info(name)
+                self.indent_step
+                options.each {|k,v| self.info("#{k} = \"#{v}\"") }
+                self.indent_step_back
               end
-            else
-              data.each {|k,v| self.info("#{k} = \"#{v}\"") }
             end
+          else
+            data.each {|k,v| self.info("#{k} = \"#{v}\"") }
           end
         end
       end
