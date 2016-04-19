@@ -16,20 +16,26 @@ module Superhosting
                :boolean => true
 
         def self.after_action(data, config)
-          data.each do |site_info|
-            name = site_info['name']
-            container = site_info['container']
-            state = site_info['state']
-            aliases = site_info['aliases']
+          if config[:json]
+            self.info_pretty_json(data.map do |site_info|
+              {
+                  'name' => site_info['name'],
+                  'state' => site_info['state'],
+                  'container' => site_info['container'],
+                  'aliases' => site_info['aliases']
+              }
+            end)
+          else
+            data.each do |site_info|
+              name = site_info['name']
+              container = site_info['container']
+              state = site_info['state']
 
-            output = []
-            output << container unless config[:container_name]
-            output << name
-            output << state if config[:state]
+              output = []
+              output << container unless config[:container_name]
+              output << name
+              output << state if config[:state]
 
-            if config[:json]
-              self.info_pretty_json('name' => name, 'state' => state, 'aliases' => aliases, 'container' => container)
-            else
               self.info(output.join(' '))
             end
           end
