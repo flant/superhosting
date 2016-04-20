@@ -35,7 +35,7 @@ module Superhosting
         begin
           self.command!(cmd, logger: false) unless dry_run
           blk.call(code: :pulled)
-        rescue NetStatus::Exception => e
+        rescue NetStatus::Exception => _e
           blk.call(code: :not_found)
         end
       end
@@ -110,7 +110,7 @@ module Superhosting
     end
 
     def container_status?(name, status)
-      self.with_dry_run do |blk, dry_run|
+      self.with_dry_run do |dry_run|
         return true if dry_run and self.storage[name] == status
         resp = container_info(name)
         if resp.nil?
@@ -122,7 +122,7 @@ module Superhosting
     end
 
     def container_running?(name)
-      self.with_dry_run do |blk, dry_run|
+      self.with_dry_run do |dry_run|
         return true if dry_run and self.storage[name] == 'running'
         resp = container_info(name)
         if resp.nil?
