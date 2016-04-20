@@ -24,8 +24,12 @@ module Superhosting
         end
       end
 
+      def alias?(name:)
+        self.index[name][:mapper].name != name
+      end
+
       def container_sites(container_name:)
-        self.index.select {|k,v| v[:container_mapper].name == container_name } # TODO: ignoring aliases
+        self.index.select {|k,v| v[:container_mapper].name == container_name and !self.alias?(name: k) }
       end
 
       def reindex_site(name:, container_name:)

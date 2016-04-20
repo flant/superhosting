@@ -2,42 +2,30 @@ module Superhosting
   module Patches
     module PathMapper
       module FileNode
-        include Helper::Logger
+        include Helper
 
         def _put!(content)
-          self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:file, { path: @path }) { super }
         end
 
         def _safe_put!(content)
-          self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:file, { path: @path }) { super }
         end
 
         def _remove_line!(line)
-          self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:file, { path: @path }) { super }
         end
 
         def _append_line!(content)
-          self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:file, { path: @path }) { super }
         end
 
         def _rename!(new_path)
-          self.debug_operation(desc: { code: :file, data: { path: @path, to: new_path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:file, { path: @path, to: new_path }) { super }
         end
 
         def _delete!(full: false)
-          self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:file, { path: @path }) { super }
         end
       end
     end

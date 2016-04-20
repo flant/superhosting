@@ -214,36 +214,38 @@ module SpecHelpers
         end
 
         after :each do
-          container_delete(name: @container_name)
+          with_logger(logger: false) do
+            container_delete(name: @container_name)
 
-          %w(new test).each do |prefix|
-            if @with_docker
-              command("docker ps --filter 'name=#{prefix}' -a | xargs docker unpause")
-              command("docker ps --filter 'name=#{prefix}' -a | xargs docker kill")
-              command("docker ps --filter 'name=#{prefix}' -a | xargs docker rm")
+            %w(new test).each do |prefix|
+              if @with_docker
+                command("docker ps --filter 'name=#{prefix}' -a | xargs docker unpause")
+                command("docker ps --filter 'name=#{prefix}' -a | xargs docker kill")
+                command("docker ps --filter 'name=#{prefix}' -a | xargs docker rm")
+              end
+
+              PathMapper.new('/etc/security/docker.conf').remove_line!("@#{@container_name} #{@container_name}")
+
+              Etc.passwd do |user|
+                command("userdel #{user.name}") if user.name.start_with? prefix
+              end
+
+              command("rm -rf /etc/sx/containers/#{prefix}*")
+              command("rm -rf /var/sx/containers/#{prefix}*")
+              command("rm -rf /web/#{prefix}*")
+              command("rm -rf /etc/postfix/postfwd.cf.d/#{prefix}*")
             end
 
-            PathMapper.new('/etc/security/docker.conf').remove_line!("@#{@container_name} #{@container_name}")
+            # mux
+            command('docker unpause mux-test')
+            command('docker kill mux-test')
+            command('docker rm mux-test')
+            command('docker unpause ctestmux')
+            command('docker kill ctestmux')
+            command('docker rm ctestmux')
 
-            Etc.passwd do |user|
-              command("userdel #{user.name}") if user.name.start_with? prefix
-            end
-
-            command("rm -rf /etc/sx/containers/#{prefix}*")
-            command("rm -rf /var/sx/containers/#{prefix}*")
-            command("rm -rf /web/#{prefix}*")
-            command("rm -rf /etc/postfix/postfwd.cf.d/#{prefix}*")
+            command('rm -rf /var/sx/containers/muxs/test')
           end
-
-          # mux
-          command('docker unpause mux-test')
-          command('docker kill mux-test')
-          command('docker rm mux-test')
-          command('docker unpause ctestmux')
-          command('docker kill ctestmux')
-          command('docker rm ctestmux')
-
-          command('rm -rf /var/sx/containers/muxs/test')
         end
       end
     end

@@ -2,10 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class SiteAdd < Base
-        option :container_name,
-               :short => '-c NAME',
-               :long  => '--container NAME',
-							 :required => true
+        include Helper::Options::Container
 
         def self.has_required_param?
           true

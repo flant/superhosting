@@ -2,13 +2,8 @@ module Superhosting
   module Cli
     module Cmd
       class ContainerList < Base
-        option :state,
-               :long  => '--state',
-               :boolean => true
-
-        option :json,
-               :long  => '--json',
-               :boolean => true
+        include Helper::Options::List
+        include Helper::Options::State
 
         def self.after_action(data, config)
           show_container_list(data, config)

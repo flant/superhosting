@@ -10,19 +10,19 @@ describe Superhosting::Controller::Model do
   end
 
   it 'tree' do
-    expect(model_tree_with_exps(name: 'test')).to include(:data) # TODO
+    expect(model_tree_with_exps(name: 'test')).to include(:data)
   end
 
   it 'inspect' do
-    expect(model_inspect_with_exps(name: 'test')).to include(:data) # TODO
+    expect(model_inspect_with_exps(name: 'test')).to include(:data)
   end
 
   it 'inheritance' do
-    expect(model_inheritance_with_exps(name: 'test')).to include(:data) # TODO
+    expect(model_inheritance_with_exps(name: 'test')).to include(:data)
   end
 
   it 'options' do
-    expect(model_options_with_exps(name: 'test')).to include(:data) # TODO
+    expect(model_options_with_exps(name: 'test')).to include(:data)
   end
 
   it 'reconfig', :docker do

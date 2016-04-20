@@ -2,14 +2,8 @@ module Superhosting
   module Cli
     module Cmd
       class SiteAliasList < Base
-        option :site_name,
-               :short => '-s NAME',
-               :long  => '--site NAME',
-               :required => true
-
-        option :json,
-               :long  => '--json',
-               :boolean => true
+        include Helper::Options::List
+        include Helper::Options::Site
 
         def self.after_action(data, config)
           show_alias_list(data, config)

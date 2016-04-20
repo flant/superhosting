@@ -134,7 +134,7 @@ module Superhosting
       def unconfigure(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           self._each_site(name: name) do |controller, site_name, state|
-            controller.unconfigure(name: site_name).net_status_ok! # TODO: unchanged site status
+            controller.unconfigure(name: site_name).net_status_ok!
           end
           super
         else
@@ -179,7 +179,7 @@ module Superhosting
             if (resp = self._safe_run_docker(command_options, image, command, name: name, restart: restart)).net_status_ok?
               mapper.lib.image.put!(image, logger: false)
               mapper.lib.signature.put!(dump_command_option, logger: false)
-              mapper.lib.docker_options.put!(Marshal.dump(docker_options))
+              mapper.lib.docker_options.put!(Marshal.dump(docker_options), logger: false)
             end
           end
           resp

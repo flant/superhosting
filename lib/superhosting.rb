@@ -15,6 +15,7 @@ require 'punycode'
 require 'digest/md5'
 require 'polling'
 require 'strong_password'
+require 'active_support/concern'
 
 require 'path_mapper'
 require 'net_status'
@@ -31,6 +32,7 @@ require 'superhosting/helper/mapper'
 require 'superhosting/helpers'
 
 require 'superhosting/patches/string/punycode'
+require 'superhosting/patches/path_mapper/helper'
 require 'superhosting/patches/path_mapper/dir_node'
 require 'superhosting/patches/path_mapper/file_node'
 require 'superhosting/patches/path_mapper/null_node'
@@ -88,6 +90,19 @@ require 'superhosting/cli/error/base'
 Dir["#{File.dirname(__FILE__)}/superhosting/cli/error/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}
 
 require 'superhosting/cli/helper/after_action'
+
+require 'superhosting/cli/helper/options/admin'
+require 'superhosting/cli/helper/options/container'
+require 'superhosting/cli/helper/options/generate'
+require 'superhosting/cli/helper/options/inheritance'
+require 'superhosting/cli/helper/options/inspect'
+require 'superhosting/cli/helper/options/json'
+require 'superhosting/cli/helper/options/list'
+require 'superhosting/cli/helper/options/model'
+require 'superhosting/cli/helper/options/new_name'
+require 'superhosting/cli/helper/options/site'
+require 'superhosting/cli/helper/options/state'
+require 'superhosting/cli/helper/options/user_add'
 
 require 'superhosting/cli/base'
 Dir["#{File.dirname(__FILE__)}/superhosting/cli/cmd/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}

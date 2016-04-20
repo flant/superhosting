@@ -21,16 +21,22 @@ module Superhosting
       resp_if_success raw_connection.request(method: :get, path: "/images/#{name}/json")
     end
 
-    def image_pull(name) # TODO
-      cmd = "docker pull #{name}"
-      self.debug_operation(desc: { code: :image_pull, data: { name: name } }) do |&blk|
+    def base_action(name, code)
+      self.debug_operation(desc: { code: code, data: { name: name } }) do |&blk|
         self.with_dry_run do |dry_run|
-          begin
-            self.command!(cmd, logger: false) unless dry_run
-            blk.call(code: :pulled)
-          rescue Exception => e
-            blk.call(code: :not_found)
-          end
+          yield blk, dry_run
+        end
+      end
+    end
+
+    def image_pull(name)
+      cmd = "docker pull #{name}"
+      base_action(name, :image_pull) do |blk, dry_run|
+        begin
+          self.command!(cmd, logger: false) unless dry_run
+          blk.call(code: :pulled)
+        rescue NetStatus::Exception => e
+          blk.call(code: :not_found)
         end
       end
     end
@@ -44,71 +50,57 @@ module Superhosting
     end
 
     def container_kill!(name)
-      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
-        self.with_dry_run do |dry_run|
-          self.storage.delete(name) if dry_run
-          resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/kill") unless dry_run
-        end
+      base_action(name, :container) do |blk, dry_run|
+        self.storage.delete(name) if dry_run
+        resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/kill") unless dry_run
         blk.call(code: :killed)
       end
     end
 
     def container_rm!(name)
-      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
-        self.with_dry_run do |dry_run|
-          self.storage.delete(name) if dry_run
-          resp_if_success raw_connection.request(method: :delete, path: "/containers/#{name}") unless dry_run
-        end
+      base_action(name, :container) do |blk, dry_run|
+        self.storage.delete(name) if dry_run
+        resp_if_success raw_connection.request(method: :delete, path: "/containers/#{name}") unless dry_run
         blk.call(code: :removed)
       end
     end
 
     def container_stop!(name)
-      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
-        self.with_dry_run do |dry_run|
-          self.storage[name] = 'exited' if dry_run
-          resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/stop") unless dry_run
-        end
+      base_action(name, :container) do |blk, dry_run|
+        self.storage[name] = 'exited' if dry_run
+        resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/stop") unless dry_run
         blk.call(code: :stopped)
       end
     end
 
     def container_start!(name)
-      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
-        self.with_dry_run do |dry_run|
-          self.storage[name] = 'running' if dry_run
-          resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/start") unless dry_run
-        end
+      base_action(name, :container) do |blk, dry_run|
+        self.storage[name] = 'running' if dry_run
+        resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/start") unless dry_run
         blk.call(code: :started)
       end
     end
 
     def container_pause!(name)
-      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
-        self.with_dry_run do |dry_run|
-          self.storage[name] = 'paused' if dry_run
-          resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/pause") unless dry_run
-        end
+      base_action(name, :container) do |blk, dry_run|
+        self.storage[name] = 'paused' if dry_run
+        resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/pause") unless dry_run
         blk.call(code: :paused)
       end
     end
 
     def container_unpause!(name)
-      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
-        self.with_dry_run do |dry_run|
-          self.storage[name] = 'running' if dry_run
-          resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/unpause") unless dry_run
-        end
+      base_action(name, :container) do |blk, dry_run|
+        self.storage[name] = 'running' if dry_run
+        resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/unpause") unless dry_run
         blk.call(code: :unpaused)
       end
     end
 
     def container_restart!(name)
-      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
-        self.with_dry_run do |dry_run|
-          resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/restart") unless dry_run
-          self.storage[name] = 'running' if dry_run
-        end
+      base_action(name, :container) do |blk, dry_run|
+        resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/restart") unless dry_run
+        self.storage[name] = 'running' if dry_run
         blk.call(code: :restarted)
       end
     end
@@ -118,7 +110,7 @@ module Superhosting
     end
 
     def container_status?(name, status)
-      self.with_dry_run do |dry_run|
+      self.with_dry_run do |blk, dry_run|
         return true if dry_run and self.storage[name] == status
         resp = container_info(name)
         if resp.nil?
@@ -130,7 +122,7 @@ module Superhosting
     end
 
     def container_running?(name)
-      self.with_dry_run do |dry_run|
+      self.with_dry_run do |blk, dry_run|
         return true if dry_run and self.storage[name] == 'running'
         resp = container_info(name)
         if resp.nil?
@@ -183,13 +175,10 @@ module Superhosting
       end
     end
 
-    def container_run(name, options, image, command) # TODO
+    def container_run(name, options, image, command)
       cmd = "docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}"
-      self.debug_operation(desc: { code: :container, data: { name: name } }) do |&blk|
-        self.with_dry_run do |dry_run|
-          self.storage[name] = 'running' if dry_run
-        end
-
+      base_action(name, :container) do |blk, dry_run|
+        self.storage[name] = 'running' if dry_run
         self.command!(cmd).tap do
           blk.call(code: :added)
         end

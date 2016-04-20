@@ -2,10 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class SiteAliasAdd < Base
-        option :site_name,
-               :short => '-s NAME',
-               :long  => '--site NAME',
-							 :required => true
+        include Helper::Options::Site
 
         def self.has_required_param?
           true

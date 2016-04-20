@@ -2,9 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class ContainerAdd < Base
-        option :model,
-               :short => '-m MODEL',
-               :long  => '--model MODEL'
+        include Helper::Options::Model
 
         def self.has_required_param?
           true

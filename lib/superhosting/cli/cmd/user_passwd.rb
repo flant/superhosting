@@ -2,21 +2,14 @@ module Superhosting
   module Cli
     module Cmd
       class UserPasswd < Base
-        option :generate,
-               :short => '-g',
-               :long  => '--generate',
-               :boolean => true
-
-        option :container_name,
-               :short => '-c NAME',
-               :long  => '--container NAME',
-               :required => true
+        include Helper::Options::Container
+        include Helper::Options::Generate
 
         def self.has_required_param?
           true
         end
 
-        def self.after_action(data, config)
+        def self.after_action(data, _config)
           show_data(data)
         end
       end

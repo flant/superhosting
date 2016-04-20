@@ -2,18 +2,14 @@ module Superhosting
   module Patches
     module PathMapper
       module DirNode
-        include Helper::Logger
+        include Helper
 
         def _delete!(full: false)
-          self.debug_operation(desc: { code: :directory, data: { path: @path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:directory, { path: @path }) { super }
         end
 
         def _rename!(new_path)
-          self.debug_operation(desc: { code: :directory, data: { path: @path, to: new_path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:directory, { path: @path, to: new_path }) { super }
         end
       end
     end

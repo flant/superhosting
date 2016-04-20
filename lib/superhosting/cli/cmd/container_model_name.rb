@@ -2,12 +2,9 @@ module Superhosting
   module Cli
     module Cmd
       class ContainerModelName < Base
-        option :container_name,
-               :short => '-c NAME',
-               :long  => '--container NAME',
-               :required => true
+        include Helper::Options::Container
 
-        def self.after_action(data, config)
+        def self.after_action(data, _config)
           show_data(data)
         end
       end

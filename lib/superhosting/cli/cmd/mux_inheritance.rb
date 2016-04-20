@@ -2,9 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class MuxInheritance < Base
-        option :json,
-               :long  => '--json',
-               :boolean => true
+        include Helper::Options::Json
 
         def self.has_required_param?
           true

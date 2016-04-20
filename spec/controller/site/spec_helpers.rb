@@ -195,7 +195,9 @@ module SpecHelpers
         end
 
         after :each do
-          command("rm -rf /etc/nginx/sites/test*")
+          with_logger(logger: false) do
+            command("rm -rf /etc/nginx/sites/test*")
+          end
         end
       end
     end

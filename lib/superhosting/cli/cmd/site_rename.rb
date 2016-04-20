@@ -2,10 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class SiteRename < Base
-        option :new_name,
-               :short => '-r NAME',
-               :long  => '--new-name NAME',
-               :required => true
+        include Helper::Options::NewName
 
         option :keep_name_as_alias,
                :short => '-k',

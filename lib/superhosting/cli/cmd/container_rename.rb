@@ -2,10 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class ContainerRename < Base
-        option :new_name,
-               :short => '-r NAME',
-               :long  => '--new-name NAME',
-               :required => true
+        include Helper::Options::NewName
 
         def self.has_required_param?
           true

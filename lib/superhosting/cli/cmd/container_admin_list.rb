@@ -2,14 +2,8 @@ module Superhosting
   module Cli
     module Cmd
       class ContainerAdminList < Base
-        option :container_name,
-               :short => '-c NAME',
-               :long  => '--container NAME',
-               :required => true
-
-        option :json,
-               :long  => '--json',
-               :boolean => true
+        include Helper::Options::List
+        include Helper::Options::Container
 
         def self.after_action(data, config)
           show_container_admin_list(data, config)

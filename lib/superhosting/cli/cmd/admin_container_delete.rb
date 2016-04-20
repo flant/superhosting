@@ -2,10 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class AdminContainerDelete < Base
-        option :admin_name,
-               :short => '-a NAME',
-               :long  => '--admin NAME',
-               :required => true
+        include Helper::Options::Admin
 
         def self.has_required_param?
           true

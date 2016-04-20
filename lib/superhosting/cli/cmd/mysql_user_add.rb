@@ -2,10 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class MysqlUserAdd < Base
-        option :generate,
-               :short => '-g',
-               :long  => '--generate',
-               :boolean => true
+        include Helper::Options::Generate
       end
     end
   end

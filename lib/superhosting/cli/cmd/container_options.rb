@@ -2,13 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class ContainerOptions < Base
-        option :inheritance,
-               :long  => '--inheritance',
-               :boolean => true
-
-        option :erb,
-               :long  => '--erb',
-               :boolean => true
+        include Helper::Options::Inspect
 
         def self.has_required_param?
           true

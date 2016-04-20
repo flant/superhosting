@@ -2,30 +2,22 @@ module Superhosting
   module Patches
     module PathMapper
       module NullNode
-        include Helper::Logger
+        include Helper
 
         def _create!
-          self.debug_operation(desc: { code: :directory, data: { path: @path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:directory, { path: @path }) { super }
         end
 
         def _safe_put!(content)
-          self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:file, { path: @path }) { super }
         end
 
         def _put!(content)
-          self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:file, { path: @path }) { super }
         end
 
         def _append_line!(content)
-          self.debug_operation(desc: { code: :file, data: { path: @path } }) do |&blk|
-            super.tap {|res| blk.call(code: res[:code], diff: res[:d][:diff]) }
-          end
+          _action!(:file, { path: @path }) { super }
         end
       end
     end

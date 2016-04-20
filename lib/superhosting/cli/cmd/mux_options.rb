@@ -2,9 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class MuxOptions < Base
-        option :inheritance,
-               :long  => '--inheritance',
-               :boolean => true
+        include Helper::Options::Inheritance
 
         def self.has_required_param?
           true

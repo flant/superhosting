@@ -57,7 +57,7 @@ module Superhosting
 
         mapper.config.f('etc-passwd').lines.each do |line|
           parts = line.split(':')
-          user_name, shell = parts.first, parts.last # TODO: add home_dir
+          user_name, shell, home_dir = parts.first, parts.pop, parts.pop
           next if user_name == name # base_user
 
           if user_controller.admin?(name: user_name, container_name: name)
@@ -68,7 +68,7 @@ module Superhosting
             if user_controller.system?(name: cuser_name, container_name: name)
               user_controller._add_system_user(name: cuser_name, container_name: new_name)
             else
-              user_controller._add(name: cuser_name, container_name: new_name, shell: shell)
+              user_controller._add(name: cuser_name, container_name: new_name, shell: shell, home_dir: home_dir)
             end
           end
         end
