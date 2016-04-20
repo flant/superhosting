@@ -44,7 +44,7 @@ module Superhosting
       end
 
       def set_inheritance(mapper)
-        self.inheritors.reverse.each do |inheritor|
+        self.inheritors.reverse_each do |inheritor|
           type_dir_mapper = (@type == 'model' or @type.nil?) ? inheritor : inheritor.f(@type)
 
           if type_dir_mapper.dir?
