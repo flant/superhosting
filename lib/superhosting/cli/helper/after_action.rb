@@ -135,11 +135,11 @@ module Superhosting
           if config[:json]
             show_json(data)
           else
-            self.info(data.map do |hash|
+            self.show_list(data.map do |hash|
               type = hash['type']
               name = hash['name']
               "#{ "#{type}: " if type == 'mux' }#{name}"
-            end)
+            end, sort: false)
           end
         end
 
@@ -147,7 +147,7 @@ module Superhosting
           if config[:json]
             show_json(data)
           else
-            self.info(data.map {|hash| hash['name'] })
+            show_list(data.map {|hash| hash['name'] }, sort: false)
           end
         end
 

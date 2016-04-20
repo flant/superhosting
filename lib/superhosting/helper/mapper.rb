@@ -65,11 +65,12 @@ module Superhosting
 
       def _options(name:, inheritance: false, erb: false)
         mapper = self.index[name][:mapper]
+        mapper_type = get_mapper_type(mapper)
         if inheritance
           separate_inheritance(mapper) do |mapper, inheritors|
-            ([mapper] + inheritors).inject([]) do |inheritance, m|
+            ([mapper] + inheritors).reverse.inject([]) do |inheritance, m|
               type, name = get_mapper_type(m), get_mapper_name(m)
-              name = type if type == 'container'
+              name = type if mapper_type == 'container'
               inheritance << { "#{ "#{type}: " if type == 'mux' }#{name}" => get_mapper_options_pathes(m, erb: erb) }
             end
           end
@@ -80,7 +81,7 @@ module Superhosting
 
       def _inheritance(name:)
         mapper = self.index[name][:mapper]
-        mapper.inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } }
+        mapper.inheritance.reverse.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } }
       end
     end
   end
