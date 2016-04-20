@@ -40,7 +40,7 @@ module Superhosting
           new_hash
         end
 
-        hash = mapper.to_hash(eval_erb: erb, exclude_files: [/^config.rb$/, /^inherit$/, /^abstract$/], exclude_dirs: [/^config_templates$/])
+        hash = mapper.to_hash(eval_erb: !erb, exclude_files: [/^config.rb$/, /^inherit$/, /^abstract$/], exclude_dirs: [/^config_templates$/])
         exclude_erb_extension(hash)
       end
 
@@ -61,6 +61,26 @@ module Superhosting
 
         hash = get_mapper_options(mapper, erb: erb)
         get_pathes(hash)
+      end
+
+      def _options(name:, inheritance: false, erb: false)
+        mapper = self.index[name][:mapper]
+        if inheritance
+          separate_inheritance(mapper) do |mapper, inheritors|
+            ([mapper] + inheritors).inject([]) do |inheritance, m|
+              type, name = get_mapper_type(m), get_mapper_name(m)
+              name = type if type == 'container'
+              inheritance << { "#{ "#{type}: " if type == 'mux' }#{name}" => get_mapper_options_pathes(m, erb: erb) }
+            end
+          end
+        else
+          get_mapper_options_pathes(mapper, erb: erb)
+        end
+      end
+
+      def _inheritance(name:)
+        mapper = self.index[name][:mapper]
+        mapper.inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } }
       end
     end
   end

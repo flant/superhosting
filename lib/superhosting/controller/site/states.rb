@@ -15,7 +15,7 @@ module Superhosting
       end
 
       def uninstall_data(name:)
-        if self.index.include? name
+        if (resp = self.existing_validation(name: name)).net_status_ok?
           container_mapper = self.index[name][:container_mapper]
           container_mapper.sites.f(name).delete!
           container_mapper.lib.web.f(name).delete!
@@ -23,7 +23,7 @@ module Superhosting
 
           self.reindex_site(name: name, container_name: container_mapper.name)
         end
-        {}
+        resp
       end
 
       def _config_options(name:, on_reconfig:, on_config:)

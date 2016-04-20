@@ -1,2 +1,0 @@
-mbstring.func_overload = 2
-realpath_cache_size = 4096k

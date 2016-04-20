@@ -7,8 +7,12 @@ module Superhosting
                :long  => '--container NAME',
                :required => true
 
+        option :json,
+               :long  => '--json',
+               :boolean => true
+
         def self.after_action(data, config)
-          self.info(data)
+          show_container_admin_list(data, config)
         end
       end
     end

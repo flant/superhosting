@@ -19,7 +19,7 @@ describe Superhosting::Controller::User do
   it 'list' do
     with_container do |container_name|
       with_user do |user_name|
-        expect(user_list_with_exps(container_name: container_name)[:data]).to include("#{container_name}_#{user_name}")
+        expect(user_list_with_exps(container_name: container_name)[:data]).to include('user' => [container_name, "#{container_name}_#{user_name}"])
       end
     end
   end

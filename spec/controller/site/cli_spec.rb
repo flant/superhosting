@@ -3,7 +3,7 @@ describe 'Superhosting::Controller::Site (cli)' do
   include SpecHelpers::Controller::Container
 
   def add_site
-    container_add(name: @container_name)
+    container_add(name: @container_name, model: 'test')
     site_add(name: @site_name, container_name: @container_name)
   end
 
@@ -30,20 +30,29 @@ describe 'Superhosting::Controller::Site (cli)' do
   it 'site inspect' do
     add_site
     expect { self.cli('site', 'inspect', @site_name) }.to_not raise_error
+    expect { self.cli('site', 'inspect', @site_name, '--inheritance') }.to_not raise_error
+    expect { self.cli('site', 'inspect', @site_name, '--erb') }.to_not raise_error
   end
 
   it 'site inheritance' do
     add_site
     expect { self.cli('site', 'inheritance', @site_name) }.to_not raise_error
+    expect { self.cli('site', 'inheritance', @site_name, '--json') }.to_not raise_error
   end
 
   it 'site options' do
     add_site
     expect { self.cli('site', 'options', @site_name) }.to_not raise_error
+    expect { self.cli('site', 'options', @site_name, '--inheritance') }.to_not raise_error
+    expect { self.cli('site', 'options', @site_name, '--erb') }.to_not raise_error
   end
 
   it 'site list' do
+    add_site
     expect { self.cli('site', 'list') }.to_not raise_error
+    expect { self.cli('site', 'list', '-c', @container_name) }.to_not raise_error
+    expect { self.cli('site', 'list', '--state') }.to_not raise_error
+    expect { self.cli('site', 'list', '--json') }.to_not raise_error
   end
 
   it 'site name' do
@@ -74,5 +83,6 @@ describe 'Superhosting::Controller::Site (cli)' do
   it 'site alias list' do
     add_alias
     expect { self.cli('site', 'alias', 'list', '-s', @site_name) }.to_not raise_error
+    expect { self.cli('site', 'alias', 'list', '-s', @site_name, '--json') }.to_not raise_error
   end
 end

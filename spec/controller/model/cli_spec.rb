@@ -4,6 +4,7 @@ describe 'Superhosting::Controller::Model (cli)' do
 
   it 'model list' do
     expect { self.cli('model', 'list') }.to_not raise_error
+    expect { self.cli('model', 'list', '--json', '--abstract') }.to_not raise_error
   end
 
   it 'model reconfigure' do
@@ -25,18 +26,21 @@ describe 'Superhosting::Controller::Model (cli)' do
   it 'model inspect' do
     with_container do
       expect { self.cli('model', 'inspect', 'fcgi_m') }.to_not raise_error
+      expect { self.cli('model', 'inspect', 'fcgi_m', '--inheritance') }.to_not raise_error
     end
   end
 
   it 'model inheritance' do
     with_container do
-      expect { self.cli('model', 'inheritance', 'fcgi_m') }.to_not raise_error
+      expect { self.cli('model', 'inheritance', 'test_with_mux') }.to_not raise_error
+      expect { self.cli('model', 'inheritance', 'test_with_mux', '--json') }.to_not raise_error
     end
   end
 
   it 'model options' do
     with_container do
       expect { self.cli('model', 'options', 'fcgi_m') }.to_not raise_error
+      expect { self.cli('model', 'options', 'fcgi_m', '--inheritance') }.to_not raise_error
     end
   end
 end

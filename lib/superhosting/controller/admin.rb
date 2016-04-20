@@ -2,13 +2,13 @@ module Superhosting
   module Controller
     class Admin < Base
       def list
-        admins = {}
+        admins = []
         @admins_mapper.grep_dirs.map do |dir_name|
           admin_name = dir_name.name
 
           container_admin_controller = self.get_controller(Admin::Container, name: admin_name)
           if (resp = container_admin_controller.list).net_status_ok?
-            admins[admin_name] = resp[:data]
+            admins << { admin_name => resp[:data] }
           else
             return resp
           end

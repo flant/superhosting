@@ -3,51 +3,32 @@ module Superhosting
     class Container
       include Helper::States
 
-      def install_data(name:, mail: 'model', admin_mail: nil, model: nil)
-        if !(resp = self.adding_validation(name: name)).net_status_ok?
-          return resp
-        elsif (model_ = model || @config.containers.f(name).f('model', default: @config.default_model)).nil?
-          return { error: :input_error, code: :no_model_given }
+      def install_data(name:, model: nil)
+        if (model_ = model || @config.containers.f(name).f('model', default: @config.default_model)).nil?
+          { error: :input_error, code: :no_model_given }
+        else
+          # model
+          return { error: :input_error, code: :model_does_not_exists, data: { name: model_ } } unless @config.models.f(model_).dir?
+          etc_mapper = @config.containers.f(name).create!
+          etc_mapper.model.put!(model) unless model.nil?
+
+          # config
+          self.reindex_container(name: name)
+          mapper = self.index[name][:mapper]
+
+          # lib
+          mapper.lib.config.create!
+          mapper.lib.web.create!
+
+          # web
+          PathMapper.new('/web').create!
+          safe_link!(mapper.lib.web.path, mapper.web.path)
+          {}
         end
-
-        # model
-        model_mapper = @config.models.f(model_)
-        return { error: :input_error, code: :model_does_not_exists, data: { name: model_ } } unless @config.models.f(model_).dir?
-        etc_mapper = @config.containers.f(name).create!
-        etc_mapper.model.put!(model) unless model.nil?
-
-        # config
-        self.reindex_container(name: name)
-        mapper = self.index[name][:mapper]
-
-        # mail
-        unless mail != 'no'
-          if mail == 'yes'
-            mapper.mail.put!(mail)
-            unless (admin_mail_ = admin_mail).nil?
-              mapper.admin_mail.put!(admin_mail_)
-            end
-          elsif mail == 'model'
-            if model_mapper.default_mail == 'yes'
-              admin_mail_ = admin_mail || model_mapper.default_admin_mail
-            end
-          end
-          return { error: :input_error, code: :option_admin_mail_required } if defined? admin_mail_ and admin_mail_.nil?
-        end
-
-        # lib
-        mapper.lib.config.delete!
-        mapper.lib.config.create!
-        mapper.lib.web.create!
-
-        # web
-        PathMapper.new('/web').create!
-        safe_link!(mapper.lib.web.path, mapper.web.path)
-        {}
       end
 
       def uninstall_data(name:)
-        if self.index.include? name
+        if (resp = self.existing_validation(name: name)).net_status_ok?
           mapper = self.index[name][:mapper]
 
           # lib
@@ -61,121 +42,150 @@ module Superhosting
           mapper.delete!
 
           self.reindex_container(name: name)
+          {}
+        else
+          resp
         end
-
-        {}
       end
 
-      def install_users(name:)
-        mapper = self.index[name][:mapper]
+      def install_users(name:, model:)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = self.index[name][:mapper]
 
-        # user / group
-        user_controller = self.get_controller(User)
-        user_controller._group_add(name: name)
-        unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?
-          return resp
-        end
-        user = user_controller._get(name: name)
-
-        self.with_dry_run do |dry_run|
-          user_gid = if dry_run
-            'XXXX' if user.nil?
-          else
-            user.gid
-          end
-
-          mapper.lib.config.f('etc-group').append_line!("#{name}:x:#{user_gid}:") unless user_gid.nil?
-        end
-
-        # system users
-        current_system_users = user_controller._group_get_system_users(name: name)
-        add_users = mapper.system_users.lines - current_system_users
-        del_users = current_system_users - mapper.system_users.lines
-        add_users.each do |u|
-          unless (resp = user_controller._add_system_user(name: u.strip, container_name: name)).net_status_ok?
+          # user / group
+          user_controller = self.get_controller(User)
+          user_controller._group_add(name: name)
+          unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?
             return resp
           end
-        end
-        del_users.each do |u|
-          user_name = "#{name}_#{u.strip}"
-          user = user_controller._get(name: user_name)
-          unless (resp = user_controller._del(name: user_name, group: name)).net_status_ok?
-            return resp
+          user = user_controller._get(name: name)
+
+          self.with_dry_run do |dry_run|
+            user_gid = if dry_run
+              'XXXX' if user.nil?
+            else
+              user.gid
+            end
+
+            mapper.lib.config.f('etc-group').append_line!("#{name}:x:#{user_gid}:") unless user_gid.nil?
           end
-          mapper.lib.config.f('etc-passwd').remove_line!(/^#{user_name}:.*/)
+
+          # system users
+          current_system_users = user_controller._group_get_system_users(name: name)
+          add_users = mapper.system_users.lines - current_system_users
+          del_users = current_system_users - mapper.system_users.lines
+          add_users.each do |u|
+            unless (resp = user_controller._add_system_user(name: u.strip, container_name: name)).net_status_ok?
+              return resp
+            end
+          end
+          del_users.each do |u|
+            user_name = "#{name}_#{u.strip}"
+            user = user_controller._get(name: user_name)
+            unless (resp = user_controller._del(name: user_name, group: name)).net_status_ok?
+              return resp
+            end
+            mapper.lib.config.f('etc-passwd').remove_line!(/^#{user_name}:.*/)
+          end
+
+          # docker
+          PathMapper.new('/etc/security/docker.conf').append_line!("@#{name} #{name}")
+
+          # chown
+          chown_r!(name, name, mapper.lib.web.path)
+          {}
+        else
+          resp
         end
-
-        # docker
-        PathMapper.new('/etc/security/docker.conf').append_line!("@#{name} #{name}")
-
-        # chown
-        chown_r!(name, name, mapper.lib.web.path)
-        {}
       end
 
       def uninstall_users(name:)
-        mapper = self.index[name][:mapper]
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = self.index[name][:mapper]
 
-        user_controller = self.get_controller(User)
-        if (user = user_controller._get(name: name))
-          mapper.lib.config.f('etc-group').remove_line!("#{name}:x:#{user.gid}:")
+          user_controller = self.get_controller(User)
+          if (user = user_controller._get(name: name))
+            mapper.lib.config.f('etc-group').remove_line!("#{name}:x:#{user.gid}:")
+          end
+
+          user_controller._group_del_users(name: name)
+          user_controller._group_del(name: name)
+
+          # docker
+          PathMapper.new('/etc/security/docker.conf').remove_line!("@#{name} #{name}")
+
+          {}
+        else
+          resp
         end
-
-        user_controller._group_del_users(name: name)
-        user_controller._group_del(name: name)
-
-        # docker
-        PathMapper.new('/etc/security/docker.conf').remove_line!("@#{name} #{name}")
-
-        {}
       end
 
       def configure(name:)
-        self._each_site(name: name) do |controller, sname, state|
-          controller.configure(name: sname).net_status_ok!
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self._each_site(name: name) do |controller, site_name, state|
+            controller.configure(name: site_name).net_status_ok!
+          end
+          super
+        else
+          resp
         end
-        super
       end
 
       def unconfigure(name:)
-        self._each_site(name: name) do |controller, sname, state|
-          controller.unconfigure(name: sname).net_status_ok! # TODO: unchanged site status
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self._each_site(name: name) do |controller, site_name, state|
+            controller.unconfigure(name: site_name).net_status_ok! # TODO: unchanged site status
+          end
+          super
+        else
+          resp
         end
-        super
       end
 
       def apply(name:)
-        self._each_site(name: name) do |controller, sname, state|
-          controller.apply(name: sname).net_status_ok!
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self._each_site(name: name) do |controller, site_name, state|
+            controller.apply(name: site_name).net_status_ok!
+          end
+          super
+        else
+          resp
         end
-        super
       end
 
       def configure_with_apply(name:)
-        self._each_site(name: name) do |controller, sname, state|
-          controller.reconfigure(name: sname).net_status_ok!
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self._each_site(name: name) do |controller, site_name, state|
+            controller.reconfigure(name: site_name).net_status_ok!
+          end
+          super
+        else
+          resp
         end
-        super
       end
 
       def run(name:)
-        mapper = self.index[name][:mapper]
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = self.index[name][:mapper]
 
-        if (resp = self._collect_docker_options(mapper: mapper)).net_status_ok?
-          docker_options = resp[:data]
-          command_options, image, command = docker_options
-          dump_command_option = (command_options + [command]).join("\n")
-          dummy_signature_md5 = Digest::MD5.new.digest(dump_command_option)
+          if (resp = self._collect_docker_options(mapper: mapper)).net_status_ok?
+            docker_options = resp[:data]
+            command_options, image, command = docker_options
+            dump_command_option = (command_options + [command]).join("\n")
+            dummy_signature_md5 = Digest::MD5.new.digest(dump_command_option)
 
-          restart = (!mapper.docker.image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5))
+            restart = (!mapper.docker.image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5))
 
-          if (resp = self._safe_run_docker(command_options, image, command, name: name, restart: restart)).net_status_ok?
-            mapper.lib.image.put!(image, logger: false)
-            mapper.lib.signature.put!(dump_command_option, logger: false)
-            mapper.lib.docker_options.put!(Marshal.dump(docker_options))
+            if (resp = self._safe_run_docker(command_options, image, command, name: name, restart: restart)).net_status_ok?
+              mapper.lib.image.put!(image, logger: false)
+              mapper.lib.signature.put!(dump_command_option, logger: false)
+              mapper.lib.docker_options.put!(Marshal.dump(docker_options))
+            end
           end
+          resp
+        else
+          resp
         end
-        resp
       end
 
       def run_mux(name:)
@@ -193,23 +203,25 @@ module Superhosting
       end
 
       def stop_mux(name:)
-        resp = {}
-        mapper = self.index[name][:mapper]
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          mapper = self.index[name][:mapper]
 
-        if (mux_mapper = mapper.mux).file?
-          mux_name = mux_mapper.value
-          mux_controller = self.get_controller(Mux)
-          mux_controller.index_pop(mux_name, name)
-          mux_controller._delete(name: mux_name) unless mux_controller.index.include?(mux_name)
+          if (mux_mapper = mapper.mux).file?
+            mux_name = mux_mapper.value
+            mux_controller = self.get_controller(Mux)
+            mux_controller.index_pop(mux_name, name)
+            mux_controller._delete(name: mux_name) unless mux_controller.index.include?(mux_name)
+          end
         end
-
         resp
       end
 
       def stop(name:)
-        self._delete_docker(name: name)
-        self.get_controller(Mux).reindex
-        {}
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self._delete_docker(name: name)
+          self.get_controller(Mux).reindex
+        end
+        resp
       end
 
       def _config_options(name:, on_reconfig:, on_config:)
@@ -290,6 +302,7 @@ module Superhosting
 
       def _each_site(name:)
         site_controller = self.get_controller(Superhosting::Controller::Site)
+        site_controller.reindex_container_sites(container_name: name)
         site_controller.container_sites(container_name: name).each do |site_name, index|
           yield site_controller, site_name, index[:state]
         end

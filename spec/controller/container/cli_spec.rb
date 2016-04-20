@@ -10,12 +10,6 @@ describe 'Superhosting::Controller::Container (cli)' do
     expect { self.cli('container', 'add', @container_name) }.to_not raise_error
   end
 
-  it 'container change' do
-    with_container do |container_name|
-      expect { self.cli('container', 'change', container_name) }.to_not raise_error
-    end
-  end
-
   it 'container delete' do
     add_container
     expect { self.cli('container', 'delete', @container_name) }.to_not raise_error
@@ -34,23 +28,31 @@ describe 'Superhosting::Controller::Container (cli)' do
   it 'container inspect' do
     with_container do |container_name|
       expect { self.cli('container', 'inspect', container_name) }.to_not raise_error
+      expect { self.cli('container', 'inspect', container_name, '--inheritance') }.to_not raise_error
+      expect { self.cli('container', 'inspect', container_name, '--erb') }.to_not raise_error
     end
   end
 
   it 'container inheritance' do
     with_container do |container_name|
       expect { self.cli('container', 'inheritance', container_name) }.to_not raise_error
+      expect { self.cli('container', 'inheritance', container_name, '--json') }.to_not raise_error
     end
   end
 
   it 'container options' do
     with_container do |container_name|
       expect { self.cli('container', 'options', container_name) }.to_not raise_error
+      expect { self.cli('container', 'options', container_name, '--inheritance') }.to_not raise_error
+      expect { self.cli('container', 'options', container_name, '--erb') }.to_not raise_error
     end
   end
 
   it 'container list' do
+    add_container
     expect { self.cli('container', 'list') }.to_not raise_error
+    expect { self.cli('container', 'list', '--json') }.to_not raise_error
+    expect { self.cli('container', 'list', '--state') }.to_not raise_error
   end
 
   it 'container reconfigure' do
@@ -97,7 +99,11 @@ describe 'Superhosting::Controller::Container (cli)' do
 
   it 'container admin list' do
     with_container do |container_name|
-      expect { self.cli('container', 'admin', 'list', '-c', container_name) }.to_not raise_error
+      with_admin do
+        container_admin_add(name: @admin_name)
+        expect { self.cli('container', 'admin', 'list', '-c', container_name) }.to_not raise_error
+        expect { self.cli('container', 'admin', 'list', '-c', container_name, '--json') }.to_not raise_error
+      end
     end
   end
 end

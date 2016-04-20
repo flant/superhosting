@@ -16,33 +16,13 @@ module Superhosting
         super(mapper)
       end
 
-      def collect_inheritors(m=@mapper, depth=0)
+      def collect_inheritors(m=@mapper)
         m.inherit.lines.each do |name|
           inherit_mapper = @muxs_mapper.f(name)
-          raise NetStatus::Exception, { error: :logical_error, code: :mux_does_not_exists, data: { name: name } } unless inherit_mapper.dir?
-
-          collect_inheritors(inherit_mapper, depth)
+          collect_inheritors(inherit_mapper)
         end
 
-        depth += 1
-
-        collect_inheritor(m, depth) unless m == @mapper
-      end
-
-      def collect_inheritor(mapper, depth)
-        (self.inheritors[depth] ||= []) << mapper
-      end
-
-      def set_inheritance(mapper)
-        self.inheritors.sort.each do |k, inheritors|
-          inheritors.each do |inheritor|
-            if inheritor.dir?
-              inheritor.changes_overlay = mapper
-              mapper << inheritor
-            end
-          end
-        end
-        mapper
+        collect_inheritor(m) unless m == @mapper
       end
     end
   end

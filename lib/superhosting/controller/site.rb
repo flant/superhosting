@@ -11,9 +11,9 @@ module Superhosting
 
       def _list(container_name: nil)
         sites = []
-        sites_mappers = container_name.nil? ? self.index : self.container_sites(container_name: container_name)
-        sites_mappers.each do |name, _index|
-          sites << self._inspect(name: name) if (state = self.state(name: name)).file?
+        sites_hash = container_name.nil? ? self.index : self.container_sites(container_name: container_name)
+        sites_hash.each do |name, _index|
+          sites << self._inspect(name: name) if self.state(name: name).file?
         end
 
         sites
@@ -53,8 +53,7 @@ module Superhosting
 
       def inheritance(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = self.index[name][:mapper]
-          { data: mapper.inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
+          { data: self._inheritance(name: name) }
         else
           resp
         end
@@ -62,19 +61,7 @@ module Superhosting
 
       def options(name:, inheritance: false, erb: false)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = self.index[name][:mapper]
-          if inheritance
-            data = separate_inheritance(mapper) do |mapper, inheritors|
-              ([mapper] + inheritors).inject([]) do |inheritance, m|
-                type, name = get_mapper_type(m), get_mapper_name(m)
-                name = type if type == 'site'
-                inheritance << { "#{ "#{type}: " if type == 'mux' }#{name}" => get_mapper_options_pathes(m, erb: erb) }
-              end
-            end
-            { data: data }
-          else
-            { data: get_mapper_options_pathes(mapper, erb: erb) }
-          end
+          { data: self._options(name: name, inheritance: inheritance, erb: erb) }
         else
           resp
         end

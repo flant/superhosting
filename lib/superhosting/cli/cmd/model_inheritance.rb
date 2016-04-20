@@ -11,15 +11,7 @@ module Superhosting
         end
 
         def self.after_action(data, config)
-          if config[:json]
-            self.info_pretty_json(data)
-          else
-            self.info(data.map do |hash|
-              type = hash['type']
-              name = hash['name']
-              "#{ "#{type}: " if type == 'mux' }#{name}"
-            end)
-          end
+          show_inheritance(data, config)
         end
       end
     end

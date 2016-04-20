@@ -6,7 +6,7 @@ describe Superhosting::Controller::Model do
   # positive
 
   it 'list' do
-    expect(model_list_with_exps[:data]).to including('joomla_v3_l', 'test_with_mux', 'symfony_m', 'fcgi_m')
+    expect(model_list_with_exps).to include(:data)
   end
 
   it 'tree' do

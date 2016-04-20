@@ -23,7 +23,7 @@ module Superhosting
           @@index.delete(name)
         else
           admin_container_controller = self.get_controller(Admin::Container, name: name)
-          @@index[name] = admin_container_controller._users_list.net_status_ok![:data] || []
+          @@index[name] = admin_container_controller._users_list || []
         end
       end
     end

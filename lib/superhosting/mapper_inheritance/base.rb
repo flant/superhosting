@@ -6,7 +6,7 @@ module Superhosting
       attr_accessor :inheritors, :inheritors_tree
 
       def initialize
-        self.inheritors = {}
+        self.inheritors = []
         self.inheritors_tree = {}
       end
 
@@ -35,8 +35,24 @@ module Superhosting
         node
       end
 
+      def collect_inheritor(mapper)
+        self.inheritors << mapper
+      end
+
       def set_inheritors(mapper)
         self.set_inheritance(mapper)
+      end
+
+      def set_inheritance(mapper)
+        self.inheritors.reverse.each do |inheritor|
+          type_dir_mapper = (@type == 'model' or @type.nil?) ? inheritor : inheritor.f(@type)
+
+          if type_dir_mapper.dir?
+            type_dir_mapper.changes_overlay = mapper
+            mapper << type_dir_mapper
+          end
+        end
+        mapper
       end
     end
   end

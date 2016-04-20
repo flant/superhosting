@@ -41,16 +41,14 @@ module Superhosting
             'name' => name,
             'state' => self.state(name: name).value,
             'model' => model_name,
-            'users' => user_controller._list(container_name: name),
-            'admins' => self.admin(name: name)._list,
+            'users' => user_controller.list(container_name: name).net_status_ok![:data],
             'options' => get_mapper_options(mapper, erb: erb)
         }
       end
 
       def inheritance(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = self.index[name][:mapper]
-          { data: mapper.inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
+          { data: self._inheritance(name: name) }
         else
           resp
         end
@@ -58,26 +56,17 @@ module Superhosting
 
       def options(name:, inheritance: false, erb: false)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = self.index[name][:mapper]
-          if inheritance
-            data = separate_inheritance(mapper) do |mapper, inheritors|
-              ([mapper] + inheritors).inject([]) do |inheritance, m|
-                type, name = get_mapper_type(m), get_mapper_name(m)
-                name = type if type == 'container'
-                inheritance << { "#{ "#{type}: " if type == 'mux' }#{name}" => get_mapper_options_pathes(m, erb: erb) }
-              end
-            end
-            { data: data }
-          else
-            { data: get_mapper_options_pathes(mapper, erb: erb) }
-          end
+          { data: self._options(name: name, inheritance: inheritance, erb: erb) }
         else
           resp
         end
       end
 
-      def add(name:, mail: 'model', admin_mail: nil, model: nil)
-        resp = self._reconfigure(name: name, mail: mail, admin_mail: admin_mail, model: model) if (resp = self.not_existing_validation(name: name)).net_status_ok?
+      def add(name:, model: nil)
+        if (resp = self.not_existing_validation(name: name)).net_status_ok? and
+            (resp = self.adding_validation(name: name)).net_status_ok?
+          resp = self._reconfigure(name: name, model: model)
+        end
         resp
       end
 
@@ -97,10 +86,6 @@ module Superhosting
                         name: name)
         end
         resp
-      end
-
-      def change(name:, mail: 'model', admin_mail: nil, model: nil)
-
       end
 
       def update(name:)
@@ -124,7 +109,7 @@ module Superhosting
           mapper = self.index[name][:mapper]
           status_name = "#{name}_to_#{new_name}"
           state_mapper = @lib.process_status.f(status_name).create!
-          model = nil if (model = mapper.f('model').value).nil? # TODO: mail:, admin_mail:
+          model = nil if (model = mapper.f('model').value).nil?
 
           states = {
               none: { action: :stop, undo: :run, next: :stopped },
@@ -144,10 +129,11 @@ module Superhosting
         end
       end
 
-      def reconfigure(name:)
+      def reconfigure(name:, model: nil)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          self.set_state(state: :data_installed, state_mapper: self.state(name: name))
-          resp = self._reconfigure(name: name)
+          state = model ? :none : :data_installed
+          self.set_state(state: state, state_mapper: self.state(name: name))
+          resp = self._reconfigure(name: name, model: model)
         end
         resp
       end

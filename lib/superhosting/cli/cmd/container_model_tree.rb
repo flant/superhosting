@@ -8,7 +8,7 @@ module Superhosting
                :required => true
 
         def self.after_action(data, config)
-          ModelTree.show_models_tree(data)
+          show_models_tree(data)
         end
       end
     end

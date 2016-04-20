@@ -22,6 +22,14 @@ describe Superhosting::Controller::Container do
     end
   end
 
+  it 'reconfig with model' do
+    with_container do |container_name|
+      with_site do |site_name|
+        container_reconfigure_with_exps(name: container_name, model: 'test')
+      end
+    end
+  end
+
   it 'rename' do
     container_add_with_exps(name: @container_name)
     site_add_with_exps(name: @site_name, container_name: @container_name)
@@ -58,13 +66,13 @@ describe Superhosting::Controller::Container do
 
   it 'list' do
     with_container do |container_name|
-      expect(container_list_with_exps[:data].first).to include('name', 'state', 'model', 'options', 'users', 'admins')
+      expect(container_list_with_exps[:data].first).to include('name', 'state', 'model', 'options', 'users')
     end
   end
 
   it 'inspect' do
     with_container do |container_name|
-      expect(container_inspect_with_exps(name: container_name)[:data]).to include('name', 'state', 'model', 'options', 'users', 'admins')
+      expect(container_inspect_with_exps(name: container_name)[:data]).to include('name', 'state', 'model', 'options', 'users')
     end
   end
 
@@ -106,7 +114,7 @@ describe Superhosting::Controller::Container do
 
   it 'admin_list' do
     with_container_admin do |container_name, admin_name|
-      expect(container_admin_list_with_exps[:data]).to include(admin: admin_name, user: "#{container_name}_admin_#{admin_name}")
+      expect(container_admin_list_with_exps[:data]).to include('admin' => admin_name, 'user' => "#{container_name}_admin_#{admin_name}")
     end
   end
 
@@ -226,7 +234,7 @@ describe Superhosting::Controller::Container do
     end
   end
 
-  it 'reconfig@system_users', :docker do
+  it 'reconfig@system_users' do
     with_container(model: 'fcgi_m') do |container_name|
       self.config.containers.f(container_name).system_users.put!('test_system_user')
       container_reconfigure_with_exps(name: container_name)

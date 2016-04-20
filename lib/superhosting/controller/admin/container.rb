@@ -14,14 +14,16 @@ module Superhosting
         end
 
         def list
-          container_users = @container_controller._list.map do |container_info|
+          { data: self._list }
+        end
+
+        def _list
+          @container_controller._list.map do |container_info|
             container_name = container_info['name']
             unless @user_controller._get(name: "#{container_name}_admin_#{@admin_name}").nil?
-              { container: container_name, user: "#{container_name}_admin_#{@admin_name}" }
+              { 'container' => container_name, 'user' => "#{container_name}_admin_#{@admin_name}" }
             end
           end.compact
-
-          { data: container_users }
         end
 
         def add(name:)
@@ -48,35 +50,20 @@ module Superhosting
         end
 
         def _containers_list
-          if (resp = self.list).net_status_ok?
-            containers = resp[:data].map {|elm| elm[:container] }
-            { data: containers }
-          else
-            resp
-          end
+          self._list.map {|elm| elm['container'] }
         end
 
         def _users_list
-          if (resp = self.list).net_status_ok?
-            users = resp[:data].map {|elm| elm[:user] }
-            { data: users }
-          else
-            resp
-          end
+          self._list.map {|elm| elm[:user] }
         end
 
         def _delete_all_users
-          if (resp = self._containers_list).net_status_ok?
-            containers = resp[:data]
-            containers.each do |container_name|
-              unless (resp = self.delete(name: container_name)).net_status_ok?
-                return resp
-              end
+          self._containers_list.each do |container_name|
+            unless (resp = self.delete(name: container_name)).net_status_ok?
+              return resp
             end
-            {}
-          else
-            resp
           end
+          {}
         end
       end
     end

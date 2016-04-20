@@ -6,12 +6,6 @@ module Superhosting
                :short => '-m MODEL',
                :long  => '--model MODEL'
 
-        option :mail,
-               :long  => '--mail MAIL'
-
-        option :admin_mail,
-               :long  => '--admin-mail MAIL'
-
         def self.has_required_param?
           true
         end

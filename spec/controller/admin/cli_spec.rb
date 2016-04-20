@@ -4,7 +4,13 @@ describe 'Superhosting::Controller::Admin (cli)' do
   include SpecHelpers::Controller::Admin
 
   def add_admin
-    self.admin_add(name: @admin_name, generate: true)
+    self.admin_add_with_exps(name: @admin_name, generate: true)
+  end
+
+  def add_admin_container
+    add_admin
+    container_add(name: @container_name)
+    admin_container_add(name: @container_name)
   end
   
   it 'admin add' do
@@ -17,7 +23,9 @@ describe 'Superhosting::Controller::Admin (cli)' do
   end
 
   it 'admin list' do
+    add_admin_container
     expect { self.cli('admin', 'list') }.to_not raise_error
+    expect { self.cli('admin', 'list', '--json') }.to_not raise_error
   end
 
   it 'admin passwd' do
@@ -43,8 +51,8 @@ describe 'Superhosting::Controller::Admin (cli)' do
   end
 
   it 'admin container list' do
-    with_admin do |admin_name|
-      expect { self.cli('admin', 'container', 'list', '-a', admin_name) }.to_not raise_error
-    end
+    add_admin_container
+    expect { self.cli('admin', 'container', 'list', '-a', @admin_name) }.to_not raise_error
+    expect { self.cli('admin', 'container', 'list', '-a', @admin_name, '--json') }.to_not raise_error
   end
 end

@@ -23,54 +23,22 @@ module Superhosting
         super(mapper)
       end
 
-      def collect_inheritors(m=@mapper, depth=0, mux=false)
-        depth += 1
+      def collect_inheritors(m=@mapper, mux=false)
+        m.inherit.lines.each do |name|
+          inherit_mapper = (mux ? @muxs_mapper : @models_mapper).f(name)
+
+          # mixed
+          collect_inheritors(inherit_mapper, mux)
+        end
 
         # mux
         m.container.mux.lines.each do |name|
           mux_mapper = @muxs_mapper.f(name)
-          raise NetStatus::Exception, { error: :logical_error, code: :base_mux_should_not_be_abstract, data: { name: name } } if mux_mapper.abstract?
-          raise NetStatus::Exception, { error: :logical_error, code: :mux_does_not_exists, data: { name: name } } unless mux_mapper.dir?
-          collect_inheritors(mux_mapper, depth, true)
-        end
-
-        m.inherit.lines.each do |name|
-          inherit_mapper = (mux ? @muxs_mapper : @models_mapper).f(name)
-          raise NetStatus::Exception, { error: :logical_error, code: :model_does_not_exists, data: { name: name } } unless inherit_mapper.dir?
-
-          # mixed
-          collect_inheritors(inherit_mapper, depth, mux)
+          collect_inheritors(mux_mapper, true)
         end
 
         # model
-        collect_inheritor(m, depth, mux)
-
-        depth
-      end
-
-      def collect_inheritor(mapper, depth, mux)
-        self.inheritors[depth] ||= {}
-        (self.inheritors[depth][mux ? 'mux' : 'model'] ||= []) << mapper
-      end
-
-      def set_inheritance(mapper)
-        self.inheritors.sort.each do |k, inherits|
-          %w(mux model).each do |t|
-            (inherits[t] || []).each do |inheritor|
-              type_dir_mapper = if @type == 'model'
-                inheritor
-              else
-                inheritor.f(@type)
-              end
-
-              if type_dir_mapper.dir?
-                type_dir_mapper.changes_overlay = mapper
-                mapper << type_dir_mapper
-              end
-            end
-          end
-        end
-        mapper
+        collect_inheritor(m)
       end
     end
   end

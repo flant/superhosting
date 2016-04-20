@@ -3,9 +3,9 @@ module Superhosting
     module Cmd; end
     class Base
       include Mixlib::CLI
-      extend Helper::I18n
-      include Helper::Logger
-      extend Helper::Logger
+      extend Superhosting::Helper::I18n
+      include Superhosting::Helper::Logger
+      extend Helper::AfterAction
 
       COMMANDS_MODULE = Cmd
       CONTROLLERS_MODULE = Superhosting::Controller
@@ -69,7 +69,7 @@ module Superhosting
           end
         end
 
-        self.info("#{opt_parser.to_s}\n#{get_childs_banners(@node) if self.class == Base}")
+        self.info("#{opt_parser.to_s}\n#{get_childs_banners(@node) if self.class == Base}".strip)
 
         exit 1
       end
@@ -191,11 +191,7 @@ module Superhosting
             node = h
             parts = split_toggle_case_name(k)
             parts.each do |cmd|
-              begin
-                node = (node[cmd] ||= (cmd == parts.last) ? COMMANDS_MODULE.const_get(k) : {})
-              rescue
-                p
-              end
+              node = (node[cmd] ||= (cmd == parts.last) ? COMMANDS_MODULE.const_get(k) : {})
             end
             h
           end

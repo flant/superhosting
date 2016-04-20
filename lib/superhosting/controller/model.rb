@@ -6,14 +6,15 @@ module Superhosting
         @container_controller = self.get_controller(Container)
       end
 
-      def list
-        { data: self._list }
+      def list(abstract: false)
+        { data: self._list(abstract: abstract) }
       end
 
-      def _list
+      def _list(abstract: false)
         models = []
         @config.models.grep_dirs.each do |model_mapper|
-          models << model_mapper.name unless model_mapper.abstract?
+          next if !abstract and model_mapper.abstract?
+          models << { 'name' => model_mapper.name, 'abstract' => model_mapper.abstract? }
         end
         models
       end
@@ -32,12 +33,12 @@ module Superhosting
           if inheritance
             data = separate_inheritance(mapper) do |mapper, inheritors|
               (inheritors).inject([]) do |inheritance, m|
-                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => get_mapper_options(m) }
+                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => get_mapper_options(m, erb: true) }
               end
             end
             { data: data }
           else
-            { data: { 'name' => mapper.name, 'options' => get_mapper_options(mapper) } }
+            { data: { 'name' => mapper.name, 'options' => get_mapper_options(mapper, erb: true) } }
           end
         else
           resp
@@ -51,12 +52,12 @@ module Superhosting
             data = separate_inheritance(mapper) do |mapper, inheritors|
               (inheritors).inject([]) do |inheritance, m|
                 type, name = get_mapper_type(m), get_mapper_name(m)
-                inheritance << { "#{ "#{type}: " if type == 'mux' }#{name}" => get_mapper_options_pathes(m) }
+                inheritance << { "#{ "#{type}: " if type == 'mux' }#{name}" => get_mapper_options_pathes(m, erb: true) }
               end
             end
             { data: data }
           else
-            { data: { 'name' => mapper.name, 'options' => get_mapper_options_pathes(mapper) } }
+            { data: get_mapper_options_pathes(mapper, erb: true) }
           end
         else
           resp
@@ -65,8 +66,8 @@ module Superhosting
 
       def inheritance(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = MapperInheritance::Model.new(@config.models.f(name)).set_inheritors(@config.models.f(name))
-          { data: mapper.inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
+          inheritance = MapperInheritance::Model.new(@config.models.f(name)).inheritors
+          { data: inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
         else
           resp
         end

@@ -16,7 +16,7 @@ module Superhosting
 
         def _list
           self._list_users.map do |user|
-            { admin: user[/(?<=#{@container_name}_admin_)(.*)/], user: user }
+            { 'admin' => user[/(?<=#{@container_name}_admin_)(.*)/], 'user' => user }
           end
         end
 

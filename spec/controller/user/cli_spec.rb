@@ -1,14 +1,16 @@
 describe 'Superhosting::Controller::User (cli)' do
   include SpecHelpers::Controller::Container
   include SpecHelpers::Controller::User
+  include SpecHelpers::Controller::Admin
 
   def add_container_user
     container_add(name: @container_name)
-    self.cli('user', 'add', @user_name, '-c', @container_name)
+    user_add(name: @user_name, container_name: @container_name)
   end
 
   it 'user add' do
-    expect { add_container_user }.to_not raise_error
+    container_add(name: @container_name)
+    expect { self.cli('user', 'add', @user_name, '-c', @container_name, '-g') }.to_not raise_error
   end
 
   it 'user change' do
@@ -23,7 +25,11 @@ describe 'Superhosting::Controller::User (cli)' do
 
   it 'user list' do
     add_container_user
-    expect { self.cli('user', 'list', '-c', @container_name) }.to_not raise_error
+    with_admin do
+      container_admin_add(name: @admin_name)
+      expect { self.cli('user', 'list', '-c', @container_name) }.to_not raise_error
+      expect { self.cli('user', 'list', '-c', @container_name, '--json') }.to_not raise_error
+    end
   end
 
   it 'user passwd' do

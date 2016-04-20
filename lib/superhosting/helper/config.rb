@@ -2,48 +2,66 @@ module Superhosting
   module Helper
     module Config
       def configure(name:)
-        self._config(name: name, on_reconfig: false, on_config: true)
-        {}
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self._config(name: name, on_reconfig: false, on_config: true)
+        end
+        resp
       end
 
       def unconfigure(name:)
-        case get_mapper_type(self.index[name][:mapper])
-          when 'container'
-            registry_mapper = self.index[name][:mapper].lib.registry.container
-          when 'site'
-            registry_mapper = self.index[name][:container_mapper].lib.registry.sites.f(name)
-          else raise NetStatus::Exception, { error: :logical_error, code: :mapper_type_not_supported, data: { name: type } }
-        end
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          case get_mapper_type(self.index[name][:mapper])
+            when 'container'
+              registry_mapper = self.index[name][:mapper].lib.registry.container
+            when 'site'
+              registry_mapper = self.index[name][:container_mapper].lib.registry.sites.f(name)
+            else raise NetStatus::Exception, { error: :logical_error, code: :mapper_type_not_supported, data: { name: type } }
+          end
 
-        unless registry_mapper.nil?
-          registry_mapper.lines.each {|path| PathMapper.new(path).delete! }
-          registry_mapper.delete!
+          unless registry_mapper.nil?
+            registry_mapper.lines.each {|path| PathMapper.new(path).delete! }
+            registry_mapper.delete!
+          end
         end
-        {}
+        resp
       end
 
       def apply(name:)
-        self._config(name: name, on_reconfig: true, on_config: false)
-        {}
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self._config(name: name, on_reconfig: true, on_config: false)
+        end
+        resp
       end
 
       def unapply(name:)
-        apply(name: name)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          apply(name: name)
+        end
+        resp
       end
 
       def configure_with_apply(name:)
-        self._config(name: name, on_reconfig: true, on_config: true)
-        {}
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self._config(name: name, on_reconfig: true, on_config: true)
+        end
+        resp
       end
 
       def unconfigure_with_unapply(name:)
-        self.unconfigure(name: name)
-        self.unapply(name: name)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self.unconfigure(name: name)
+          self.unapply(name: name)
+        else
+          resp
+        end
       end
 
       def reconfig(name:)
-        self.unconfigure(name: name)
-        self.configure(name: name)
+        if (resp = self.existing_validation(name: name)).net_status_ok?
+          self.unconfigure(name: name)
+          self.configure(name: name)
+        end
+        resp
       end
 
       def _config(name:, on_reconfig:, on_config:)

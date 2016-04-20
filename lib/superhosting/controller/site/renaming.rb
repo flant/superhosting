@@ -3,7 +3,7 @@ module Superhosting
     class Site
       def new_up(name:, new_name:, container_name:, is_alias:)
         mapper = self.index[name][:mapper]
-        mapper.aliases_mapper.remove_line!(new_name) if defined? is_alias and is_alias
+        mapper.aliases_mapper.remove_line!(new_name) if is_alias
         self.reindex_site(name: name, container_name: container_name)
         self._reconfigure(name: new_name, container_name: container_name)
       end

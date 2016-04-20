@@ -53,9 +53,16 @@ module Superhosting
           self.with_dry_run do |dry_run|
             resp = {}
             with_adding_group = self._group_get_users(name: group).one? ? true : false
-            resp = self.command!("userdel #{name}", debug: false) unless dry_run
+
+            if self._get(name: name)
+              unless dry_run
+                resp = self.command!("userdel #{name}", debug: false)
+              end
+              blk.call(code: :deleted)
+            else
+              blk.call(code: :ok)
+            end
             self._group_add(name: group) if with_adding_group
-            blk.call(code: :deleted)
             resp
           end
         end

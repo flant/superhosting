@@ -15,7 +15,7 @@ module Superhosting
         end
 
         def self.after_action(data, config)
-          self.info_pretty_json(data)
+          show_json(data)
         end
       end
     end
