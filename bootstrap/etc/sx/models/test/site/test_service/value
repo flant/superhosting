@@ -1,0 +1,6 @@
+mbstring.internal_encoding = UTF-8
+post_max_size = 256M
+upload_max_filesize = 256M
+max_file_uploads = 30
+default_socket_timeout = 120
+date.timezone = Europe/Moscow
