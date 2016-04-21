@@ -70,16 +70,29 @@ module Superhosting
         get_pathes(hash)
       end
 
-      def _options(name:, inheritance: false, erb: false)
+      def inspect(name:, inheritance: false, erb: false)
+        if inheritance
+          mapper = index[name][:mapper]
+          separate_inheritance(mapper) do |base, inheritors|
+            ([base] + inheritors).inject([]) do |total, m|
+              total << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
+            end
+          end
+        else
+          _inspect(name: name, erb: erb)
+        end
+      end
+
+      def options(name:, inheritance: false, erb: false)
         mapper = index[name][:mapper]
         mapper_type = mapper_type(mapper)
         if inheritance
-          separate_inheritance(mapper) do |mapper, inheritors|
-            ([mapper] + inheritors).reverse.inject([]) do |inheritance, m|
+          separate_inheritance(mapper) do |base, inheritors|
+            ([base] + inheritors).inject([]) do |total, m|
               type = mapper_type(m)
               name = mapper_name(m)
-              name = type if mapper_type == 'container'
-              inheritance << { "#{"#{type}: " if type == 'mux'}#{name}" => get_mapper_options_pathes(m, erb: erb) }
+              name = type if type == mapper_type
+              total << { "#{"#{type}: " if type == 'mux'}#{name}" => get_mapper_options_pathes(m, erb: erb) }
             end
           end
         else
@@ -87,9 +100,9 @@ module Superhosting
         end
       end
 
-      def _inheritance(name:)
+      def inheritance(name:)
         mapper = index[name][:mapper]
-        mapper.inheritance.reverse.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } }
+        mapper.inheritance.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } }
       end
     end
   end

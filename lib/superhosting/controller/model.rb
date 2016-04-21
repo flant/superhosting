@@ -31,9 +31,9 @@ module Superhosting
         if (resp = existing_validation(name: name)).net_status_ok?
           mapper = MapperInheritance::Model.new(@config.models.f(name)).inheritors_mapper(@config.models.f(name))
           if inheritance
-            data = separate_inheritance(mapper) do |mapper, inheritors|
-              inheritors.inject([]) do |inheritance, m|
-                inheritance << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: true) }
+            data = separate_inheritance(mapper) do |_base, inheritors|
+              inheritors.inject([]) do |total, m|
+                total << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: true) }
               end
             end
             { data: data }

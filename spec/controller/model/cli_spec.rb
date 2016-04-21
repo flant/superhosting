@@ -14,7 +14,7 @@ describe 'Superhosting::Controller::Model (cli)' do
   end
 
   it 'model tree' do
-    expect { cli('model', 'tree', 'test_with_mux') }.to_not raise_error
+    expect { cli('model', 'tree', 'fcgi_m') }.to_not raise_error
   end
 
   it 'model update' do
@@ -32,8 +32,8 @@ describe 'Superhosting::Controller::Model (cli)' do
 
   it 'model inheritance' do
     with_container do
-      expect { cli('model', 'inheritance', 'test_with_mux') }.to_not raise_error
-      expect { cli('model', 'inheritance', 'test_with_mux', '--json') }.to_not raise_error
+      expect { cli('model', 'inheritance', 'fcgi_m') }.to_not raise_error
+      expect { cli('model', 'inheritance', 'fcgi_m', '--json') }.to_not raise_error
     end
   end
 

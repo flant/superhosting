@@ -214,15 +214,13 @@ module SpecHelpers
         end
 
         after :each do
-          with_logger(logger: false) do
+          # with_logger(logger: false) do
             container_delete(name: @container_name)
 
             %w(new test).each do |prefix|
-              if @with_docker
-                command("docker ps --filter 'name=#{prefix}' -a | xargs docker unpause")
-                command("docker ps --filter 'name=#{prefix}' -a | xargs docker kill")
-                command("docker ps --filter 'name=#{prefix}' -a | xargs docker rm")
-              end
+              command("docker ps --filter 'name=#{prefix}' -a | xargs docker unpause")
+              command("docker ps --filter 'name=#{prefix}' -a | xargs docker kill")
+              command("docker ps --filter 'name=#{prefix}' -a | xargs docker rm")
 
               PathMapper.new('/etc/security/docker.conf').remove_line!("@#{@container_name} #{@container_name}")
 
@@ -245,7 +243,7 @@ module SpecHelpers
             command('docker rm ctestmux')
 
             command('rm -rf /var/sx/containers/muxs/test')
-          end
+          # end
         end
       end
     end

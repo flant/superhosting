@@ -17,17 +17,7 @@ module Superhosting
 
       def inspect(name:, inheritance: false, erb: false)
         if (resp = existing_validation(name: name)).net_status_ok?
-          if inheritance
-            mapper = index[name][:mapper]
-            data = separate_inheritance(mapper) do |mapper, inheritors|
-              inheritors.inject([_inspect(name: mapper.name, erb: erb)]) do |inheritance, m|
-                inheritance << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
-              end
-            end
-            { data: data }
-          else
-            { data: _inspect(name: name, erb: erb) }
-          end
+          { data: super }
         else
           resp
         end
@@ -48,7 +38,7 @@ module Superhosting
 
       def inheritance(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          { data: _inheritance(name: name) }
+          { data: super }
         else
           resp
         end
@@ -56,7 +46,7 @@ module Superhosting
 
       def options(name:, inheritance: false, erb: false)
         if (resp = existing_validation(name: name)).net_status_ok?
-          { data: _options(name: name, inheritance: inheritance, erb: erb) }
+          { data: super }
         else
           resp
         end
