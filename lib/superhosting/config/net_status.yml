@@ -45,6 +45,7 @@ en:
     mapper_type_not_supported: "Mapper type '%{name}' not supported."
 
     no_docker_image_specified_in_model_or_mux: "No container/docker/image specified in model|mux '%{name}'."
+    no_docker_options_specified_in_container_or_mux: "No docker_options specified in container|mux '%{name}'."
 
     erb_error: "Erb has executed with error: '%{error}'."
     file_does_not_exists: "File '%{path}' does not exist."

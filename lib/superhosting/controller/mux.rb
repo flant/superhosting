@@ -34,12 +34,13 @@ module Superhosting
       def update(name:)
         if (resp = useable_validation(name: name)).net_status_ok?
           mux_mapper = @container_controller.index[index[name].first][:mux_mapper]
-          docker_options = @lib.muxs.f(name).docker_options.value
-          @container_controller._update(name: _container_name(name: name), docker_options: Marshal.load(docker_options))
+          @container_controller._update(name: _container_name(name: name), docker_options: Marshal.load(@container_controller._lib_docker_options(lib_mapper: @lib.muxs.f(name))))
           @docker_api.image_pull(mux_mapper.container.docker.image.value)
           index[name].each do |container_name|
-            docker_options = Marshal.load(@container_controller.index[container_name][:mapper].lib.docker_options.value)
-            @container_controller._update(name: container_name, docker_options: docker_options, with_pull: false)
+            @container_controller.instance_eval do
+              docker_options = Marshal.load(_lib_docker_options(lib_mapper: index[container_name][:mapper].lib))
+              _update(name: container_name, docker_options: docker_options, with_pull: false)
+            end
           end
         end
         resp

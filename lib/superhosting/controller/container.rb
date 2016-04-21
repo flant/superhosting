@@ -31,7 +31,7 @@ module Superhosting
           'name' => name,
           'state' => state(name: name).value,
           'model' => model_name,
-          'users' => user_controller.list(container_name: name).net_status_ok![:data],
+          'users' => user_controller._list(container_name: name),
           'options' => get_mapper_options(mapper, erb: erb)
         }
       end
@@ -81,8 +81,7 @@ module Superhosting
       def update(name:)
         if (resp = existing_validation(name: name)).net_status_ok? && @docker_api.container_exists?(name)
           mapper = index[name][:mapper]
-          docker_options = mapper.lib.docker_options.value
-          _update(name: name, docker_options: Marshal.load(docker_options))
+          _update(name: name, docker_options: Marshal.load(_lib_docker_options(lib_mapper: mapper.lib)))
         end
         resp
       end

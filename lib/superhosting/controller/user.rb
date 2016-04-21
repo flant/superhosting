@@ -8,17 +8,17 @@ module Superhosting
 
       def list(container_name:)
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
-          all_users = _list(container_name: container_name)
-          admins, users = all_users.partition { |u| admin?(name: u, container_name: container_name) }
-          system_users, users = users.partition { |u| system?(name: u, container_name: container_name) }
-          { data: [{ 'user' => users }, { 'admin' => admins }, { 'system' => system_users }] }
+          { data: _list(container_name: container_name) }
         else
           resp
         end
       end
 
       def _list(container_name:)
-        _group_get_users_names(name: container_name)
+        all_users = _group_get_users_names(name: container_name)
+        admins, users = all_users.partition { |u| admin?(name: u, container_name: container_name) }
+        system_users, users = users.partition { |u| system?(name: u, container_name: container_name) }
+        [{ 'user' => users }, { 'admin' => admins }, { 'system' => system_users }]
       end
 
       def add(name:, container_name:, ftp_dir: nil, ftp_only: false, generate: false)

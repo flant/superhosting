@@ -53,6 +53,6 @@ describe Superhosting::Controller::Model do
   # negative
 
   it 'reconfig:model_does_not_used' do
-    model_reconfigure_with_exps(name: 'test_with_mux', code: :model_does_not_used)
+    model_reconfigure_with_exps(name: 'php-5.6', code: :model_does_not_used)
   end
 end

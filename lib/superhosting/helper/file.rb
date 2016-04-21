@@ -15,7 +15,7 @@ module Superhosting
       end
 
       def safe_unlink!(path)
-        if ::File.exist? path
+        if ::File.symlink? path
           debug_operation(desc: { code: :symlink, data: { path: path } }) do |&blk|
             with_dry_run do |dry_run|
               ::File.unlink(path) unless dry_run

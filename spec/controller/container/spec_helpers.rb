@@ -214,7 +214,7 @@ module SpecHelpers
         end
 
         after :each do
-          # with_logger(logger: false) do
+          with_logger(logger: false) do
             container_delete(name: @container_name)
 
             %w(new test).each do |prefix|
@@ -243,7 +243,7 @@ module SpecHelpers
             command('docker rm ctestmux')
 
             command('rm -rf /var/sx/containers/muxs/test')
-          # end
+          end
         end
       end
     end
