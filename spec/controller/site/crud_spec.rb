@@ -99,7 +99,7 @@ describe Superhosting::Controller::Site do
       site_add_with_exps(name: @site_name, container_name: container_name)
       alias1_name = "alias1-#{@site_name}"
       alias2_name = "alias2-#{@site_name}"
-      [alias1_name, alias2_name].each {|n| site_alias_add_with_exps(name: n) }
+      [alias1_name, alias2_name].each { |n| site_alias_add_with_exps(name: n) }
       site_rename_with_exps(name: alias1_name, new_name: alias2_name, keep_name_as_alias: true)
       expect_in_file(self.site_aliases(container_name, alias2_name), @site_name)
       not_expect_in_file(self.site_aliases(container_name, alias2_name), alias2_name)
@@ -194,7 +194,7 @@ describe Superhosting::Controller::Site do
 
   it 'add:invalid_site_name' do
     with_container do |container_name|
-      INVALID_SITE_NAMES.each {|name| site_add_with_exps(name: name, container_name: container_name, code: :invalid_site_name) }
+      INVALID_SITE_NAMES.each { |name| site_add_with_exps(name: name, container_name: container_name, code: :invalid_site_name) }
     end
   end
 
@@ -211,7 +211,7 @@ describe Superhosting::Controller::Site do
   it 'rename:invalid_site_name' do
     with_container do |container_name|
       with_site do |site_name|
-        INVALID_SITE_NAMES.each {|name| site_rename_with_exps(name: site_name, new_name: name, code: :invalid_site_name) }
+        INVALID_SITE_NAMES.each { |name| site_rename_with_exps(name: site_name, new_name: name, code: :invalid_site_name) }
       end
     end
   end
@@ -226,14 +226,14 @@ describe Superhosting::Controller::Site do
 
   it 'delete:site_does_not_exists' do
     with_container do
-      site_delete_with_exps(name: @site_name, code: :site_does_not_exists )
+      site_delete_with_exps(name: @site_name, code: :site_does_not_exists)
     end
   end
 
   it 'alias_add:invalid_site_name' do
     with_container do |container_name|
       with_site do |site_name|
-        INVALID_SITE_NAMES.each {|name| site_alias_add_with_exps(name: name, code: :invalid_site_name) }
+        INVALID_SITE_NAMES.each { |name| site_alias_add_with_exps(name: name, code: :invalid_site_name) }
       end
     end
   end

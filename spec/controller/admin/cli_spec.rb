@@ -12,7 +12,7 @@ describe 'Superhosting::Controller::Admin (cli)' do
     container_add(name: @container_name)
     admin_container_add(name: @container_name)
   end
-  
+
   it 'admin add' do
     expect { self.cli('admin', 'add', '-g', @admin_name) }.to_not raise_error
   end

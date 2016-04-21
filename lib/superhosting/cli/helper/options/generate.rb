@@ -8,7 +8,7 @@ module Superhosting
           included do
             option :generate,
                    :short => '-g',
-                   :long  => '--generate',
+                   :long => '--generate',
                    :boolean => true
           end
         end

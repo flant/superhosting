@@ -6,7 +6,7 @@ module Superhosting
 
         def show_list(data, sort: true)
           data.sort! if sort
-          data.each {|elm| self.info(elm) }
+          data.each { |elm| self.info(elm) }
         end
 
         def show_data(data)
@@ -14,14 +14,14 @@ module Superhosting
         end
 
         def show_json(data, sortby: nil)
-          data.sort! {|a1,a2| a1[sortby] <=> a2[sortby]} unless sortby.nil?
+          data.sort! { |a1, a2| a1[sortby] <=> a2[sortby] } unless sortby.nil?
           self.info(JSON.pretty_generate(data))
         end
 
         def show_site_list(data, config)
-          data = data.uniq {|v| v['name'] }
+          data = data.uniq { |v| v['name'] }
           if config[:json]
-            sites = data.map {|site_info| { 'name' => site_info['name'], 'state' => site_info['state'], 'container' => site_info['container'], 'aliases' => site_info['aliases'] } }
+            sites = data.map { |site_info| { 'name' => site_info['name'], 'state' => site_info['state'], 'container' => site_info['container'], 'aliases' => site_info['aliases'] } }
             show_json(sites, sortby: 'name')
           else
             data.each do |site_info|
@@ -41,7 +41,7 @@ module Superhosting
 
         def show_container_list(data, config)
           if config[:json]
-            show_json(data.map {|container_info| { 'name' => container_info['name'], 'state' => container_info['state'] } }, sortby: 'name')
+            show_json(data.map { |container_info| { 'name' => container_info['name'], 'state' => container_info['state'] } }, sortby: 'name')
           else
             data.each do |container_info|
               name = container_info['name']
@@ -60,7 +60,7 @@ module Superhosting
           if config[:json]
             show_json(data, sortby: 'name')
           else
-            show_list(data.map {|elm| elm['name'] })
+            show_list(data.map { |elm| elm['name'] })
           end
         end
 
@@ -68,7 +68,7 @@ module Superhosting
           if config[:json]
             show_json(data, sortby: 'name')
           else
-            show_list(data.map {|admin| admin.keys.first })
+            show_list(data.map { |admin| admin.keys.first })
           end
         end
 
@@ -84,7 +84,7 @@ module Superhosting
           if config[:json]
             show_json(data, sortby: 'name')
           else
-            show_list(data.map {|admin| admin['admin'] })
+            show_list(data.map { |admin| admin['admin'] })
           end
         end
 
@@ -92,7 +92,7 @@ module Superhosting
           if config[:json]
             show_json(data, sortby: 'name')
           else
-            show_list(data.map {|admin| admin['container'] })
+            show_list(data.map { |admin| admin['container'] })
           end
         end
 
@@ -113,7 +113,7 @@ module Superhosting
 
         def show_options(data, config)
           def show(options)
-            options.each {|k,v| self.info("#{k} = #{v.inspect}") }
+            options.each { |k, v| self.info("#{k} = #{v.inspect}") }
           end
 
           if config[:inheritance]
@@ -147,14 +147,14 @@ module Superhosting
           if config[:json]
             show_json(data)
           else
-            show_list(data.map {|hash| hash['name'] }, sort: false)
+            show_list(data.map { |hash| hash['name'] }, sort: false)
           end
         end
 
         def show_models_tree(data, ignore_type: false)
           def show_tree(node, ignore_type)
             %w(model mux).each do |type|
-              (node[type] || []).each {|v| show_node(v, type, ignore_type) }
+              (node[type] || []).each { |v| show_node(v, type, ignore_type) }
             end
           end
 

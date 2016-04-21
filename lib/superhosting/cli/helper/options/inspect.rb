@@ -8,7 +8,7 @@ module Superhosting
 
           included do
             option :erb,
-                   :long  => '--erb',
+                   :long => '--erb',
                    :boolean => true
           end
         end

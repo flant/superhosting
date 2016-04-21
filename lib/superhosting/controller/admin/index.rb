@@ -13,7 +13,7 @@ module Superhosting
 
       def reindex
         @@index = {}
-        @admins_mapper.grep_dirs.each {|dir_name| self.reindex_admin(name: dir_name.name) }
+        @admins_mapper.grep_dirs.each { |dir_name| self.reindex_admin(name: dir_name.name) }
         @@index
       end
 

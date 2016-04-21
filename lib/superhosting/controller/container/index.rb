@@ -11,7 +11,7 @@ module Superhosting
       end
 
       def reindex
-        @config.containers.grep_dirs.each {|mapper| self.reindex_container(name: mapper.name) }
+        @config.containers.grep_dirs.each { |mapper| self.reindex_container(name: mapper.name) }
         @@index ||= {}
       end
 

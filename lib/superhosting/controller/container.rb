@@ -38,11 +38,11 @@ module Superhosting
         model_name = self.index[name][:model_name]
         user_controller = self.get_controller(User)
         {
-            'name' => name,
-            'state' => self.state(name: name).value,
-            'model' => model_name,
-            'users' => user_controller.list(container_name: name).net_status_ok![:data],
-            'options' => get_mapper_options(mapper, erb: erb)
+          'name' => name,
+          'state' => self.state(name: name).value,
+          'model' => model_name,
+          'users' => user_controller.list(container_name: name).net_status_ok![:data],
+          'options' => get_mapper_options(mapper, erb: erb)
         }
       end
 
@@ -64,7 +64,7 @@ module Superhosting
 
       def add(name:, model: nil)
         if (resp = self.not_existing_validation(name: name)).net_status_ok? and
-            (resp = self.adding_validation(name: name)).net_status_ok?
+          (resp = self.adding_validation(name: name)).net_status_ok?
           resp = self._reconfigure(name: name, model: model)
         end
         resp
@@ -75,11 +75,11 @@ module Superhosting
           lib_mapper = @lib.containers.f(name)
 
           states = {
-              up: { action: :stop, undo: :run, next: :configuration_applied },
-              configuration_applied: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :mux_runned },
-              mux_runned: { action: :stop_mux, undo: :run_mux, next: :users_installed },
-              users_installed: { action: :uninstall_users, next: :data_installed },
-              data_installed: { action: :uninstall_data }
+            up: { action: :stop, undo: :run, next: :configuration_applied },
+            configuration_applied: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :mux_runned },
+            mux_runned: { action: :stop_mux, undo: :run_mux, next: :users_installed },
+            users_installed: { action: :uninstall_users, next: :data_installed },
+            data_installed: { action: :uninstall_data }
           }
 
           self.on_state(state_mapper: lib_mapper, states: states,
@@ -105,21 +105,21 @@ module Superhosting
 
       def rename(name:, new_name:)
         if (resp = self.available_validation(name: name)).net_status_ok? and
-            (resp = self.adding_validation(name: new_name)).net_status_ok?
+          (resp = self.adding_validation(name: new_name)).net_status_ok?
           mapper = self.index[name][:mapper]
           status_name = "#{name}_to_#{new_name}"
           state_mapper = @lib.process_status.f(status_name).create!
           model = nil if (model = mapper.f('model').value).nil?
 
           states = {
-              none: { action: :stop, undo: :run, next: :stopped },
-              stopped: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
-              unconfigured: { action: :copy_etc, next: :copied_etc },
-              copied_etc: { action: :new_up, next: :new_upped },
-              new_upped: { action: :copy_var, next: :copied_var },
-              copied_var: { action: :copy_users, next: :copied_users },
-              copied_users: { action: :new_reconfigure, next: :new_reconfigured },
-              new_reconfigured: { action: :delete }
+            none: { action: :stop, undo: :run, next: :stopped },
+            stopped: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
+            unconfigured: { action: :copy_etc, next: :copied_etc },
+            copied_etc: { action: :new_up, next: :new_upped },
+            new_upped: { action: :copy_var, next: :copied_var },
+            copied_var: { action: :copy_users, next: :copied_users },
+            copied_users: { action: :new_reconfigure, next: :new_reconfigured },
+            new_reconfigured: { action: :delete }
           }
 
           self.on_state(state_mapper: state_mapper, states: states,
@@ -142,11 +142,11 @@ module Superhosting
         lib_mapper = @lib.containers.f(name)
 
         states = {
-            none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-            data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
-            users_installed: { action: :run_mux, undo: :stop_mux, next: :mux_runned },
-            mux_runned: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :configuration_applied },
-            configuration_applied: { action: :run, undo: :stop, next: :up }
+          none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
+          data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
+          users_installed: { action: :run_mux, undo: :stop_mux, next: :mux_runned },
+          mux_runned: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :configuration_applied },
+          configuration_applied: { action: :run, undo: :stop, next: :up }
         }
 
         self.on_state(state_mapper: lib_mapper, states: states,

@@ -43,7 +43,7 @@ module Superhosting
         end
 
         def existing_validation(name:)
-          @aliases_mapper.lines.include?(name) ?  {} : { error: :logical_error, code: :alias_does_not_exists, data: { name: name } }
+          @aliases_mapper.lines.include?(name) ? {} : { error: :logical_error, code: :alias_does_not_exists, data: { name: name } }
         end
 
         def not_existing_validation(name:)

@@ -87,7 +87,7 @@ require 'superhosting/mapper_inheritance/mux'
 require 'superhosting/docker_api'
 
 require 'superhosting/cli/error/base'
-Dir["#{File.dirname(__FILE__)}/superhosting/cli/error/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}
+Dir["#{File.dirname(__FILE__)}/superhosting/cli/error/*.rb"].each { |cmd| require_relative cmd.split('.rb').first }
 
 require 'superhosting/cli/helper/after_action'
 
@@ -105,4 +105,4 @@ require 'superhosting/cli/helper/options/state'
 require 'superhosting/cli/helper/options/user_add'
 
 require 'superhosting/cli/base'
-Dir["#{File.dirname(__FILE__)}/superhosting/cli/cmd/*.rb"].each{|cmd| require_relative cmd.split('.rb').first}
+Dir["#{File.dirname(__FILE__)}/superhosting/cli/cmd/*.rb"].each { |cmd| require_relative cmd.split('.rb').first }

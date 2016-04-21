@@ -4,11 +4,11 @@ module Superhosting
       module Options
         module Model
           extend ActiveSupport::Concern
-          
+
           included do
             option :model,
                    :short => '-m MODEL',
-                   :long  => '--model MODEL'
+                   :long => '--model MODEL'
           end
         end
       end

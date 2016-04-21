@@ -15,11 +15,12 @@ module Superhosting
               registry_mapper = self.index[name][:mapper].lib.registry.container
             when 'site'
               registry_mapper = self.index[name][:container_mapper].lib.registry.sites.f(name)
-            else raise NetStatus::Exception, { error: :logical_error, code: :mapper_type_not_supported, data: { name: type } }
+            else
+              raise NetStatus::Exception, { error: :logical_error, code: :mapper_type_not_supported, data: { name: type } }
           end
 
           unless registry_mapper.nil?
-            registry_mapper.lines.each {|path| PathMapper.new(path).delete! }
+            registry_mapper.lines.each { |path| PathMapper.new(path).delete! }
             registry_mapper.delete!
           end
         end
@@ -70,7 +71,7 @@ module Superhosting
         registry_mapper = options.delete(:registry_mapper)
         registry_files = []
 
-        mapper.f('config.rb', overlay: false).reverse.each do |config|
+        mapper.f('config.rb', overlay: false).reverse_each do |config|
           ex = ConfigExecutor.new(options)
           ex.execute(config)
           ex.run_commands

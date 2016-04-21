@@ -29,12 +29,12 @@ module Superhosting
       end
 
       def container_sites(container_name:)
-        self.index.select {|k,v| v[:container_mapper].name == container_name and !self.alias?(name: k) }
+        self.index.select { |k, v| v[:container_mapper].name == container_name and !self.alias?(name: k) }
       end
 
       def reindex_site(name:, container_name:)
         @@index ||= {}
-        @@index[name][:names].each{|n| @@index.delete(n) } if @@index[name]
+        @@index[name][:names].each { |n| @@index.delete(n) } if @@index[name]
 
         container_mapper = @container_controller.index[container_name][:mapper]
         model_name = @container_controller.index[container_name][:model_name]
@@ -60,7 +60,7 @@ module Superhosting
         end
 
         names = ([mapper.name] + mapper.aliases)
-        names.each {|name| @@index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, names: names } }
+        names.each { |name| @@index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, names: names } }
       end
     end
   end

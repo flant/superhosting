@@ -32,8 +32,8 @@ module Superhosting
         registry_mapper = container_mapper.lib.registry.sites.f(name)
 
         @container_controller._config_options(name: container_mapper.name, on_reconfig: on_reconfig, on_config: on_config).merge! ({
-            site: mapper,
-            registry_mapper: registry_mapper
+          site: mapper,
+          registry_mapper: registry_mapper
         })
       end
     end

@@ -43,11 +43,11 @@ module Superhosting
         container_mapper = self.index[actual_name][:container_mapper]
         alias_controller = self.get_controller(Alias, name: actual_name)
         {
-            'name' => actual_name,
-            'container' => container_mapper.name,
-            'state' => self.state(name: actual_name).value,
-            'aliases' => alias_controller._list,
-            'options' => get_mapper_options(mapper, erb: erb)
+          'name' => actual_name,
+          'container' => container_mapper.name,
+          'state' => self.state(name: actual_name).value,
+          'aliases' => alias_controller._list,
+          'options' => get_mapper_options(mapper, erb: erb)
         }
       end
 
@@ -69,7 +69,7 @@ module Superhosting
 
       def add(name:, container_name:)
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? and
-            (resp = self.adding_validation(name: name)).net_status_ok?
+          (resp = self.adding_validation(name: name)).net_status_ok?
           resp = self._reconfigure(name: name, container_name: container_name)
         end
         resp
@@ -98,9 +98,9 @@ module Superhosting
           state_mapper = lib_sites_mapper.f(actual_name)
 
           states = {
-              up: { action: :unapply, undo: :apply, next: :configured },
-              configured: { action: :unconfigure, next: :data_installed },
-              data_installed: { action: :uninstall_data },
+            up: { action: :unapply, undo: :apply, next: :configured },
+            configured: { action: :unconfigure, next: :data_installed },
+            data_installed: { action: :uninstall_data },
           }
 
           self.on_state(state_mapper: state_mapper, states: states, name: actual_name)
@@ -110,8 +110,8 @@ module Superhosting
 
       def rename(name:, new_name:, keep_name_as_alias: false)
         if (resp = self.available_validation(name: name)).net_status_ok? and
-            ((resp = self.adding_validation(name: new_name)).net_status_ok? or
-                (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
+          ((resp = self.adding_validation(name: new_name)).net_status_ok? or
+            (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
           mapper = self.index[name][:mapper]
           status_name = "#{name}_to_#{new_name}"
           state_mapper = @lib.process_status.f(status_name).create!
@@ -119,12 +119,12 @@ module Superhosting
           container_name = self.index[name][:container_mapper].name
 
           states = {
-              none: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
-              unconfigured: { action: :new_up, next: :new_upped },
-              new_upped: { action: :copy, next: :copied },
-              copied: { action: :new_reconfigure, next: :new_reconfigured },
-              new_reconfigured: { action: :delete, next: :deleted },
-              deleted: { action: :keep_name_as_alias }
+            none: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
+            unconfigured: { action: :new_up, next: :new_upped },
+            new_upped: { action: :copy, next: :copied },
+            copied: { action: :new_reconfigure, next: :new_reconfigured },
+            new_reconfigured: { action: :delete, next: :deleted },
+            deleted: { action: :keep_name_as_alias }
           }
 
           self.on_state(state_mapper: state_mapper, states: states,
@@ -153,8 +153,8 @@ module Superhosting
         state_mapper = lib_sites_mapper.f(name)
 
         states = {
-            none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-            data_installed: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :up },
+          none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
+          data_installed: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :up },
         }
 
         self.on_state(state_mapper: state_mapper, states: states,

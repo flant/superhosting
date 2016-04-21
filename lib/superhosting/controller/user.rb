@@ -9,8 +9,8 @@ module Superhosting
       def list(container_name:)
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           all_users = self._list(container_name: container_name)
-          admins, users = all_users.partition {|u| self.admin?(name: u, container_name: container_name) }
-          system_users, users = users.partition {|u| self.system?(name: u, container_name: container_name) }
+          admins, users = all_users.partition { |u| self.admin?(name: u, container_name: container_name) }
+          system_users, users = users.partition { |u| self.system?(name: u, container_name: container_name) }
           { data: [{ 'user' => users }, { 'admin' => admins }, { 'system' => system_users }] }
         else
           resp
@@ -55,7 +55,7 @@ module Superhosting
 
       def delete(name:, container_name:)
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? and
-            (resp = self.existing_validation(name: name, container_name: container_name)).net_status_ok?
+          (resp = self.existing_validation(name: name, container_name: container_name)).net_status_ok?
           container_lib_mapper = @lib.containers.f(container_name)
           passwd_mapper = container_lib_mapper.config.f('etc-passwd')
           user_name = "#{container_name}_#{name}"

@@ -30,7 +30,7 @@ module Superhosting
           admin_name = "admin_#{@admin_name}"
 
           if (resp = @container_controller.available_validation(name: name)).net_status_ok? and
-              (resp = @user_controller.not_existing_validation(name: admin_name, container_name: name)).net_status_ok?
+            (resp = @user_controller.not_existing_validation(name: admin_name, container_name: name)).net_status_ok?
             user, encrypted_password = @admin_passwd.split(':')
             if (resp = @user_controller._add(name: admin_name, container_name: name, shell: '/bin/bash')).net_status_ok?
               resp = encrypted_password.nil? ? {} : @user_controller._update_password(name: "#{name}_#{admin_name}", encrypted_password: encrypted_password)
@@ -43,18 +43,18 @@ module Superhosting
           admin_name = "admin_#{@admin_name}"
 
           if (resp = @container_controller.available_validation(name: name)).net_status_ok? and
-              (resp = @user_controller.existing_validation(name: admin_name, container_name: name)).net_status_ok?
+            (resp = @user_controller.existing_validation(name: admin_name, container_name: name)).net_status_ok?
             resp = @user_controller.delete(name: admin_name, container_name: name)
           end
           resp
         end
 
         def _containers_list
-          self._list.map {|elm| elm['container'] }
+          self._list.map { |elm| elm['container'] }
         end
 
         def _users_list
-          self._list.map {|elm| elm[:user] }
+          self._list.map { |elm| elm[:user] }
         end
 
         def _delete_all_users

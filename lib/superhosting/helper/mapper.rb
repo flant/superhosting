@@ -4,7 +4,7 @@ module Superhosting
       def separate_inheritance(mapper)
         inheritance = mapper.inheritance
         mapper.inheritance = []
-        inheritance.each {|i| i.erb_options = mapper.erb_options }
+        inheritance.each { |i| i.erb_options = mapper.erb_options }
         yield mapper, inheritance
       ensure
         mapper.inheritance = inheritance
@@ -30,7 +30,7 @@ module Superhosting
       def get_mapper_options(mapper, erb: false)
         def exclude_erb_extension(h)
           new_hash = {}
-          h.each do |k,v|
+          h.each do |k, v|
             if v.is_a? Hash
               new_hash[k] = exclude_erb_extension(h[k])
             else
@@ -47,13 +47,13 @@ module Superhosting
       def get_mapper_options_pathes(mapper, erb: false)
         def get_pathes(h, path=[])
           options = {}
-          h.each do |k,v|
+          h.each do |k, v|
             path_ = path.dup
             path_ << k
             if v.is_a? Hash
               options.merge!(get_pathes(h[k], path_))
             else
-              options.merge!( path_.join('.') => v )
+              options.merge!(path_.join('.') => v)
             end
           end
           options
@@ -81,7 +81,7 @@ module Superhosting
 
       def _inheritance(name:)
         mapper = self.index[name][:mapper]
-        mapper.inheritance.reverse.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } }
+        mapper.inheritance.reverse.map { |m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } }
       end
     end
   end

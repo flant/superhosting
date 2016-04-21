@@ -22,12 +22,12 @@ module Superhosting
       end
 
       def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :site_exists, data: { name: name} } : {}
+        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :site_exists, data: { name: name } } : {}
       end
 
       def available_validation(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          resp = (self.index[name][:state_mapper].value == 'up') ? {} : { error: :logical_error, code: :site_is_not_available, data: { name: name }  }
+          resp = (self.index[name][:state_mapper].value == 'up') ? {} : { error: :logical_error, code: :site_is_not_available, data: { name: name } }
         end
         resp
       end

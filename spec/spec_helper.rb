@@ -27,7 +27,7 @@ require 'controller/model/spec_helpers'
 def logger
   Logger.new(STDOUT).tap do |logger|
     logger.level = Logger::DEBUG
-    logger.formatter = proc {|severity, datetime, progname, msg| sprintf("%s\n", msg.to_s) }
+    logger.formatter = proc { |severity, datetime, progname, msg| sprintf("%s\n", msg.to_s) }
   end
 end
 

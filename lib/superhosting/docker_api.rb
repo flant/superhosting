@@ -128,7 +128,7 @@ module Superhosting
         if resp.nil?
           false
         else
-          resp['State']['Running'] and %w(Restarting Paused OOMKilled Dead).all? {|c| !resp['State'][c] }
+          resp['State']['Running'] and %w(Restarting Paused OOMKilled Dead).all? { |c| !resp['State'][c] }
         end
       end
     end
@@ -189,7 +189,7 @@ module Superhosting
       options = []
       AVAILABLE_DOCKER_OPTIONS.map do |k|
         unless (value = command_options[k]).nil?
-          value.lines.each {|val| options << "--#{k.to_s.sub('_', '-')} #{val}" }
+          value.lines.each { |val| options << "--#{k.to_s.sub('_', '-')} #{val}" }
         end
       end
       options

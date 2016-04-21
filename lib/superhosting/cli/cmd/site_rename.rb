@@ -6,7 +6,7 @@ module Superhosting
 
         option :keep_name_as_alias,
                :short => '-k',
-               :long  => '--keep-name-as-alias',
+               :long => '--keep-name-as-alias',
                :bollean => true
 
         def self.has_required_param?

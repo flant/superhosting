@@ -8,7 +8,7 @@ module Superhosting
           included do
             option :site_name,
                    :short => '-s NAME',
-                   :long  => '--site NAME',
+                   :long => '--site NAME',
                    :required => true
           end
         end

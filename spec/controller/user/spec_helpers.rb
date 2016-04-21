@@ -43,7 +43,7 @@ module SpecHelpers
       def user_add_exps(**kwargs)
         self.user_base(**kwargs) do |name, container_name, container_lib_mapper|
           # group / user
-          shell = kwargs[:shell] || kwargs[:ftp_only] ?  '/usr/sbin/nologin' : '/bin/bash'
+          shell = kwargs[:shell] || kwargs[:ftp_only] ? '/usr/sbin/nologin' : '/bin/bash'
           expect_user(name)
           expect_in_file(self.etc.passwd, /#{name}.*#{shell}/)
           expect_in_file(container_lib_mapper.config.f('etc-passwd'), /#{name}.*#{shell}/)

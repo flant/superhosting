@@ -7,7 +7,7 @@ module Superhosting
 
         option :container_name,
                :short => '-c NAME',
-               :long  => '--container NAME',
+               :long => '--container NAME',
                :required => false
 
         def self.after_action(data, config)

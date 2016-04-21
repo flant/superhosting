@@ -72,7 +72,7 @@ module SpecHelpers
           not_expect_dir(mapper)
           not_expect_in_file(etc_passwd_mapper, /_admin_#{name}/)
         end
-       end
+      end
 
       def admin_container_add_exps(**kwargs)
         user_add_exps(name: "admin_#{@admin_name}", container_name: kwargs[:name])

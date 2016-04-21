@@ -232,15 +232,15 @@ module Superhosting
         mux_mapper = self.index[name][:mux_mapper]
 
         {
-            container: mapper,
-            mux: mux_mapper,
-            model: model_mapper,
-            registry_mapper: registry_mapper,
-            on_reconfig: on_reconfig,
-            on_config: on_config,
-            etc: @config,
-            lib: @lib,
-            docker_api: @docker_api
+          container: mapper,
+          mux: mux_mapper,
+          model: model_mapper,
+          registry_mapper: registry_mapper,
+          on_reconfig: on_reconfig,
+          on_config: on_config,
+          etc: @config,
+          lib: @lib,
+          docker_api: @docker_api
         }
       end
 
@@ -275,8 +275,8 @@ module Superhosting
             @docker_api.container_unpause!(name)
           elsif @docker_api.container_restarting?(name)
             Polling.start 10 do
-               break unless @docker_api.container_restarting?(name)
-               sleep 2
+              break unless @docker_api.container_restarting?(name)
+              sleep 2
             end
           end
         else
@@ -289,13 +289,13 @@ module Superhosting
         model_or_mux ||= mapper.f('model', default: @config.default_model)
         return { error: :input_error, code: :no_docker_image_specified_in_model_or_mux, data: { name: model_or_mux } } if (image = mapper.docker.image).nil?
 
-        all_options = mapper.docker.grep_files.map {|n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n.value] }.to_h
+        all_options = mapper.docker.grep_files.map { |n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n.value] }.to_h
         return { error: :logical_error, code: :docker_command_not_found } if (command = all_options[:command]).nil?
 
         command_options = @docker_api.grab_container_options(all_options)
         volume_opts = []
-        mapper.docker.f('volume', overlay: false).each {|v| volume_opts += v.lines unless v.nil? }
-        volume_opts.each {|val| command_options << "--volume #{val}" }
+        mapper.docker.f('volume', overlay: false).each { |v| volume_opts += v.lines unless v.nil? }
+        volume_opts.each { |val| command_options << "--volume #{val}" }
 
         { data: [command_options, image.value, command] }
       end

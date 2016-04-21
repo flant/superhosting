@@ -4,7 +4,7 @@ module Superhosting
       class SiteMove < Base
         option :new_container_name,
                :short => '-c NAME',
-               :long  => '--container-name NAME',
+               :long => '--container-name NAME',
                :required => true
 
         def self.has_required_param?

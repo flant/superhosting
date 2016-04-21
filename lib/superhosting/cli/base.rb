@@ -14,24 +14,24 @@ module Superhosting
       banner "#{?= * 50}\n#{?- * 19}SUPERHOSTING#{?- * 19}\n#{?= * 50}\n\n"
 
       option :help,
-             :short        => '-h',
-             :long         => '--help',
-             :on           => :tail
+             :short => '-h',
+             :long => '--help',
+             :on => :tail
 
       option :debug,
-             :long         => '--debug',
-             :boolean      => true,
-             :on           => :tail
+             :long => '--debug',
+             :boolean => true,
+             :on => :tail
 
       option :verbose,
-             :long         => '--verbose',
-             :boolean      => true,
-             :on           => :tail
+             :long => '--verbose',
+             :boolean => true,
+             :on => :tail
 
       option :dry_run,
-             :long         => '--dry-run',
-             :boolean      => true,
-             :on           => :tail
+             :long => '--dry-run',
+             :boolean => true,
+             :on => :tail
 
       def initialize(argv, node)
         self.class.options.merge!(Base::options)
@@ -48,7 +48,7 @@ module Superhosting
 
         @logger = Logger.new(STDOUT)
         @logger.level = (config[:debug] or config[:dry_run] or config[:verbose]) ? Logger::DEBUG : Logger::INFO
-        @logger.formatter = proc {|severity, datetime, progname, msg| sprintf("%s\n", msg.to_s) }
+        @logger.formatter = proc { |severity, datetime, progname, msg| sprintf("%s\n", msg.to_s) }
         self.__logger = @logger
 
         self.help if config[:help] or self.class == Base
@@ -57,7 +57,7 @@ module Superhosting
       def help
         def get_childs_banners(node)
           if node.is_a? Hash
-            node.map do |k,v|
+            node.map do |k, v|
               if v.is_a? Hash
                 get_childs_banners(node[k])
               else
@@ -127,7 +127,7 @@ module Superhosting
           end
 
           CONTROLLER_BASE_OPTIONS.each { |opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
-          opts.merge!(logger: self.__logger)
+          opts[:logger] = self.__logger
           node.new(**opts).method(m_name)
         end
 
@@ -150,7 +150,7 @@ module Superhosting
       class << self
         def start(args)
           def clear_args(args, cmd)
-            split_toggle_case_name(cmd).length.times{ args.shift }
+            split_toggle_case_name(cmd).length.times { args.shift }
             args
           end
 
@@ -167,7 +167,7 @@ module Superhosting
         end
 
         def set_banners(node=@@commands_hierarchy, path=[])
-          node.each do |k,v|
+          node.each do |k, v|
             path_ = path.dup
             path_ << k
             if v.is_a? Hash
@@ -184,10 +184,10 @@ module Superhosting
 
         def set_commands_hierarchy
           def get_commands
-            COMMANDS_MODULE.constants.select {|c| Class === COMMANDS_MODULE.const_get(c) }.sort
+            COMMANDS_MODULE.constants.select { |c| Class === COMMANDS_MODULE.const_get(c) }.sort
           end
 
-          @@commands_hierarchy = get_commands.sort_by {|k1, k2| split_toggle_case_name(k1).one? ? 0 : 1 }.inject({}) do |h,k|
+          @@commands_hierarchy = get_commands.sort_by { |k1, k2| split_toggle_case_name(k1).one? ? 0 : 1 }.inject({}) do |h, k|
             node = h
             parts = split_toggle_case_name(k)
             parts.each do |cmd|

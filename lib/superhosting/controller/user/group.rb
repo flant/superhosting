@@ -29,7 +29,7 @@ module Superhosting
 
       def _group_get_system_users(name:)
         if (base_user = self._get(name: name))
-          self._group_get_users(name: name).map {|u| u.name.slice(/(?<=#{name}_).*/) if u.uid != base_user.uid }.compact
+          self._group_get_users(name: name).map { |u| u.name.slice(/(?<=#{name}_).*/) if u.uid != base_user.uid }.compact
         else
           []
         end
@@ -68,7 +68,7 @@ module Superhosting
       end
 
       def _group_del_users(name:)
-        self._group_get_users_names(name: name).each {|user| self._del(name: user, group: name) }
+        self._group_get_users_names(name: name).each { |user| self._del(name: user, group: name) }
       end
     end
   end

@@ -10,7 +10,7 @@ module Superhosting
           if (resp = @container_controller._collect_docker_options(mapper: mapper, model_or_mux: name)).net_status_ok?
             docker_options = resp[:data]
             @lib.muxs.f(name).docker_options.put!(Marshal.dump(docker_options), logger: false)
-            @container_controller._safe_run_docker(*docker_options, name: self._container_name(name: name) ).net_status_ok!
+            @container_controller._safe_run_docker(*docker_options, name: self._container_name(name: name)).net_status_ok!
           end
         else
           resp
@@ -93,7 +93,7 @@ module Superhosting
       def inheritance(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           inheritance = MapperInheritance::Mux.new(@config.muxs.f(name)).inheritors
-          { data: inheritance.map{|m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
+          { data: inheritance.map { |m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
         else
           resp
         end

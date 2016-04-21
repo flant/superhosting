@@ -86,9 +86,9 @@ module SpecHelpers
       end
 
       def expect_file_mtime(*file_path, &b)
-        files = file_path.map {|path| [path, File.mtime(path)] }
+        files = file_path.map { |path| [path, File.mtime(path)] }
         yield
-        files.each {|path,time| expect(time).to_not eq File.mtime(path) }
+        files.each { |path, time| expect(time).to_not eq File.mtime(path) }
       end
     end
   end

@@ -127,7 +127,7 @@ describe Superhosting::Controller::Container do
 
   it 'add:invalid_container_name' do
     invalid_names = [:s, :'!incorrectsymbol']
-    invalid_names.each {|name| container_add_with_exps(name: name, code: :invalid_container_name) }
+    invalid_names.each { |name| container_add_with_exps(name: name, code: :invalid_container_name) }
   end
 
   it 'add:invalid_container_name_by_user_format' do
@@ -282,7 +282,7 @@ describe Superhosting::Controller::Container do
 
   it 'add@override_image_by_mux', :docker do
     test_image = self.config.models.test.container.docker.image.value
-    mux_image  = self.config.muxs.test.container.docker.image.value
+    mux_image = self.config.muxs.test.container.docker.image.value
     container_add_with_exps(name: @container_name, model: 'test_with_mux')
     expect(docker_api.container_image?(@container_name, test_image)).to be_falsey
     expect(docker_api.container_image?(@container_name, mux_image)).to be_truthy

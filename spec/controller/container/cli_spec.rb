@@ -5,7 +5,7 @@ describe 'Superhosting::Controller::Container (cli)' do
   def add_container
     self.container_add(name: @container_name)
   end
-  
+
   it 'container add' do
     expect { self.cli('container', 'add', @container_name) }.to_not raise_error
   end

@@ -8,7 +8,7 @@ module Superhosting
           included do
             option :container_name,
                    :short => '-c NAME',
-                   :long  => '--container NAME',
+                   :long => '--container NAME',
                    :required => true
           end
         end

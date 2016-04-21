@@ -8,7 +8,7 @@ module Superhosting
           included do
             option :new_name,
                    :short => '-r NAME',
-                   :long  => '--new-name NAME',
+                   :long => '--new-name NAME',
                    :required => true
           end
         end

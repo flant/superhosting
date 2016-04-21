@@ -4,7 +4,7 @@ module Superhosting
 
     attr_reader :config, :lib
 
-    def initialize(config_path: '/etc/sx', lib_path: '/var/sx', logger: nil, docker_api: nil, dry_run: nil, debug: nil, **kwargs)
+    def initialize(config_path: '/etc/sx', lib_path: '/var/sx', logger: nil, docker_api: nil, dry_run: nil, debug: nil, **_kwargs)
       @config_path = Pathname.new(config_path)
       @lib_path = Pathname.new(lib_path)
       @config = PathMapper.new(config_path)
@@ -18,9 +18,9 @@ module Superhosting
 
     def get_base_controller_options
       {
-          config_path: @config_path.to_s,
-          lib_path: @lib_path.to_s,
-          docker_api: @docker_api,
+        config_path: @config_path.to_s,
+        lib_path: @lib_path.to_s,
+        docker_api: @docker_api,
       }
     end
 
