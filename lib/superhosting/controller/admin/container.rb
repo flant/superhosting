@@ -8,7 +8,7 @@ module Superhosting
           @user_controller = get_controller(User)
           @admin_controller = get_controller(Admin)
           @container_controller = get_controller(Controller::Container)
-          @admin_passwd = @config.admins.f(@admin_name).passwd
+          @admin_passwd = @lib.admins.f(@admin_name).passwd
 
           @admin_controller.existing_validation(name: @admin_name).net_status_ok!
         end

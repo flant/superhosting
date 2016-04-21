@@ -42,7 +42,7 @@ module SpecHelpers
 
       def admin_base(**kwargs)
         name = kwargs[:name]
-        admins_mapper = config.admins
+        admins_mapper = lib.admins
         mapper = admins_mapper.f(name)
 
         yield name, mapper, admins_mapper
@@ -104,7 +104,7 @@ module SpecHelpers
 
         after :each do
           with_logger(logger: false) do
-            command('rm -rf /etc/sx/admins/test*')
+            command('rm -rf /var/sx/admins/test*')
           end
         end
       end

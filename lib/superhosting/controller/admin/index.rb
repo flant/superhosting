@@ -5,7 +5,7 @@ module Superhosting
 
       def initialize(**kwargs)
         super(**kwargs)
-        @admins_mapper = @config.admins
+        @admins_mapper = @lib.admins
         index
       end
 
