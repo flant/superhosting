@@ -41,7 +41,7 @@ module Superhosting
 
       def inheritance(mapper)
         inheritors.each do |inheritor|
-          type_dir_mapper = (@type == 'model' || @type.nil?) ? inheritor : inheritor.f(@type)
+          type_dir_mapper = @type.nil? ? inheritor : inheritor.f(@type)
 
           if type_dir_mapper.dir?
             type_dir_mapper.changes_overlay = mapper

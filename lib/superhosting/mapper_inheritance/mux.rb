@@ -11,8 +11,6 @@ module Superhosting
       end
 
       def inheritors_mapper(mapper = @mapper)
-        raise NetStatus::Exception, error: :input_error, code: :mux_does_not_exists, data: { name: mapper.name } unless mapper.dir?
-        raise NetStatus::Exception, error: :logical_error, code: :base_mux_should_not_be_abstract, data: { name: mapper.name } if mapper.abstract?
         inheritance(mapper)
       end
 

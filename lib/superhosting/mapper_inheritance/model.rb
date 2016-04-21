@@ -12,12 +12,13 @@ module Superhosting
       end
 
       def inheritors_mapper(mapper)
-        raise NetStatus::Exception, error: :input_error, code: :model_does_not_exists, data: { name: @mapper.name } unless @mapper.dir?
-        raise NetStatus::Exception, error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: @mapper.name } if @mapper.abstract?
-
-        @type = case type = mapper_type(mapper)
-                  when 'container', 'site', 'model' then
-                    type
+        @type = case
+                  when 'container', 'site'
+                    raise NetStatus::Exception, error: :input_error, code: :model_does_not_exists, data: { name: @mapper.name } unless @mapper.dir?
+                    raise NetStatus::Exception, error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: @mapper.name } if @mapper.abstract?
+                    mapper_type(mapper)
+                  when 'model'
+                    nil
                   else
                     raise NetStatus::Exception, error: :logical_error, code: :mapper_type_not_supported, data: { name: type }
                 end
