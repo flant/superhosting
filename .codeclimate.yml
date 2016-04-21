@@ -1,4 +1,0 @@
-engines:
-  rubocop:
-   TargetRubyVersion: 2.3.0
-   enabled: true
