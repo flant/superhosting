@@ -10,13 +10,13 @@ module Superhosting
 
       def unconfigure(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          case get_mapper_type(self.index[name][:mapper])
+          case mapper_type(self.index[name][:mapper])
             when 'container'
               registry_mapper = self.index[name][:mapper].lib.registry.container
             when 'site'
               registry_mapper = self.index[name][:container_mapper].lib.registry.sites.f(name)
             else
-              raise NetStatus::Exception, { error: :logical_error, code: :mapper_type_not_supported, data: { name: type } }
+              raise NetStatus::Exception, error: :logical_error, code: :mapper_type_not_supported, data: { name: type }
           end
 
           unless registry_mapper.nil?
@@ -87,7 +87,7 @@ module Superhosting
 
       def _save_registry!(registry_mapper, registry_files)
         old_configs = registry_mapper.lines
-        unless (old_configs = old_configs - registry_files).empty?
+        unless (old_configs -= registry_files).empty?
           self.debug_block(desc: { code: :deleting_old_configs }) do
             old_configs.each { |file| PathMapper.new(file).delete! }
           end

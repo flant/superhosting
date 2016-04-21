@@ -3,7 +3,7 @@ module Superhosting
     module Cmd
       def command!(*command_args, **kwargs)
         self._command(*command_args, **kwargs) do |cmd|
-          raise NetStatus::Exception.new(error: :error, code: :command_with_error, data: { error: [cmd.stdout, cmd.stderr].join("\n") })
+          raise NetStatus::Exception.new, error: :error, code: :command_with_error, data: { error: [cmd.stdout, cmd.stderr].join("\n") }
         end
       end
 
@@ -31,7 +31,7 @@ module Superhosting
           unless dry_run
             cmd = Mixlib::ShellOut.new(*command_args)
             cmd.run_command
-            yield cmd if block_given? and !cmd.status.success?
+            yield cmd if block_given? && !cmd.status.success?
           end
         end
       end

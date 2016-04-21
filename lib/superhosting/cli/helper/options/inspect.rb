@@ -8,8 +8,8 @@ module Superhosting
 
           included do
             option :erb,
-                   :long => '--erb',
-                   :boolean => true
+                   long: '--erb',
+                   boolean: true
           end
         end
       end

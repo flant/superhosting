@@ -2,7 +2,7 @@ module Superhosting
   module Controller
     class Site < Base
       def list(container_name: nil)
-        if container_name.nil? or (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
+        if container_name.nil? || (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
           { data: self._list(container_name: container_name) }
         else
           resp
@@ -25,7 +25,7 @@ module Superhosting
             mapper = self.index[name][:mapper]
             data = separate_inheritance(mapper) do |mapper, inheritors|
               inheritors.inject([self._inspect(name: mapper.name, erb: erb)]) do |inheritance, m|
-                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
+                inheritance << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
               end
             end
             { data: data }
@@ -68,8 +68,8 @@ module Superhosting
       end
 
       def add(name:, container_name:)
-        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? and
-          (resp = self.adding_validation(name: name)).net_status_ok?
+        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? &&
+           (resp = self.adding_validation(name: name)).net_status_ok?
           resp = self._reconfigure(name: name, container_name: container_name)
         end
         resp
@@ -100,7 +100,7 @@ module Superhosting
           states = {
             up: { action: :unapply, undo: :apply, next: :configured },
             configured: { action: :unconfigure, next: :data_installed },
-            data_installed: { action: :uninstall_data },
+            data_installed: { action: :uninstall_data }
           }
 
           self.on_state(state_mapper: state_mapper, states: states, name: actual_name)
@@ -109,9 +109,9 @@ module Superhosting
       end
 
       def rename(name:, new_name:, keep_name_as_alias: false)
-        if (resp = self.available_validation(name: name)).net_status_ok? and
-          ((resp = self.adding_validation(name: new_name)).net_status_ok? or
-            (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
+        if (resp = self.available_validation(name: name)).net_status_ok? &&
+           ((resp = self.adding_validation(name: new_name)).net_status_ok? ||
+             (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
           mapper = self.index[name][:mapper]
           status_name = "#{name}_to_#{new_name}"
           state_mapper = @lib.process_status.f(status_name).create!
@@ -154,7 +154,7 @@ module Superhosting
 
         states = {
           none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-          data_installed: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :up },
+          data_installed: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :up }
         }
 
         self.on_state(state_mapper: state_mapper, states: states,

@@ -16,16 +16,16 @@ module Superhosting
       @docker_api = docker_api || DockerApi.new(socket: @config.f('docker_socket', default: nil))
     end
 
-    def get_base_controller_options
+    def base_controller_options
       {
         config_path: @config_path.to_s,
         lib_path: @lib_path.to_s,
-        docker_api: @docker_api,
+        docker_api: @docker_api
       }
     end
 
     def get_controller(controller, **kwargs)
-      controller.new(**self.get_base_controller_options.merge!(kwargs))
+      controller.new(**self.base_controller_options.merge!(kwargs))
     end
   end
 end

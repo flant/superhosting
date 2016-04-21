@@ -5,13 +5,12 @@ module Superhosting
         admins = []
         @admins_mapper.grep_dirs.map do |dir_name|
           admin_name = dir_name.name
-
           container_admin_controller = self.get_controller(Admin::Container, name: admin_name)
-          if (resp = container_admin_controller.list).net_status_ok?
-            admins << { admin_name => resp[:data] }
-          else
+
+          unless (resp = container_admin_controller.list).net_status_ok?
             return resp
           end
+          admins << { admin_name => resp[:data] }
         end
 
         { data: admins }

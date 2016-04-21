@@ -40,7 +40,7 @@ module Superhosting
         Thread.current[:debug]
       end
 
-      def info(msg=nil, indent: true, desc: nil, **kwargs, &b)
+      def info(msg = nil, indent: true, desc: nil, **kwargs, &b)
         unless self.__logger.nil?
           msg = indent ? with_indent(msg) : msg.chomp
           self.__logger.info(msg, &b)
@@ -48,7 +48,7 @@ module Superhosting
         {} # net_status
       end
 
-      def debug(msg=nil, indent: true, desc: nil, &b)
+      def debug(msg = nil, indent: true, desc: nil, &b)
         unless self.__logger.nil?
           unless desc.nil?
             (desc[:data] ||= {})[:msg] = msg
@@ -76,7 +76,7 @@ module Superhosting
       ensure
         desc[:code] = :"#{desc[:code]}.#{status}"
         self.debug(desc: desc)
-        self.debug(diff, indent: false) if !diff.nil? and self.__debug
+        self.debug(diff, indent: false) if !diff.nil? && self.__debug
         self.indent = old
       end
 
@@ -103,7 +103,7 @@ module Superhosting
         data = desc[:data]
         ::I18n.t [:debug, context, code].join('.'), [:debug, code].join('.'), **data, raise: true
       rescue ::I18n::MissingTranslationData => e
-        raise NetStatus::Exception, { code: :missing_translation, data: { code: code } }
+        raise NetStatus::Exception, code: :missing_translation, data: { code: code }
       end
 
       def indent
@@ -127,7 +127,7 @@ module Superhosting
       end
 
       def with_indent(msg)
-        ind = "#{' ' * 4 * self.indent }"
+        ind = (' ' * 4 * self.indent).to_s
         "#{ind}#{msg.to_s.sub("\n", "\n#{ind}")}"
       end
     end

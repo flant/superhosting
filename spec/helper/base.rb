@@ -75,7 +75,7 @@ module SpecHelpers
           end
         rescue Exception => e
           net_status = e.net_status.net_status_normalize
-          $stderr.puts(net_status[:message] || [net_status[:error], net_status[:code]].compact.join(": "))
+          $stderr.puts(net_status[:message] || [net_status[:error], net_status[:code]].compact.join(': '))
           raise
         end
       end

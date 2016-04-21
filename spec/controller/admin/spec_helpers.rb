@@ -104,7 +104,7 @@ module SpecHelpers
 
         after :each do
           with_logger(logger: false) do
-            command("rm -rf /etc/sx/admins/test*")
+            command('rm -rf /etc/sx/admins/test*')
           end
         end
       end

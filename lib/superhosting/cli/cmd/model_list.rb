@@ -5,8 +5,8 @@ module Superhosting
         include Helper::Options::List
 
         option :abstract,
-               :long => '--abstract',
-               :boolean => true
+               long: '--abstract',
+               boolean: true
 
         def self.after_action(data, config)
           show_model_list(data, config)

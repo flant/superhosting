@@ -3,9 +3,9 @@ module Superhosting
     module Cmd
       class ContainerSave < Base
         option :save_to,
-               :long => '--to'
+               long: '--to'
 
-        def self.has_required_param?
+        def self.required_param?
           true
         end
       end

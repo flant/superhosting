@@ -10,7 +10,6 @@ module Superhosting
       end
 
       def grant
-
       end
     end
   end

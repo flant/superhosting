@@ -3,11 +3,11 @@ module Superhosting
     module Cmd
       class SiteMove < Base
         option :new_container_name,
-               :short => '-c NAME',
-               :long => '--container-name NAME',
-               :required => true
+               short: '-c NAME',
+               long: '--container-name NAME',
+               required: true
 
-        def self.has_required_param?
+        def self.required_param?
           true
         end
       end

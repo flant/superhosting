@@ -7,9 +7,9 @@ module Superhosting
 
           included do
             option :admin_name,
-                   :short => '-a NAME',
-                   :long => '--admin NAME',
-                   :required => true
+                   short: '-a NAME',
+                   long: '--admin NAME',
+                   required: true
           end
         end
       end

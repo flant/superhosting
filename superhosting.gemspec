@@ -3,15 +3,15 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'superhosting/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "superhosting"
+  spec.name          = 'superhosting'
   spec.version       = Superhosting::VERSION
-  spec.authors       = ["Alexey Igrychev", "Timofey Kirillov", "Dmitry Stolyarov"]
-  spec.email         = ["alexey.igrychev@flant.com", "timofey.kirillov@flant.com", "dmitry.stolyarov@flant.com"]
+  spec.authors       = ['Alexey Igrychev', 'Timofey Kirillov', 'Dmitry Stolyarov']
+  spec.email         = ['alexey.igrychev@flant.com', 'timofey.kirillov@flant.com', 'dmitry.stolyarov@flant.com']
 
-  spec.summary       = "The tool for web hosting using docker containers"
+  spec.summary       = 'The tool for web hosting using docker containers'
   spec.description   = "#{spec.summary}."
-  spec.license       = "MIT"
-  spec.homepage      = "https://github.com/flant/superhosting"
+  spec.license       = 'MIT'
+  spec.homepage      = 'https://github.com/flant/superhosting'
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.executables   = ['sx']

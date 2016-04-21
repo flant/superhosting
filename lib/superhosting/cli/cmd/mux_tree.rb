@@ -2,7 +2,7 @@ module Superhosting
   module Cli
     module Cmd
       class MuxTree < Base
-        def self.has_required_param?
+        def self.required_param?
           true
         end
 

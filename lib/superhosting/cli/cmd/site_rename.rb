@@ -5,11 +5,11 @@ module Superhosting
         include Helper::Options::NewName
 
         option :keep_name_as_alias,
-               :short => '-k',
-               :long => '--keep-name-as-alias',
-               :bollean => true
+               short: '-k',
+               long: '--keep-name-as-alias',
+               bollean: true
 
-        def self.has_required_param?
+        def self.required_param?
           true
         end
       end

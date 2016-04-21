@@ -7,8 +7,8 @@ module Superhosting
 
           included do
             option :json,
-                   :long => '--json',
-                   :boolean => true
+                   long: '--json',
+                   boolean: true
           end
         end
       end

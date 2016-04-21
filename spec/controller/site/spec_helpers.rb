@@ -184,7 +184,7 @@ module SpecHelpers
           with_site do |site_name|
             alias_name = "alias-#{@site_name}"
             self.with_base('site_alias', default: { name: alias_name },
-                           to_yield: [container_name, site_name, alias_name], **kwargs, &b)
+                                         to_yield: [container_name, site_name, alias_name], **kwargs, &b)
           end
         end
       end
@@ -196,7 +196,7 @@ module SpecHelpers
 
         after :each do
           with_logger(logger: false) do
-            command("rm -rf /etc/nginx/sites/test*")
+            command('rm -rf /etc/nginx/sites/test*')
           end
         end
       end

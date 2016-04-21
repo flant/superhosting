@@ -1,2 +1,14 @@
 AllCops:
   TargetRubyVersion: 2.3
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/CaseIndentation:
+  Enabled: false
+
+Style/ElseAlignment:
+  Enabled: false

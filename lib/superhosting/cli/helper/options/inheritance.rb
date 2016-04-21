@@ -7,8 +7,8 @@ module Superhosting
 
           included do
             option :inheritance,
-                   :long => '--inheritance',
-                   :boolean => true
+                   long: '--inheritance',
+                   boolean: true
           end
         end
       end

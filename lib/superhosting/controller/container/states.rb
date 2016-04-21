@@ -174,7 +174,7 @@ module Superhosting
             dump_command_option = (command_options + [command]).join("\n")
             dummy_signature_md5 = Digest::MD5.new.digest(dump_command_option)
 
-            restart = (!mapper.docker.image.compare_with(mapper.lib.image) or (dummy_signature_md5 != mapper.lib.signature.md5))
+            restart = (!mapper.docker.image.compare_with(mapper.lib.image) || (dummy_signature_md5 != mapper.lib.signature.md5))
 
             if (resp = self._safe_run_docker(command_options, image, command, name: name, restart: restart)).net_status_ok?
               mapper.lib.image.put!(image, logger: false)
@@ -182,10 +182,8 @@ module Superhosting
               mapper.lib.docker_options.put!(Marshal.dump(docker_options), logger: false)
             end
           end
-          resp
-        else
-          resp
         end
+        resp
       end
 
       def run_mux(name:)

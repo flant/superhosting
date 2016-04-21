@@ -3,7 +3,7 @@ module Superhosting
     module Cmd
       class ModelTree < Base
         class << self
-          def has_required_param?
+          def required_param?
             true
           end
 

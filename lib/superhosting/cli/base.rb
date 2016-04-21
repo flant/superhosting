@@ -9,32 +9,32 @@ module Superhosting
 
       COMMANDS_MODULE = Cmd
       CONTROLLERS_MODULE = Superhosting::Controller
-      CONTROLLER_BASE_OPTIONS = [:dry_run, :debug]
+      CONTROLLER_BASE_OPTIONS = [:dry_run, :debug].freeze
 
-      banner "#{?= * 50}\n#{?- * 19}SUPERHOSTING#{?- * 19}\n#{?= * 50}\n\n"
+      banner "#{'=' * 50}\n#{'-' * 19}SUPERHOSTING#{'-' * 19}\n#{'=' * 50}\n\n"
 
       option :help,
-             :short => '-h',
-             :long => '--help',
-             :on => :tail
+             short: '-h',
+             long: '--help',
+             on: :tail
 
       option :debug,
-             :long => '--debug',
-             :boolean => true,
-             :on => :tail
+             long: '--debug',
+             boolean: true,
+             on: :tail
 
       option :verbose,
-             :long => '--verbose',
-             :boolean => true,
-             :on => :tail
+             long: '--verbose',
+             boolean: true,
+             on: :tail
 
       option :dry_run,
-             :long => '--dry-run',
-             :boolean => true,
-             :on => :tail
+             long: '--dry-run',
+             boolean: true,
+             on: :tail
 
       def initialize(argv, node)
-        self.class.options.merge!(Base::options)
+        self.class.options.merge!(Base.options)
         super()
 
         begin
@@ -47,11 +47,11 @@ module Superhosting
         @node_class = node.values.first
 
         @logger = Logger.new(STDOUT)
-        @logger.level = (config[:debug] or config[:dry_run] or config[:verbose]) ? Logger::DEBUG : Logger::INFO
-        @logger.formatter = proc { |severity, datetime, progname, msg| sprintf("%s\n", msg.to_s) }
+        @logger.level = (config[:debug] || config[:dry_run] || config[:verbose]) ? Logger::DEBUG : Logger::INFO
+        @logger.formatter = proc { |severity, datetime, progname, msg| format("%s\n", msg.to_s) }
         self.__logger = @logger
 
-        self.help if config[:help] or self.class == Base
+        self.help if config[:help] || self.class == Base
       end
 
       def help
@@ -91,23 +91,22 @@ module Superhosting
       end
 
       def action
-        method = get_controller
+        method = controller_method
         opts = {}
         method.parameters.each do |req, name|
-          if req.to_s.start_with? 'key'
-            opt = config[name]
-            self.help unless (opt = @pos_args.shift) if name == :name
-            opts.merge!(name => opt)
-          end
+          next unless req.to_s.start_with? 'key'
+          opt = config[name]
+          self.help if name == :name && !(opt = @pos_args.shift)
+          opts.merge!(name => opt)
         end
         self.help unless @pos_args.empty? # only one position argument
 
         method.parameters.empty? ? method.call : method.call(**opts)
       end
 
-      def get_controller
-        def get_subcontroller_option
-          key = :"#{self.class.get_splited_class_name.first}_name"
+      def controller_method
+        def subcontroller_option
+          key = :"#{self.class.splited_class_name.first}_name"
           config[key] unless config[key].nil?
         end
 
@@ -116,14 +115,13 @@ module Superhosting
 
           opts = {}
           params.each do |req, name|
-            if req.to_s.start_with? 'key'
-              if name == :name
-                opt = get_subcontroller_option
-              elsif config.key? name
-                opt = config[name]
-              end
-              opts.merge!(name => opt) unless opt.nil?
+            next unless req.to_s.start_with? 'key'
+            opt = if name == :name
+              subcontroller_option
+            elsif config.key? name
+              config[name]
             end
+            opts.merge!(name => opt) unless opt.nil?
           end
 
           CONTROLLER_BASE_OPTIONS.each { |opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
@@ -131,31 +129,31 @@ module Superhosting
           node.new(**opts).method(m_name)
         end
 
-        names = self.class.get_splited_class_name
+        names = self.class.splited_class_name
         node = names.one? ? CONTROLLERS_MODULE::Base : CONTROLLERS_MODULE
 
         names.each do |n|
           c_name = n.capitalize.to_sym
           m_name = n.to_sym
 
-          if node.respond_to? :constants and node.constants.include? c_name
+          if node.respond_to?(:constants) && node.constants.include?(c_name)
             node = node.const_get(c_name)
-          elsif node.respond_to? :instance_methods and node.instance_methods(false).include? m_name
+          elsif node.respond_to?(:instance_methods) && node.instance_methods(false).include?(m_name)
             return get_method(m_name, node)
           end
         end
-        raise NetStatus::Exception, { message: 'Method doesn\'t found' }
+        raise NetStatus::Exception, message: 'Method doesn\'t found'
       end
 
       class << self
         def start(args)
           def clear_args(args, cmd)
-            split_toggle_case_name(cmd).length.times { args.shift }
+            toggle_case_name(cmd).length.times { args.shift }
             args
           end
 
           self.prepend
-          cmd, node = get_cmd_and_node(args)
+          cmd, node = cmd_and_node(args)
           args = clear_args(args, cmd)
           cmd.new(args, node).run
         end
@@ -166,30 +164,27 @@ module Superhosting
           i18n_initialize
         end
 
-        def set_banners(node=@@commands_hierarchy, path=[])
+        def set_banners(node = @@commands_hierarchy, path = [])
           node.each do |k, v|
             path_ = path.dup
             path_ << k
             if v.is_a? Hash
               set_banners(v, path_)
             else
-              v.banner("sx #{path_.join(' ')}#{" <#{path.last}>" if v.has_required_param?}#{' (options)' unless v.options.empty?}")
+              v.banner("sx #{path_.join(' ')}#{" <#{path.last}>" if v.required_param?}#{' (options)' unless v.options.empty?}")
             end
           end
         end
 
-        def has_required_param?
+        def required_param?
           false
         end
 
         def set_commands_hierarchy
-          def get_commands
-            COMMANDS_MODULE.constants.select { |c| Class === COMMANDS_MODULE.const_get(c) }.sort
-          end
-
-          @@commands_hierarchy = get_commands.sort_by { |k1, k2| split_toggle_case_name(k1).one? ? 0 : 1 }.inject({}) do |h, k|
+          commands = COMMANDS_MODULE.constants.select { |c| COMMANDS_MODULE.const_get(c).is_a?(Class) }
+          @@commands_hierarchy = commands.sort_by { |k1, k2| toggle_case_name(k1).one? ? 0 : 1 }.each_with_object({}) do |k, h|
             node = h
-            parts = split_toggle_case_name(k)
+            parts = toggle_case_name(k)
             parts.each do |cmd|
               node = (node[cmd] ||= (cmd == parts.last) ? COMMANDS_MODULE.const_get(k) : {})
             end
@@ -197,15 +192,15 @@ module Superhosting
           end
         end
 
-        def get_splited_class_name
-          self.split_toggle_case_name(self.name.split('::').last)
+        def splited_class_name
+          self.toggle_case_name(self.name.split('::').last)
         end
 
-        def split_toggle_case_name(klass)
+        def toggle_case_name(klass)
           klass.to_s.gsub(/([[:lower:]])([[:upper:]])/, '\1 \2').split(' ').map(&:downcase)
         end
 
-        def get_cmd_and_node(args)
+        def cmd_and_node(args)
           def positional_arguments(args)
             args.select { |arg| arg =~ /^([[:alnum:]\_\-]+)$/ }
           end
@@ -215,7 +210,7 @@ module Superhosting
           path = []
           key = ''
           cmd = nil
-          while arg = args.shift and cmd.nil?
+          while (arg = args.shift) && cmd.nil?
             res = node.keys.select { |k| k.start_with? arg }
 
             case res.count
@@ -225,7 +220,7 @@ module Superhosting
               when 0
                 break
               else
-                raise Error::AmbiguousCommand.new(path: path, commands: res)
+                raise Error::AmbiguousCommand, path: path, commands: res
             end
 
             path << key

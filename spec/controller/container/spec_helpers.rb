@@ -115,8 +115,8 @@ module SpecHelpers
           # group / user
           expect_group(name)
           expect_user(name)
-          expect_in_file(self.etc.passwd, /#{name}.*\/usr\/sbin\/nologin/)
-          expect_in_file(lib_mapper.config.f('etc-passwd'), /#{name}.*\/usr\/sbin\/nologin/)
+          expect_in_file(self.etc.passwd, %r{#{name}.*\/usr\/sbin\/nologin})
+          expect_in_file(lib_mapper.config.f('etc-passwd'), %r{#{name}.*\/usr\/sbin\/nologin})
           expect_in_file(lib_mapper.config.f('etc-group'), /#{name}.*/)
 
           # docker.conf
@@ -146,7 +146,7 @@ module SpecHelpers
           # group / user
           not_expect_group(name)
           not_expect_user(name)
-          not_expect_in_file(self.etc.passwd, /^#{name}:.*\/usr\/sbin\/nologin/)
+          not_expect_in_file(self.etc.passwd, %r{^#{name}:.*\/usr\/sbin\/nologin})
 
           # docker
           not_expect_in_file(self.etc.security.f('docker.conf'), "@#{name} #{name}")

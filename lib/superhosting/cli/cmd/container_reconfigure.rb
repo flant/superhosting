@@ -4,7 +4,7 @@ module Superhosting
       class ContainerReconfigure < Base
         include Helper::Options::Model
 
-        def self.has_required_param?
+        def self.required_param?
           true
         end
       end

@@ -43,7 +43,7 @@ describe Superhosting::Controller::User do
   # negative
 
   it 'add:invalid_user_name' do
-    invalid_user_names = ["l#{?o*25}ngname", "name!"]
+    invalid_user_names = ["l#{'o' * 25}ngname", 'name!']
     with_container do |container_name|
       invalid_user_names.each { |name| user_add_with_exps(name: name, container_name: container_name, code: :invalid_user_name) }
     end

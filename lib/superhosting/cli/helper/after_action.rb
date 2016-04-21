@@ -138,7 +138,7 @@ module Superhosting
             self.show_list(data.map do |hash|
               type = hash['type']
               name = hash['name']
-              "#{ "#{type}: " if type == 'mux' }#{name}"
+              "#{"#{type}: " if type == 'mux'}#{name}"
             end, sort: false)
           end
         end
@@ -160,7 +160,7 @@ module Superhosting
 
           def show_node(node, type, ignore_type)
             node.each do |k, hash|
-              self.info("#{"#{type}: " if !ignore_type and type == 'mux'}#{k}")
+              self.info("#{"#{type}: " if !ignore_type && type == 'mux'}#{k}")
               self.indent_step
               self.show_tree(hash, ignore_type)
               self.indent_step_back

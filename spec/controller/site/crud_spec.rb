@@ -183,7 +183,7 @@ describe Superhosting::Controller::Site do
 
   # negative
 
-  INVALID_SITE_NAMES = ['a', '-site.com', 'site.s', 'sub.site.longregion', 'my_site.com']
+  INVALID_SITE_NAMES = ['a', '-site.com', 'site.s', 'sub.site.longregion', 'my_site.com'].freeze
 
   it 'add:site_exists' do
     with_container do |container_name|

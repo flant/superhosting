@@ -4,7 +4,7 @@ module Superhosting
       class ContainerRename < Base
         include Helper::Options::NewName
 
-        def self.has_required_param?
+        def self.required_param?
           true
         end
       end

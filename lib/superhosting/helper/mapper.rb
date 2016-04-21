@@ -10,20 +10,20 @@ module Superhosting
         mapper.inheritance = inheritance
       end
 
-      def get_mapper_type(mapper)
+      def mapper_type(mapper)
         case mapper.name
           when 'containers' then 'container'
           when 'web', 'sites' then 'site'
           when 'models' then 'model'
           when 'muxs' then 'mux'
-          else get_mapper_type(mapper.parent)
+          else mapper_type(mapper.parent)
         end
       end
 
-      def get_mapper_name(mapper)
+      def mapper_name(mapper)
         case mapper.parent.name
           when 'containers', 'models', 'muxs' then mapper.name
-          else get_mapper_name(mapper.parent)
+          else mapper_name(mapper.parent)
         end
       end
 
@@ -45,7 +45,7 @@ module Superhosting
       end
 
       def get_mapper_options_pathes(mapper, erb: false)
-        def get_pathes(h, path=[])
+        def get_pathes(h, path = [])
           options = {}
           h.each do |k, v|
             path_ = path.dup
@@ -65,13 +65,14 @@ module Superhosting
 
       def _options(name:, inheritance: false, erb: false)
         mapper = self.index[name][:mapper]
-        mapper_type = get_mapper_type(mapper)
+        mapper_type = mapper_type(mapper)
         if inheritance
           separate_inheritance(mapper) do |mapper, inheritors|
             ([mapper] + inheritors).reverse.inject([]) do |inheritance, m|
-              type, name = get_mapper_type(m), get_mapper_name(m)
+              type = mapper_type(m)
+              name = mapper_name(m)
               name = type if mapper_type == 'container'
-              inheritance << { "#{ "#{type}: " if type == 'mux' }#{name}" => get_mapper_options_pathes(m, erb: erb) }
+              inheritance << { "#{"#{type}: " if type == 'mux'}#{name}" => get_mapper_options_pathes(m, erb: erb) }
             end
           end
         else
@@ -81,7 +82,7 @@ module Superhosting
 
       def _inheritance(name:)
         mapper = self.index[name][:mapper]
-        mapper.inheritance.reverse.map { |m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } }
+        mapper.inheritance.reverse.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } }
       end
     end
   end

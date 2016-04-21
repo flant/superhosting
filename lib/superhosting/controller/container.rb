@@ -10,7 +10,7 @@ module Superhosting
         containers = []
         @config.containers.grep_dirs.map do |n|
           name = n.name
-          containers << self._inspect(name: name) if self.index.key? name and self.index[name][:mapper].lib.state.file?
+          containers << self._inspect(name: name) if self.index.key?(name) && self.index[name][:mapper].lib.state.file?
         end
         containers
       end
@@ -21,7 +21,7 @@ module Superhosting
             mapper = self.index[name][:mapper]
             data = separate_inheritance(mapper) do |mapper, inheritors|
               inheritors.inject([self._inspect(name: mapper.name, erb: erb)]) do |inheritance, m|
-                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
+                inheritance << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
               end
             end
             { data: data }
@@ -63,8 +63,8 @@ module Superhosting
       end
 
       def add(name:, model: nil)
-        if (resp = self.not_existing_validation(name: name)).net_status_ok? and
-          (resp = self.adding_validation(name: name)).net_status_ok?
+        if (resp = self.not_existing_validation(name: name)).net_status_ok? &&
+           (resp = self.adding_validation(name: name)).net_status_ok?
           resp = self._reconfigure(name: name, model: model)
         end
         resp
@@ -89,7 +89,7 @@ module Superhosting
       end
 
       def update(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok? and @docker_api.container_exists?(name)
+        if (resp = self.existing_validation(name: name)).net_status_ok? && @docker_api.container_exists?(name)
           mapper = self.index[name][:mapper]
           docker_options = mapper.lib.docker_options.value
           self._update(name: name, docker_options: Marshal.load(docker_options))
@@ -104,8 +104,8 @@ module Superhosting
       end
 
       def rename(name:, new_name:)
-        if (resp = self.available_validation(name: name)).net_status_ok? and
-          (resp = self.adding_validation(name: new_name)).net_status_ok?
+        if (resp = self.available_validation(name: name)).net_status_ok? &&
+           (resp = self.adding_validation(name: new_name)).net_status_ok?
           mapper = self.index[name][:mapper]
           status_name = "#{name}_to_#{new_name}"
           state_mapper = @lib.process_status.f(status_name).create!
@@ -154,11 +154,9 @@ module Superhosting
       end
 
       def save(name:, to:)
-
       end
 
       def restore(name:, from:, mail: 'model', admin_mail: nil, model: nil)
-
       end
 
       def admin(name:)

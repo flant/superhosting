@@ -21,14 +21,14 @@ module Superhosting
         end
       end
 
-      def config(save_to, script=nil, **options)
+      def config(save_to, script = nil, **options)
         if @on_config
           save_to_mapper = PathMapper.new(save_to)
           script = options.delete(:source) || save_to_mapper.name if script.nil?
           script = script.to_s.end_with?('.erb') ? script : "#{script}.erb"
-          raise NetStatus::Exception.new(error: :error, code: :can_not_pass_an_absolute_path, data: { path: script }) if Pathname.new(script).absolute?
+          raise NetStatus::Exception, error: :error, code: :can_not_pass_an_absolute_path, data: { path: script } if Pathname.new(script).absolute?
           script_mapper = self.config_mapper(options).config_templates.f(script)
-          raise NetStatus::Exception.new(error: :error, code: :file_does_not_exists, data: { path: script_mapper.path.to_s }) if script_mapper.nil?
+          raise NetStatus::Exception, error: :error, code: :file_does_not_exists, data: { path: script_mapper.path.to_s } if script_mapper.nil?
           save_to_mapper.put!(script_mapper)
           self.set_file_attributes(save_to_mapper.path, options)
           self.registry_files << save_to_mapper.path.to_s
@@ -42,7 +42,7 @@ module Superhosting
             container = case in_option
               when :container then container.name
               when :mux then mux_name
-              else raise NetStatus::Exception.new(error: :error, code: :on_reconfig_not_supported_option_value, data: { value: in_option, option: 'in' })
+              else raise NetStatus::Exception, error: :error, code: :on_reconfig_not_supported_option_value, data: { value: in_option, option: 'in' }
             end
 
             "docker exec #{container} #{cmd}"
@@ -66,8 +66,8 @@ module Superhosting
       protected
 
       def set_file_attributes(path, user: nil, group: nil, mode: nil, **kwargs)
-        chown!(user, group, path) if user and group
-        chmod!(mode, path) if user and mode
+        chown!(user, group, path) if user && group
+        chmod!(mode, path) if user && mode
       end
 
       def base_mapper

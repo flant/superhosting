@@ -7,8 +7,8 @@ module Superhosting
 
           included do
             option :state,
-                   :long => '--state',
-                   :boolean => true
+                   long: '--state',
+                   boolean: true
           end
         end
       end

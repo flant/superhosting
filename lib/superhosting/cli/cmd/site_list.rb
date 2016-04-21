@@ -6,9 +6,9 @@ module Superhosting
         include Helper::Options::State
 
         option :container_name,
-               :short => '-c NAME',
-               :long => '--container NAME',
-               :required => false
+               short: '-c NAME',
+               long: '--container NAME',
+               required: false
 
         def self.after_action(data, config)
           show_site_list(data, config)

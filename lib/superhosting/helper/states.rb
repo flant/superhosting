@@ -4,7 +4,7 @@ module Superhosting
       def on_state(states:, state_mapper:, **options)
         current_state = state_mapper.state default: :none
 
-        while (state = states[current_state.to_sym]) do
+        while (state = states[current_state.to_sym])
           method = state[:action]
           opts = method_options(method, options)
 

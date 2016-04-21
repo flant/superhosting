@@ -7,18 +7,18 @@ module Superhosting
 
           included do
             option :ftp_only,
-                   :short => '-f',
-                   :long => '--ftp-only',
-                   :boolean => true
+                   short: '-f',
+                   long: '--ftp-only',
+                   boolean: true
 
             option :ftp_dir,
-                   :short => '-d',
-                   :long => '--ftp-dir DIR'
+                   short: '-d',
+                   long: '--ftp-dir DIR'
 
             option :generate,
-                   :short => '-g',
-                   :long => '--generate',
-                   :boolean => true
+                   short: '-g',
+                   long: '--generate',
+                   boolean: true
           end
         end
       end

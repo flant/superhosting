@@ -3,11 +3,9 @@ module Superhosting
     class Mysql
       class User < Base
         def add(generate:)
-
         end
 
         def delete
-
         end
       end
     end

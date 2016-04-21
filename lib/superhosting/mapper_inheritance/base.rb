@@ -10,7 +10,7 @@ module Superhosting
         self.inheritors_tree = {}
       end
 
-      def collect_inheritors_tree(m=@mapper, node=self.inheritors_tree, mux: false)
+      def collect_inheritors_tree(m = @mapper, node = self.inheritors_tree, mux: false)
         type = mux ? 'mux' : 'model'
         m_key = m.name
         node[m_key] ||= {}
@@ -19,14 +19,14 @@ module Superhosting
         # mux
         m.container.mux.lines.each do |name|
           mux_mapper = @muxs_mapper.f(name)
-          raise NetStatus::Exception, { error: :logical_error, code: :base_mux_should_not_be_abstract, data: { name: name } } if mux_mapper.abstract?
-          raise NetStatus::Exception, { error: :logical_error, code: :mux_does_not_exists, data: { name: name } } unless mux_mapper.dir?
+          raise NetStatus::Exception, error: :logical_error, code: :base_mux_should_not_be_abstract, data: { name: name } if mux_mapper.abstract?
+          raise NetStatus::Exception, error: :logical_error, code: :mux_does_not_exists, data: { name: name } unless mux_mapper.dir?
           (node[m_key]['mux'] ||= []) << collect_inheritors_tree(mux_mapper, {}, mux: true)
         end
 
         m.inherit.lines.each do |name|
           inherit_mapper = (mux ? @muxs_mapper : @models_mapper).f(name)
-          raise NetStatus::Exception, { error: :logical_error, code: :model_does_not_exists, data: { name: name } } unless inherit_mapper.dir?
+          raise NetStatus::Exception, error: :logical_error, code: :model_does_not_exists, data: { name: name } unless inherit_mapper.dir?
 
           # mixed
           node[m_key][mux ? 'mux' : 'model'] << collect_inheritors_tree(inherit_mapper, {}, mux: mux)
@@ -39,13 +39,9 @@ module Superhosting
         self.inheritors << mapper
       end
 
-      def set_inheritors(mapper)
-        self.set_inheritance(mapper)
-      end
-
-      def set_inheritance(mapper)
+      def inheritance(mapper)
         self.inheritors.reverse_each do |inheritor|
-          type_dir_mapper = (@type == 'model' or @type.nil?) ? inheritor : inheritor.f(@type)
+          type_dir_mapper = (@type == 'model' || @type.nil?) ? inheritor : inheritor.f(@type)
 
           if type_dir_mapper.dir?
             type_dir_mapper.changes_overlay = mapper

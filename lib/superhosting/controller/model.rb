@@ -13,7 +13,7 @@ module Superhosting
       def _list(abstract: false)
         models = []
         @config.models.grep_dirs.each do |model_mapper|
-          next if !abstract and model_mapper.abstract?
+          next if !abstract && model_mapper.abstract?
           models << { 'name' => model_mapper.name, 'abstract' => model_mapper.abstract? }
         end
         models
@@ -29,11 +29,11 @@ module Superhosting
 
       def inspect(name:, inheritance: false)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = MapperInheritance::Model.new(@config.models.f(name)).set_inheritors(@config.models.f(name))
+          mapper = MapperInheritance::Model.new(@config.models.f(name)).inheritors_mapper(@config.models.f(name))
           if inheritance
             data = separate_inheritance(mapper) do |mapper, inheritors|
-              (inheritors).inject([]) do |inheritance, m|
-                inheritance << { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m), 'options' => get_mapper_options(m, erb: true) }
+              inheritors.inject([]) do |inheritance, m|
+                inheritance << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: true) }
               end
             end
             { data: data }
@@ -47,12 +47,13 @@ module Superhosting
 
       def options(name:, inheritance: false)
         if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = MapperInheritance::Model.new(@config.models.f(name)).set_inheritors(@config.models.f(name))
+          mapper = MapperInheritance::Model.new(@config.models.f(name)).inheritors_mapper(@config.models.f(name))
           if inheritance
             data = separate_inheritance(mapper) do |mapper, inheritors|
-              (inheritors).inject([]) do |inheritance, m|
-                type, name = get_mapper_type(m), get_mapper_name(m)
-                inheritance << { "#{ "#{type}: " if type == 'mux' }#{name}" => get_mapper_options_pathes(m, erb: true) }
+              inheritors.inject([]) do |inheritance, m|
+                type = mapper_type(m)
+                name = mapper_name(m)
+                inheritance << { "#{"#{type}: " if type == 'mux'}#{name}" => get_mapper_options_pathes(m, erb: true) }
               end
             end
             { data: data }
@@ -67,9 +68,9 @@ module Superhosting
       def inheritance(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           model_mapper = @config.models.f(name)
-          inheritance = MapperInheritance::Model.new(model_mapper).inheritors
+          inheritance = MapperInheritance::Model.new(model_mapper).inheritors_mapper
           inheritance.delete(model_mapper)
-          { data: inheritance.map { |m| { 'type' => get_mapper_type(m.parent), 'name' => get_mapper_name(m) } } }
+          { data: inheritance.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } } }
         else
           resp
         end

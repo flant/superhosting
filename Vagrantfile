@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 # vi: set sts=2 ts=2 sw=2 :
 
-VAGRANTFILE_API_VERSION = '2'
+VAGRANTFILE_API_VERSION = '2'.freeze
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = 'ubuntu/trusty64'

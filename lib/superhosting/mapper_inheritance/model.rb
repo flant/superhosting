@@ -11,19 +11,19 @@ module Superhosting
         self.collect_inheritors
       end
 
-      def set_inheritors(mapper)
-        raise NetStatus::Exception, { error: :input_error, code: :model_does_not_exists, data: { name: @mapper.name } } unless @mapper.dir?
-        raise NetStatus::Exception, { error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: @mapper.name } } if @mapper.abstract?
+      def inheritors_mapper(mapper)
+        raise NetStatus::Exception, error: :input_error, code: :model_does_not_exists, data: { name: @mapper.name } unless @mapper.dir?
+        raise NetStatus::Exception, error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: @mapper.name } if @mapper.abstract?
 
-        @type = case type = get_mapper_type(mapper)
+        @type = case type = mapper_type(mapper)
           when 'container', 'site', 'model' then type
-          else raise NetStatus::Exception, { error: :logical_error, code: :mapper_type_not_supported, data: { name: type } }
+          else raise NetStatus::Exception, error: :logical_error, code: :mapper_type_not_supported, data: { name: type }
         end
 
-        super(mapper)
+        inheritance(mapper)
       end
 
-      def collect_inheritors(m=@mapper, mux=false)
+      def collect_inheritors(m = @mapper, mux = false)
         m.inherit.lines.each do |name|
           inherit_mapper = (mux ? @muxs_mapper : @models_mapper).f(name)
 

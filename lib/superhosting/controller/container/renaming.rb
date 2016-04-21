@@ -57,7 +57,9 @@ module Superhosting
 
         mapper.config.f('etc-passwd').lines.each do |line|
           parts = line.split(':')
-          user_name, shell, home_dir = parts.first, parts.pop, parts.pop
+          user_name = parts.first
+          shell = parts.pop
+          home_dir = parts.pop
           next if user_name == name # base_user
 
           if user_controller.admin?(name: user_name, container_name: name)

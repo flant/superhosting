@@ -74,7 +74,7 @@ module SpecHelpers
 
       def with_user(**kwargs, &b)
         self.with_base('user', default: { name: @user_name, container_name: @container_name },
-                       to_delete: { name: @user_name, container_name: @container_name }, **kwargs, &b)
+                               to_delete: { name: @user_name, container_name: @container_name }, **kwargs, &b)
       end
 
       included do

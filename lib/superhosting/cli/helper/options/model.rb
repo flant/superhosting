@@ -7,8 +7,8 @@ module Superhosting
 
           included do
             option :model,
-                   :short => '-m MODEL',
-                   :long => '--model MODEL'
+                   short: '-m MODEL',
+                   long: '--model MODEL'
           end
         end
       end

@@ -5,7 +5,7 @@ module Superhosting
         include Helper::Options::UserAdd
         include Helper::Options::Container
 
-        def self.has_required_param?
+        def self.required_param?
           true
         end
 

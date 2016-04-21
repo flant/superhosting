@@ -17,13 +17,12 @@ module Superhosting
         @@index ||= {}
         @container_controller.index.each do |container_name, data|
           container_mapper = @container_controller.index[container_name][:mapper]
-          if (mux_mapper = container_mapper.mux).file?
-            mux_name = mux_mapper.value
-            if @container_controller.running_validation(name: container_name).net_status_ok?
-              self.index_push(mux_name, container_name)
-            else
-              self.index_pop(mux_name, container_name)
-            end
+          next unless (mux_mapper = container_mapper.mux).file?
+          mux_name = mux_mapper.value
+          if @container_controller.running_validation(name: container_name).net_status_ok?
+            self.index_push(mux_name, container_name)
+          else
+            self.index_pop(mux_name, container_name)
           end
         end
         @@index

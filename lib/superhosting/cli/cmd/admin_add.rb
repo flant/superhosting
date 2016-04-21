@@ -4,7 +4,7 @@ module Superhosting
       class AdminAdd < Base
         include Helper::Options::Generate
 
-        def self.has_required_param?
+        def self.required_param?
           true
         end
 

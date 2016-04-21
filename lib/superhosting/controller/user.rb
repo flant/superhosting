@@ -22,7 +22,7 @@ module Superhosting
       end
 
       def add(name:, container_name:, ftp_dir: nil, ftp_only: false, generate: false)
-        return { error: :logical_error, code: :option_ftp_only_is_required } if ftp_dir and !ftp_only
+        return { error: :logical_error, code: :option_ftp_only_is_required } if ftp_dir && !ftp_only
 
         web_mapper = PathMapper.new("/web/#{container_name}")
         home_dir = ftp_dir.nil? ? web_mapper.path : web_mapper.f(ftp_dir).path
@@ -54,8 +54,8 @@ module Superhosting
       end
 
       def delete(name:, container_name:)
-        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? and
-          (resp = self.existing_validation(name: name, container_name: container_name)).net_status_ok?
+        if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? &&
+           (resp = self.existing_validation(name: name, container_name: container_name)).net_status_ok?
           container_lib_mapper = @lib.containers.f(container_name)
           passwd_mapper = container_lib_mapper.config.f('etc-passwd')
           user_name = "#{container_name}_#{name}"

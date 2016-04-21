@@ -4,7 +4,7 @@ module Superhosting
       class ModelInspect < Base
         include Helper::Options::Inheritance
 
-        def self.has_required_param?
+        def self.required_param?
           true
         end
 

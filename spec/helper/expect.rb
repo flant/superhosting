@@ -31,8 +31,8 @@ module SpecHelpers
         expect_net_status(resp, code: code)
         if code
           self.expect_translation(resp)
-        else
-          self.send(expectation_method, **kwargs) if self.respond_to? expectation_method
+        elsif self.respond_to? expectation_method
+          self.send(expectation_method, **kwargs)
         end
         resp
       end
@@ -47,12 +47,12 @@ module SpecHelpers
 
       def expect_dir(maybe_path)
         maybe_path = maybe_path.path if maybe_path.respond_to? :path
-        expect(File.directory? maybe_path).to be_truthy
+        expect(File.directory?(maybe_path)).to be_truthy
       end
 
       def expect_file(maybe_path)
         maybe_path = maybe_path.path if maybe_path.respond_to? :path
-        expect(File.file? maybe_path).to be_truthy
+        expect(File.file?(maybe_path)).to be_truthy
       end
 
       def expect_in_file(path_mapper, line)

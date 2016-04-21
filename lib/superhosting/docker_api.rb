@@ -3,7 +3,7 @@ module Superhosting
     include Helper::Cmd
     include Helper::Logger
 
-    AVAILABLE_DOCKER_OPTIONS = [:user, :cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap]
+    AVAILABLE_DOCKER_OPTIONS = [:user, :cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap].freeze
 
     def initialize(**kwargs)
       @socket = kwargs[:socket] || '/var/run/docker.sock'
@@ -106,12 +106,12 @@ module Superhosting
     end
 
     def container_rm_inactive!(name)
-      self.container_rm!(name) if self.container_exists?(name) and !self.container_running?(name)
+      self.container_rm!(name) if self.container_exists?(name) && !self.container_running?(name)
     end
 
     def container_status?(name, status)
       self.with_dry_run do |dry_run|
-        return true if dry_run and self.storage[name] == status
+        return true if dry_run && self.storage[name] == status
         resp = container_info(name)
         if resp.nil?
           false
@@ -123,12 +123,12 @@ module Superhosting
 
     def container_running?(name)
       self.with_dry_run do |dry_run|
-        return true if dry_run and self.storage[name] == 'running'
+        return true if dry_run && self.storage[name] == 'running'
         resp = container_info(name)
         if resp.nil?
           false
         else
-          resp['State']['Running'] and %w(Restarting Paused OOMKilled Dead).all? { |c| !resp['State'][c] }
+          resp['State']['Running'] && %w(Restarting Paused OOMKilled Dead).all? { |c| !resp['State'][c] }
         end
       end
     end
@@ -159,7 +159,7 @@ module Superhosting
 
     def container_exists?(name)
       self.with_dry_run do |dry_run|
-        return true if dry_run and self.storage.key? name
+        return true if dry_run && self.storage.key?(name)
         container_info(name).nil? ? false : true
       end
     end
@@ -168,7 +168,7 @@ module Superhosting
       container = container_info(name)
       image = image_info(image)
 
-      if container.nil? or image.nil?
+      if container.nil? || image.nil?
         false
       else
         container['Image'] == image['Id']

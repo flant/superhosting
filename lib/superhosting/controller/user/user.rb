@@ -38,7 +38,7 @@ module Superhosting
               user = self._get(name: name)
 
               self.with_dry_run do |dry_run|
-                user_gid, user_uid = dry_run ? ['XXXX', 'XXXX'] : [user.gid, user.uid]
+                user_gid, user_uid = dry_run ? %w(XXXX XXXX) : [user.gid, user.uid]
                 passwd_mapper.append_line!("#{name}:x:#{user_uid}:#{user_gid}::#{home_dir}:#{shell}")
               end
             end
@@ -72,7 +72,7 @@ module Superhosting
         password = if generate
           SecureRandom.hex
         else
-          while 1
+          loop do
             if (pass = ask('Enter password: ') { |q| q.echo = false }) != ask('Repeat password: ') { |q| q.echo = false }
               self.info('Passwords does not match')
             elsif !StrongPassword::StrengthChecker.new(pass).is_strong?(min_entropy: @config.f('password_strength', default: '15').to_i)
@@ -99,7 +99,7 @@ module Superhosting
       end
 
       def system?(name:, container_name:)
-        if (base_user = self._get(name: container_name)) and (user = self._get(name: name))
+        if (base_user = self._get(name: container_name)) && (user = self._get(name: name))
           base_user.uid != user.uid
         else
           false
