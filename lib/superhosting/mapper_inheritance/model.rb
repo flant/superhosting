@@ -8,7 +8,7 @@ module Superhosting
         @mapper = model_mapper
         @models_mapper = @mapper.parent
         @muxs_mapper = @models_mapper.parent.muxs
-        self.collect_inheritors
+        collect_inheritors
       end
 
       def inheritors_mapper(mapper)

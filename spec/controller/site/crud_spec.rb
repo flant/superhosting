@@ -77,8 +77,8 @@ describe Superhosting::Controller::Site do
       alias_name = "alias-#{@site_name}"
       site_alias_add_with_exps(name: alias_name)
       site_rename_with_exps(name: @site_name, new_name: alias_name, keep_name_as_alias: true)
-      expect_in_file(self.site_aliases(container_name, alias_name), @site_name)
-      not_expect_in_file(self.site_aliases(container_name, alias_name), alias_name)
+      expect_in_file(site_aliases(container_name, alias_name), @site_name)
+      not_expect_in_file(site_aliases(container_name, alias_name), alias_name)
     end
   end
 
@@ -89,8 +89,8 @@ describe Superhosting::Controller::Site do
       site_alias_add_with_exps(name: alias_name)
       site_rename(name: alias_name, new_name: alias_name, keep_name_as_alias: true)
       site_add_exps(name: alias_name)
-      expect_in_file(self.site_aliases(container_name, alias_name), @site_name)
-      not_expect_in_file(self.site_aliases(container_name, alias_name), alias_name)
+      expect_in_file(site_aliases(container_name, alias_name), @site_name)
+      not_expect_in_file(site_aliases(container_name, alias_name), alias_name)
     end
   end
 
@@ -101,8 +101,8 @@ describe Superhosting::Controller::Site do
       alias2_name = "alias2-#{@site_name}"
       [alias1_name, alias2_name].each { |n| site_alias_add_with_exps(name: n) }
       site_rename_with_exps(name: alias1_name, new_name: alias2_name, keep_name_as_alias: true)
-      expect_in_file(self.site_aliases(container_name, alias2_name), @site_name)
-      not_expect_in_file(self.site_aliases(container_name, alias2_name), alias2_name)
+      expect_in_file(site_aliases(container_name, alias2_name), @site_name)
+      not_expect_in_file(site_aliases(container_name, alias2_name), alias2_name)
     end
   end
 
@@ -261,7 +261,7 @@ describe Superhosting::Controller::Site do
   it 'add#punycode' do
     with_container do |container_name|
       site_add_with_exps(name: 'домен.рф', container_name: container_name)
-      conf_mapper = self.etc.nginx.sites.f("#{container_name}-домен.рф.conf")
+      conf_mapper = etc.nginx.sites.f("#{container_name}-домен.рф.conf")
       expect_in_file(conf_mapper, 'xn--d1acufc.xn--p1ai')
     end
   end

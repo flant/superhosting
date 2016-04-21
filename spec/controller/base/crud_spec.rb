@@ -13,7 +13,7 @@ describe Superhosting::Controller::Base do
 
   it 'repair@all' do
     def site_state_(name)
-      self.site_state(name, "#{name}.rf")
+      site_state(name, "#{name}.rf")
     end
 
     first_container = @container_name

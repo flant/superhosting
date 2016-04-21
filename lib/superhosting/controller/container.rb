@@ -2,7 +2,7 @@ module Superhosting
   module Controller
     class Container < Base
       def list
-        containers = self._list
+        containers = _list
         { data: containers }
       end
 
@@ -10,23 +10,23 @@ module Superhosting
         containers = []
         @config.containers.grep_dirs.map do |n|
           name = n.name
-          containers << self._inspect(name: name) if self.index.key?(name) && self.index[name][:mapper].lib.state.file?
+          containers << _inspect(name: name) if index.key?(name) && index[name][:mapper].lib.state.file?
         end
         containers
       end
 
       def inspect(name:, inheritance: false, erb: false)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
+        if (resp = existing_validation(name: name)).net_status_ok?
           if inheritance
-            mapper = self.index[name][:mapper]
+            mapper = index[name][:mapper]
             data = separate_inheritance(mapper) do |mapper, inheritors|
-              inheritors.inject([self._inspect(name: mapper.name, erb: erb)]) do |inheritance, m|
+              inheritors.inject([_inspect(name: mapper.name, erb: erb)]) do |inheritance, m|
                 inheritance << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
               end
             end
             { data: data }
           else
-            { data: self._inspect(name: name, erb: erb) }
+            { data: _inspect(name: name, erb: erb) }
           end
         else
           resp
@@ -34,12 +34,12 @@ module Superhosting
       end
 
       def _inspect(name:, erb: false)
-        mapper = self.index[name][:mapper]
-        model_name = self.index[name][:model_name]
-        user_controller = self.get_controller(User)
+        mapper = index[name][:mapper]
+        model_name = index[name][:model_name]
+        user_controller = get_controller(User)
         {
           'name' => name,
-          'state' => self.state(name: name).value,
+          'state' => state(name: name).value,
           'model' => model_name,
           'users' => user_controller.list(container_name: name).net_status_ok![:data],
           'options' => get_mapper_options(mapper, erb: erb)
@@ -47,31 +47,31 @@ module Superhosting
       end
 
       def inheritance(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          { data: self._inheritance(name: name) }
+        if (resp = existing_validation(name: name)).net_status_ok?
+          { data: _inheritance(name: name) }
         else
           resp
         end
       end
 
       def options(name:, inheritance: false, erb: false)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          { data: self._options(name: name, inheritance: inheritance, erb: erb) }
+        if (resp = existing_validation(name: name)).net_status_ok?
+          { data: _options(name: name, inheritance: inheritance, erb: erb) }
         else
           resp
         end
       end
 
       def add(name:, model: nil)
-        if (resp = self.not_existing_validation(name: name)).net_status_ok? &&
-           (resp = self.adding_validation(name: name)).net_status_ok?
-          resp = self._reconfigure(name: name, model: model)
+        if (resp = not_existing_validation(name: name)).net_status_ok? &&
+           (resp = adding_validation(name: name)).net_status_ok?
+          resp = _reconfigure(name: name, model: model)
         end
         resp
       end
 
       def delete(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
+        if (resp = existing_validation(name: name)).net_status_ok?
           lib_mapper = @lib.containers.f(name)
 
           states = {
@@ -82,17 +82,17 @@ module Superhosting
             data_installed: { action: :uninstall_data }
           }
 
-          self.on_state(state_mapper: lib_mapper, states: states,
-                        name: name)
+          on_state(state_mapper: lib_mapper, states: states,
+                   name: name)
         end
         resp
       end
 
       def update(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok? && @docker_api.container_exists?(name)
-          mapper = self.index[name][:mapper]
+        if (resp = existing_validation(name: name)).net_status_ok? && @docker_api.container_exists?(name)
+          mapper = index[name][:mapper]
           docker_options = mapper.lib.docker_options.value
-          self._update(name: name, docker_options: Marshal.load(docker_options))
+          _update(name: name, docker_options: Marshal.load(docker_options))
         end
         resp
       end
@@ -100,13 +100,13 @@ module Superhosting
       def _update(name:, docker_options:, with_pull: true)
         command_options, image, command = docker_options
         @docker_api.image_pull(image) if with_pull
-        self._recreate_docker(command_options, image, command, name: name) unless @docker_api.container_image?(name, image)
+        _recreate_docker(command_options, image, command, name: name) unless @docker_api.container_image?(name, image)
       end
 
       def rename(name:, new_name:)
-        if (resp = self.available_validation(name: name)).net_status_ok? &&
-           (resp = self.adding_validation(name: new_name)).net_status_ok?
-          mapper = self.index[name][:mapper]
+        if (resp = available_validation(name: name)).net_status_ok? &&
+           (resp = adding_validation(name: new_name)).net_status_ok?
+          mapper = index[name][:mapper]
           status_name = "#{name}_to_#{new_name}"
           state_mapper = @lib.process_status.f(status_name).create!
           model = nil if (model = mapper.f('model').value).nil?
@@ -122,18 +122,18 @@ module Superhosting
             new_reconfigured: { action: :delete }
           }
 
-          self.on_state(state_mapper: state_mapper, states: states,
-                        name: name, new_name: new_name, model: model)
+          on_state(state_mapper: state_mapper, states: states,
+                   name: name, new_name: new_name, model: model)
         else
           resp
         end
       end
 
       def reconfigure(name:, model: nil)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
+        if (resp = existing_validation(name: name)).net_status_ok?
           state = model ? :none : :data_installed
-          self.set_state(state: state, state_mapper: self.state(name: name))
-          resp = self._reconfigure(name: name, model: model)
+          set_state(state: state, state_mapper: self.state(name: name))
+          resp = _reconfigure(name: name, model: model)
         end
         resp
       end
@@ -149,8 +149,8 @@ module Superhosting
           configuration_applied: { action: :run, undo: :stop, next: :up }
         }
 
-        self.on_state(state_mapper: lib_mapper, states: states,
-                      name: name, **kwargs)
+        on_state(state_mapper: lib_mapper, states: states,
+                 name: name, **kwargs)
       end
 
       def save(name:, to:)
@@ -160,11 +160,11 @@ module Superhosting
       end
 
       def admin(name:)
-        self.get_controller(Admin, name: name)
+        get_controller(Admin, name: name)
       end
 
       def model(name:)
-        self.get_controller(Model, name: name)
+        get_controller(Model, name: name)
       end
     end
   end

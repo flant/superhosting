@@ -2,7 +2,7 @@ module Superhosting
   module Controller
     class Container
       def copy_etc(name:, new_name:)
-        mapper = self.index[name][:mapper]
+        mapper = index[name][:mapper]
         new_etc_mapper = mapper.etc.parent.f(new_name)
         mapper.rename!(new_etc_mapper.path)
         mapper.create!
@@ -11,7 +11,7 @@ module Superhosting
       end
 
       def undo_copy_etc(name:, new_name:)
-        mapper = self.index[name][:mapper]
+        mapper = index[name][:mapper]
         new_etc_mapper = mapper.etc.parent.f(new_name)
         new_etc_mapper.rename!(mapper.path)
         new_etc_mapper.delete!
@@ -20,13 +20,13 @@ module Superhosting
       end
 
       def copy_var(name:, new_name:)
-        mapper = self.index[name][:mapper]
-        new_mapper = self.index[new_name][:mapper]
+        mapper = index[name][:mapper]
+        new_mapper = index[new_name][:mapper]
         mapper.lib.web.rename!(new_mapper.lib.web.path)
         mapper.lib.sites.rename!(new_mapper.lib.sites.path)
         mapper.lib.registry.sites.rename!(new_mapper.lib.registry.sites.path)
 
-        site_controller = self.get_controller(Site)
+        site_controller = get_controller(Site)
         site_controller.reindex_container_sites(container_name: new_name)
         site_controller.reindex_container_sites(container_name: name)
 
@@ -34,8 +34,8 @@ module Superhosting
       end
 
       def undo_copy_var(name:, new_name:)
-        mapper = self.index[name][:mapper]
-        new_mapper = self.index[new_name][:mapper]
+        mapper = index[name][:mapper]
+        new_mapper = index[new_name][:mapper]
 
         unless new_mapper.nil?
           new_mapper.lib.web.safe_rename!(mapper.lib.web.path)
@@ -43,7 +43,7 @@ module Superhosting
           new_mapper.lib.registry.sites.safe_rename!(mapper.lib.registry.sites.path)
         end
 
-        site_controller = self.get_controller(Site)
+        site_controller = get_controller(Site)
         site_controller.reindex_container_sites(container_name: name)
         site_controller.reindex_container_sites(container_name: new_name)
 
@@ -51,9 +51,9 @@ module Superhosting
       end
 
       def copy_users(name:, new_name:)
-        mapper = self.index[name][:mapper]
-        user_controller = self.get_controller(User)
-        container_admin_controller = self.admin(name: new_name)
+        mapper = index[name][:mapper]
+        user_controller = get_controller(User)
+        container_admin_controller = admin(name: new_name)
 
         mapper.config.f('etc-passwd').lines.each do |line|
           parts = line.split(':')
@@ -79,19 +79,19 @@ module Superhosting
       end
 
       def new_up(new_name:, model:)
-        self._reconfigure(name: new_name, model: model)
+        _reconfigure(name: new_name, model: model)
       end
 
       def undo_new_up(new_name:)
-        self.delete(name: new_name)
+        delete(name: new_name)
       end
 
       def new_reconfigure(new_name:)
-        self.reconfigure(name: new_name)
+        reconfigure(name: new_name)
       end
 
       def undo_new_reconfigure(new_name:)
-        self.unconfigure_with_unapply(name: new_name)
+        unconfigure_with_unapply(name: new_name)
       end
     end
   end

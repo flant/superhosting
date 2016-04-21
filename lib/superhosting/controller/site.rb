@@ -3,7 +3,7 @@ module Superhosting
     class Site < Base
       def list(container_name: nil)
         if container_name.nil? || (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
-          { data: self._list(container_name: container_name) }
+          { data: _list(container_name: container_name) }
         else
           resp
         end
@@ -11,26 +11,26 @@ module Superhosting
 
       def _list(container_name: nil)
         sites = []
-        sites_hash = container_name.nil? ? self.index : self.container_sites(container_name: container_name)
+        sites_hash = container_name.nil? ? index : container_sites(container_name: container_name)
         sites_hash.each do |name, _index|
-          sites << self._inspect(name: name) if self.state(name: name).file?
+          sites << _inspect(name: name) if state(name: name).file?
         end
 
         sites
       end
 
       def inspect(name:, inheritance: false, erb: false)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
+        if (resp = existing_validation(name: name)).net_status_ok?
           if inheritance
-            mapper = self.index[name][:mapper]
+            mapper = index[name][:mapper]
             data = separate_inheritance(mapper) do |mapper, inheritors|
-              inheritors.inject([self._inspect(name: mapper.name, erb: erb)]) do |inheritance, m|
+              inheritors.inject([_inspect(name: mapper.name, erb: erb)]) do |inheritance, m|
                 inheritance << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
               end
             end
             { data: data }
           else
-            { data: self._inspect(name: name, erb: erb) }
+            { data: _inspect(name: name, erb: erb) }
           end
         else
           resp
@@ -38,30 +38,30 @@ module Superhosting
       end
 
       def _inspect(name:, erb: false)
-        mapper = self.index[name][:mapper]
+        mapper = index[name][:mapper]
         actual_name = mapper.name
-        container_mapper = self.index[actual_name][:container_mapper]
-        alias_controller = self.get_controller(Alias, name: actual_name)
+        container_mapper = index[actual_name][:container_mapper]
+        alias_controller = get_controller(Alias, name: actual_name)
         {
           'name' => actual_name,
           'container' => container_mapper.name,
-          'state' => self.state(name: actual_name).value,
+          'state' => state(name: actual_name).value,
           'aliases' => alias_controller._list,
           'options' => get_mapper_options(mapper, erb: erb)
         }
       end
 
       def inheritance(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          { data: self._inheritance(name: name) }
+        if (resp = existing_validation(name: name)).net_status_ok?
+          { data: _inheritance(name: name) }
         else
           resp
         end
       end
 
       def options(name:, inheritance: false, erb: false)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          { data: self._options(name: name, inheritance: inheritance, erb: erb) }
+        if (resp = existing_validation(name: name)).net_status_ok?
+          { data: _options(name: name, inheritance: inheritance, erb: erb) }
         else
           resp
         end
@@ -69,32 +69,32 @@ module Superhosting
 
       def add(name:, container_name:)
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? &&
-           (resp = self.adding_validation(name: name)).net_status_ok?
-          resp = self._reconfigure(name: name, container_name: container_name)
+           (resp = adding_validation(name: name)).net_status_ok?
+          resp = _reconfigure(name: name, container_name: container_name)
         end
         resp
       end
 
       def name(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          { data: self.index[name][:mapper].name }
+        if (resp = existing_validation(name: name)).net_status_ok?
+          { data: index[name][:mapper].name }
         else
           resp
         end
       end
 
       def container(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          { data: self.index[name][:container_mapper].name }
+        if (resp = existing_validation(name: name)).net_status_ok?
+          { data: index[name][:container_mapper].name }
         else
           resp
         end
       end
 
       def delete(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          lib_sites_mapper = self.index[name][:container_mapper].lib.sites
-          actual_name = self.index[name][:mapper].name
+        if (resp = existing_validation(name: name)).net_status_ok?
+          lib_sites_mapper = index[name][:container_mapper].lib.sites
+          actual_name = index[name][:mapper].name
           state_mapper = lib_sites_mapper.f(actual_name)
 
           states = {
@@ -103,20 +103,20 @@ module Superhosting
             data_installed: { action: :uninstall_data }
           }
 
-          self.on_state(state_mapper: state_mapper, states: states, name: actual_name)
+          on_state(state_mapper: state_mapper, states: states, name: actual_name)
         end
         resp
       end
 
       def rename(name:, new_name:, keep_name_as_alias: false)
-        if (resp = self.available_validation(name: name)).net_status_ok? &&
-           ((resp = self.adding_validation(name: new_name)).net_status_ok? ||
+        if (resp = available_validation(name: name)).net_status_ok? &&
+           ((resp = adding_validation(name: new_name)).net_status_ok? ||
              (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
-          mapper = self.index[name][:mapper]
+          mapper = index[name][:mapper]
           status_name = "#{name}_to_#{new_name}"
           state_mapper = @lib.process_status.f(status_name).create!
           actual_name = mapper.name
-          container_name = self.index[name][:container_mapper].name
+          container_name = index[name][:container_mapper].name
 
           states = {
             none: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
@@ -127,19 +127,19 @@ module Superhosting
             deleted: { action: :keep_name_as_alias }
           }
 
-          self.on_state(state_mapper: state_mapper, states: states,
-                        name: actual_name, new_name: new_name, container_name: container_name,
-                        is_alias: is_alias, keep_name_as_alias: keep_name_as_alias)
+          on_state(state_mapper: state_mapper, states: states,
+                   name: actual_name, new_name: new_name, container_name: container_name,
+                   is_alias: is_alias, keep_name_as_alias: keep_name_as_alias)
         else
           resp
         end
       end
 
       def reconfigure(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          actual_name = self.index[name][:mapper].name
-          self.set_state(state: :data_installed, state_mapper: self.state(name: actual_name))
-          self._reconfigure(name: actual_name)
+        if (resp = existing_validation(name: name)).net_status_ok?
+          actual_name = index[name][:mapper].name
+          set_state(state: :data_installed, state_mapper: state(name: actual_name))
+          _reconfigure(name: actual_name)
         end
         resp
       end
@@ -148,7 +148,7 @@ module Superhosting
         lib_sites_mapper = if (container_name = kwargs[:container_name])
                              @container_controller.index[container_name][:mapper].lib.sites
                            else
-                             self.index[name][:container_mapper].lib.sites
+                             index[name][:container_mapper].lib.sites
                            end
         state_mapper = lib_sites_mapper.f(name)
 
@@ -157,12 +157,12 @@ module Superhosting
           data_installed: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :up }
         }
 
-        self.on_state(state_mapper: state_mapper, states: states,
-                      name: name, container_name: container_name, **kwargs)
+        on_state(state_mapper: state_mapper, states: states,
+                 name: name, container_name: container_name, **kwargs)
       end
 
       def alias(name:)
-        self.get_controller(Alias, name: name)
+        get_controller(Alias, name: name)
       end
     end
   end

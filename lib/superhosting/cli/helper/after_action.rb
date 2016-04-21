@@ -6,16 +6,16 @@ module Superhosting
 
         def show_list(data, sort: true)
           data.sort! if sort
-          data.each { |elm| self.info(elm) }
+          data.each { |elm| info(elm) }
         end
 
         def show_data(data)
-          self.info(data)
+          info(data)
         end
 
         def show_json(data, sortby: nil)
           data.sort! { |a1, a2| a1[sortby] <=> a2[sortby] } unless sortby.nil?
-          self.info(JSON.pretty_generate(data))
+          info(JSON.pretty_generate(data))
         end
 
         def show_site_list(data, config)
@@ -34,7 +34,7 @@ module Superhosting
               output << name
               output << state if config[:state]
 
-              self.info(output.join(' '))
+              info(output.join(' '))
             end
           end
         end
@@ -48,9 +48,9 @@ module Superhosting
               state = container_info['state']
 
               if config[:state]
-                self.info([name, state].join(' '))
+                info([name, state].join(' '))
               else
-                self.info(name)
+                info(name)
               end
             end
           end
@@ -102,10 +102,10 @@ module Superhosting
           else
             data.each do |elm|
               elm.each do |users_type, users|
-                self.info(users_type)
-                self.indent_step
+                info(users_type)
+                indent_step
                 show_list(users)
-                self.indent_step_back
+                indent_step_back
               end
             end
           end
@@ -113,17 +113,17 @@ module Superhosting
 
         def show_options(data, config)
           def show(options)
-            options.each { |k, v| self.info("#{k} = #{v.inspect}") }
+            options.each { |k, v| info("#{k} = #{v.inspect}") }
           end
 
           if config[:inheritance]
             data.each do |elm|
               elm.each do |name, options|
                 next if options.empty?
-                self.info(name)
-                self.indent_step
+                info(name)
+                indent_step
                 show(options)
-                self.indent_step_back
+                indent_step_back
               end
             end
           else
@@ -135,7 +135,7 @@ module Superhosting
           if config[:json]
             show_json(data)
           else
-            self.show_list(data.map do |hash|
+            show_list(data.map do |hash|
               type = hash['type']
               name = hash['name']
               "#{"#{type}: " if type == 'mux'}#{name}"
@@ -160,14 +160,14 @@ module Superhosting
 
           def show_node(node, type, ignore_type)
             node.each do |k, hash|
-              self.info("#{"#{type}: " if !ignore_type && type == 'mux'}#{k}")
-              self.indent_step
-              self.show_tree(hash, ignore_type)
-              self.indent_step_back
+              info("#{"#{type}: " if !ignore_type && type == 'mux'}#{k}")
+              indent_step
+              show_tree(hash, ignore_type)
+              indent_step_back
             end
           end
 
-          old = self.indent
+          old = indent
           show_tree(data, ignore_type)
           self.indent = old
         end

@@ -20,7 +20,7 @@ module Superhosting
       end
 
       def execute(script)
-        self.instance_eval(script, script.path.to_s)
+        instance_eval(script, script.path.to_s)
       end
     end
   end

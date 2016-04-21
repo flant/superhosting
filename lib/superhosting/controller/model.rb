@@ -3,11 +3,11 @@ module Superhosting
     class Model < Base
       def initialize(**kwargs)
         super
-        @container_controller = self.get_controller(Container)
+        @container_controller = get_controller(Container)
       end
 
       def list(abstract: false)
-        { data: self._list(abstract: abstract) }
+        { data: _list(abstract: abstract) }
       end
 
       def _list(abstract: false)
@@ -20,7 +20,7 @@ module Superhosting
       end
 
       def tree(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
+        if (resp = existing_validation(name: name)).net_status_ok?
           { data: MapperInheritance::Model.new(@config.models.f(name)).collect_inheritors_tree[name] }
         else
           resp
@@ -28,7 +28,7 @@ module Superhosting
       end
 
       def inspect(name:, inheritance: false)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
+        if (resp = existing_validation(name: name)).net_status_ok?
           mapper = MapperInheritance::Model.new(@config.models.f(name)).inheritors_mapper(@config.models.f(name))
           if inheritance
             data = separate_inheritance(mapper) do |mapper, inheritors|
@@ -46,7 +46,7 @@ module Superhosting
       end
 
       def options(name:, inheritance: false)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
+        if (resp = existing_validation(name: name)).net_status_ok?
           mapper = MapperInheritance::Model.new(@config.models.f(name)).inheritors_mapper(@config.models.f(name))
           if inheritance
             data = separate_inheritance(mapper) do |mapper, inheritors|
@@ -66,7 +66,7 @@ module Superhosting
       end
 
       def inheritance(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
+        if (resp = existing_validation(name: name)).net_status_ok?
           model_mapper = @config.models.f(name)
           inheritance = MapperInheritance::Model.new(model_mapper).inheritors
           inheritance.delete(model_mapper)
@@ -77,8 +77,8 @@ module Superhosting
       end
 
       def reconfigure(name:)
-        if (resp = self.useable_validation(name: name)).net_status_ok?
-          self.index[name].each do |container_name|
+        if (resp = useable_validation(name: name)).net_status_ok?
+          index[name].each do |container_name|
             break unless (resp = @container_controller.reconfigure(name: container_name)).net_status_ok?
           end
         end
@@ -86,8 +86,8 @@ module Superhosting
       end
 
       def update(name:)
-        if (resp = self.useable_validation(name: name)).net_status_ok?
-          self.index[name].each do |container_name|
+        if (resp = useable_validation(name: name)).net_status_ok?
+          index[name].each do |container_name|
             break unless (resp = @container_controller.update(name: container_name)).net_status_ok?
           end
         end

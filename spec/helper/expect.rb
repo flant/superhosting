@@ -23,22 +23,22 @@ module SpecHelpers
         code = kwargs.delete(:code)
 
         resp = begin
-          self.send(controller_method.to_sym, *args, **kwargs)
+          send(controller_method.to_sym, *args, **kwargs)
         rescue NetStatus::Exception => e
           e.net_status
         end
 
         expect_net_status(resp, code: code)
         if code
-          self.expect_translation(resp)
-        elsif self.respond_to? expectation_method
-          self.send(expectation_method, **kwargs)
+          expect_translation(resp)
+        elsif respond_to? expectation_method
+          send(expectation_method, **kwargs)
         end
         resp
       end
 
       def model_exps(m, **kwargs)
-        self.send(m, kwargs) if self.respond_to? m
+        send(m, kwargs) if respond_to? m
       end
 
       def expect_translation(resp)

@@ -22,8 +22,8 @@ module Superhosting
     end
 
     def base_action(name, code)
-      self.debug_operation(desc: { code: code, data: { name: name } }) do |&blk|
-        self.with_dry_run do |dry_run|
+      debug_operation(desc: { code: code, data: { name: name } }) do |&blk|
+        with_dry_run do |dry_run|
           yield blk, dry_run
         end
       end
@@ -33,7 +33,7 @@ module Superhosting
       cmd = "docker pull #{name}"
       base_action(name, :image_pull) do |blk, dry_run|
         begin
-          self.command!(cmd, logger: false) unless dry_run
+          command!(cmd, logger: false) unless dry_run
           blk.call(code: :pulled)
         rescue NetStatus::Exception => _e
           blk.call(code: :not_found)
@@ -51,7 +51,7 @@ module Superhosting
 
     def container_kill!(name)
       base_action(name, :container) do |blk, dry_run|
-        self.storage.delete(name) if dry_run
+        storage.delete(name) if dry_run
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/kill") unless dry_run
         blk.call(code: :killed)
       end
@@ -59,7 +59,7 @@ module Superhosting
 
     def container_rm!(name)
       base_action(name, :container) do |blk, dry_run|
-        self.storage.delete(name) if dry_run
+        storage.delete(name) if dry_run
         resp_if_success raw_connection.request(method: :delete, path: "/containers/#{name}") unless dry_run
         blk.call(code: :removed)
       end
@@ -67,7 +67,7 @@ module Superhosting
 
     def container_stop!(name)
       base_action(name, :container) do |blk, dry_run|
-        self.storage[name] = 'exited' if dry_run
+        storage[name] = 'exited' if dry_run
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/stop") unless dry_run
         blk.call(code: :stopped)
       end
@@ -75,7 +75,7 @@ module Superhosting
 
     def container_start!(name)
       base_action(name, :container) do |blk, dry_run|
-        self.storage[name] = 'running' if dry_run
+        storage[name] = 'running' if dry_run
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/start") unless dry_run
         blk.call(code: :started)
       end
@@ -83,7 +83,7 @@ module Superhosting
 
     def container_pause!(name)
       base_action(name, :container) do |blk, dry_run|
-        self.storage[name] = 'paused' if dry_run
+        storage[name] = 'paused' if dry_run
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/pause") unless dry_run
         blk.call(code: :paused)
       end
@@ -91,7 +91,7 @@ module Superhosting
 
     def container_unpause!(name)
       base_action(name, :container) do |blk, dry_run|
-        self.storage[name] = 'running' if dry_run
+        storage[name] = 'running' if dry_run
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/unpause") unless dry_run
         blk.call(code: :unpaused)
       end
@@ -100,18 +100,18 @@ module Superhosting
     def container_restart!(name)
       base_action(name, :container) do |blk, dry_run|
         resp_if_success raw_connection.request(method: :post, path: "/containers/#{name}/restart") unless dry_run
-        self.storage[name] = 'running' if dry_run
+        storage[name] = 'running' if dry_run
         blk.call(code: :restarted)
       end
     end
 
     def container_rm_inactive!(name)
-      self.container_rm!(name) if self.container_exists?(name) && !self.container_running?(name)
+      container_rm!(name) if container_exists?(name) && !container_running?(name)
     end
 
     def container_status?(name, status)
-      self.with_dry_run do |dry_run|
-        return true if dry_run && self.storage[name] == status
+      with_dry_run do |dry_run|
+        return true if dry_run && storage[name] == status
         resp = container_info(name)
         if resp.nil?
           false
@@ -122,8 +122,8 @@ module Superhosting
     end
 
     def container_running?(name)
-      self.with_dry_run do |dry_run|
-        return true if dry_run && self.storage[name] == 'running'
+      with_dry_run do |dry_run|
+        return true if dry_run && storage[name] == 'running'
         resp = container_info(name)
         if resp.nil?
           false
@@ -158,8 +158,8 @@ module Superhosting
     end
 
     def container_exists?(name)
-      self.with_dry_run do |dry_run|
-        return true if dry_run && self.storage.key?(name)
+      with_dry_run do |dry_run|
+        return true if dry_run && storage.key?(name)
         container_info(name).nil? ? false : true
       end
     end
@@ -178,8 +178,8 @@ module Superhosting
     def container_run(name, options, image, command)
       cmd = "docker run --detach --name #{name} #{options.join(' ')} #{image} #{command}"
       base_action(name, :container) do |blk, dry_run|
-        self.storage[name] = 'running' if dry_run
-        self.command!(cmd).tap do
+        storage[name] = 'running' if dry_run
+        command!(cmd).tap do
           blk.call(code: :added)
         end
       end

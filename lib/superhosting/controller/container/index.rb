@@ -5,15 +5,15 @@ module Superhosting
 
       def initialize(**kwargs)
         super
-        self.index
+        index
       end
 
       def index
-        self.class.index ||= self.reindex
+        self.class.index ||= reindex
       end
 
       def reindex
-        @config.containers.grep_dirs.each { |mapper| self.reindex_container(name: mapper.name) }
+        @config.containers.grep_dirs.each { |mapper| reindex_container(name: mapper.name) }
         self.class.index ||= {}
       end
 

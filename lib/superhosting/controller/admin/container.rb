@@ -5,16 +5,16 @@ module Superhosting
         def initialize(name:, **kwargs)
           super(kwargs)
           @admin_name = name
-          @user_controller = self.get_controller(User)
-          @admin_controller = self.get_controller(Admin)
-          @container_controller = self.get_controller(Controller::Container)
+          @user_controller = get_controller(User)
+          @admin_controller = get_controller(Admin)
+          @container_controller = get_controller(Controller::Container)
           @admin_passwd = @config.admins.f(@admin_name).passwd
 
           @admin_controller.existing_validation(name: @admin_name).net_status_ok!
         end
 
         def list
-          { data: self._list }
+          { data: _list }
         end
 
         def _list
@@ -50,16 +50,16 @@ module Superhosting
         end
 
         def _containers_list
-          self._list.map { |elm| elm['container'] }
+          _list.map { |elm| elm['container'] }
         end
 
         def _users_list
-          self._list.map { |elm| elm[:user] }
+          _list.map { |elm| elm[:user] }
         end
 
         def _delete_all_users
-          self._containers_list.each do |container_name|
-            unless (resp = self.delete(name: container_name)).net_status_ok?
+          _containers_list.each do |container_name|
+            unless (resp = delete(name: container_name)).net_status_ok?
               return resp
             end
           end

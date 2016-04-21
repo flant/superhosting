@@ -11,7 +11,7 @@ module Superhosting
       protected
 
       def base_mapper
-        self.site
+        site
       end
     end
   end

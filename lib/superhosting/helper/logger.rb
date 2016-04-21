@@ -10,7 +10,7 @@ module Superhosting
       end
 
       def with_logger(logger: nil)
-        old = self.__logger
+        old = __logger
         self.__logger = nil if logger.is_a? FalseClass
         yield
       ensure
@@ -41,27 +41,27 @@ module Superhosting
       end
 
       def info(msg = nil, indent: true, desc: nil, **kwargs, &b)
-        unless self.__logger.nil?
+        unless __logger.nil?
           msg = indent ? with_indent(msg) : msg.chomp
-          self.__logger.info(msg, &b)
+          __logger.info(msg, &b)
         end
         {} # net_status
       end
 
       def debug(msg = nil, indent: true, desc: nil, &b)
-        unless self.__logger.nil?
+        unless __logger.nil?
           unless desc.nil?
             (desc[:data] ||= {})[:msg] = msg
             msg = t(desc: desc)
           end
           msg = indent ? with_indent(msg) : msg.chomp
-          self.__logger.debug(msg, &b)
+          __logger.debug(msg, &b)
         end
         {} # net_status
       end
 
       def debug_operation(desc: nil, &b)
-        old = self.indent
+        old = indent
 
         status = :failed
         diff = nil
@@ -75,16 +75,16 @@ module Superhosting
         raise
       ensure
         desc[:code] = :"#{desc[:code]}.#{status}"
-        self.debug(desc: desc)
-        self.debug(diff, indent: false) if !diff.nil? && self.__debug
+        debug(desc: desc)
+        debug(diff, indent: false) if !diff.nil? && __debug
         self.indent = old
       end
 
       def debug_block(desc: nil, operation: false, &b)
-        old = self.indent
+        old = indent
 
-        self.debug(desc: desc)
-        self.indent_step
+        debug(desc: desc)
+        indent_step
 
         status = :failed
         resp = yield
@@ -94,7 +94,7 @@ module Superhosting
       rescue Exception => e
         raise
       ensure
-        self.debug(desc: { code: status })
+        debug(desc: { code: status })
         self.indent = old
       end
 
@@ -107,7 +107,7 @@ module Superhosting
       end
 
       def indent
-        @@indent ||= self.indent_reset
+        @@indent ||= indent_reset
       end
 
       def indent=(val)

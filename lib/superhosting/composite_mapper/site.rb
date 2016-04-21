@@ -6,7 +6,7 @@ module Superhosting
       end
 
       def aliases_mapper
-        self.lib.parent.parent.sites.f(self.name).aliases
+        lib.parent.parent.sites.f(name).aliases
       end
     end
   end

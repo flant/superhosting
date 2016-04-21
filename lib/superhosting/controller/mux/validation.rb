@@ -3,11 +3,11 @@ module Superhosting
     class Mux
       def adding_validation(name:)
         @docker_api.container_rm_inactive!(name)
-        self.not_running_validation(name: self._container_name(name: name))
+        not_running_validation(name: _container_name(name: name))
       end
 
       def useable_validation(name:)
-        self.index.include?(name) ? {} : { error: :logical_error, code: :mux_does_not_used, data: { name: name } }
+        index.include?(name) ? {} : { error: :logical_error, code: :mux_does_not_used, data: { name: name } }
       end
 
       def existing_validation(name:)
@@ -15,11 +15,11 @@ module Superhosting
       end
 
       def not_running_validation(name:)
-        @container_controller.not_running_validation(name: self._container_name(name: name)).net_status_ok? ? {} : { error: :logical_error, code: :mux_is_running, data: { name: name } }
+        @container_controller.not_running_validation(name: _container_name(name: name)).net_status_ok? ? {} : { error: :logical_error, code: :mux_is_running, data: { name: name } }
       end
 
       def running_validation(name:)
-        @container_controller.running_validation(name: self._container_name(name: name)).net_status_ok? ? {} : { error: :logical_error, code: :mux_is_not_running, data: { name: name } }
+        @container_controller.running_validation(name: _container_name(name: name)).net_status_ok? ? {} : { error: :logical_error, code: :mux_is_not_running, data: { name: name } }
       end
     end
   end

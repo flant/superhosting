@@ -6,12 +6,12 @@ module Superhosting
 
       def initialize(**kwargs)
         super
-        @container_controller = self.get_controller(Container)
-        self.index
+        @container_controller = get_controller(Container)
+        index
       end
 
       def index
-        self.class.index ||= self.reindex
+        self.class.index ||= reindex
       end
 
       def reindex
@@ -21,9 +21,9 @@ module Superhosting
           next unless (mux_mapper = container_mapper.mux).file?
           mux_name = mux_mapper.value
           if @container_controller.running_validation(name: container_name).net_status_ok?
-            self.index_push(mux_name, container_name)
+            index_push(mux_name, container_name)
           else
-            self.index_pop(mux_name, container_name)
+            index_pop(mux_name, container_name)
           end
         end
         self.class.index

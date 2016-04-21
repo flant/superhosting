@@ -71,7 +71,7 @@ module Superhosting
       end
 
       def _options(name:, inheritance: false, erb: false)
-        mapper = self.index[name][:mapper]
+        mapper = index[name][:mapper]
         mapper_type = mapper_type(mapper)
         if inheritance
           separate_inheritance(mapper) do |mapper, inheritors|
@@ -88,7 +88,7 @@ module Superhosting
       end
 
       def _inheritance(name:)
-        mapper = self.index[name][:mapper]
+        mapper = index[name][:mapper]
         mapper.inheritance.reverse.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } }
       end
     end

@@ -5,12 +5,12 @@ module Superhosting
 
       def initialize(**kwargs)
         super(**kwargs)
-        @container_controller = self.get_controller(Container)
-        self.index
+        @container_controller = get_controller(Container)
+        index
       end
 
       def index
-        self.class.index ||= self.reindex
+        self.class.index ||= reindex
       end
 
       def reindex
@@ -22,16 +22,16 @@ module Superhosting
 
       def reindex_container_sites(container_name:)
         @config.containers.f(container_name).sites.grep_dirs.each do |site_mapper|
-          self.reindex_site(name: site_mapper.name, container_name: container_name)
+          reindex_site(name: site_mapper.name, container_name: container_name)
         end
       end
 
       def alias?(name:)
-        self.index[name][:mapper].name != name
+        index[name][:mapper].name != name
       end
 
       def container_sites(container_name:)
-        self.index.select { |k, v| v[:container_mapper].name == container_name && !self.alias?(name: k) }
+        index.select { |k, v| v[:container_mapper].name == container_name && !alias?(name: k) }
       end
 
       def reindex_site(name:, container_name:)

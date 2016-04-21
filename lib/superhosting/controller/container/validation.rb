@@ -5,7 +5,7 @@ module Superhosting
 
       def base_validation(name:)
         @docker_api.container_rm_inactive!(name)
-        [self, self.get_controller(User)].each { |controller| controller.container_name_validation(name: name).net_status_ok! }
+        [self, get_controller(User)].each { |controller| controller.container_name_validation(name: name).net_status_ok! }
         {}
       end
 
@@ -14,8 +14,8 @@ module Superhosting
       end
 
       def adding_validation(name:)
-        if (resp = self.base_validation(name: name)).net_status_ok?
-          resp = self.not_running_validation(name: name)
+        if (resp = base_validation(name: name)).net_status_ok?
+          resp = not_running_validation(name: name)
         end
         resp
       end
@@ -29,16 +29,16 @@ module Superhosting
       end
 
       def existing_validation(name:)
-        self.index.include?(name) ? {} : { error: :logical_error, code: :container_does_not_exists, data: { name: name } }
+        index.include?(name) ? {} : { error: :logical_error, code: :container_does_not_exists, data: { name: name } }
       end
 
       def not_existing_validation(name:)
-        self.existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_exists, data: { name: name } } : {}
+        existing_validation(name: name).net_status_ok? ? { error: :logical_error, code: :container_exists, data: { name: name } } : {}
       end
 
       def available_validation(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          resp = (self.index[name][:mapper].lib.state.value == 'up') ? {} : { error: :logical_error, code: :container_is_not_available, data: { name: name } }
+        if (resp = existing_validation(name: name)).net_status_ok?
+          resp = (index[name][:mapper].lib.state.value == 'up') ? {} : { error: :logical_error, code: :container_is_not_available, data: { name: name } }
         end
         resp
       end

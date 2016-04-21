@@ -16,8 +16,8 @@ module Superhosting
       def mkdir(path, **options)
         if @on_config
           PathMapper.new(path).create!
-          self.set_file_attributes(path, options)
-          self.registry_files << path.to_s
+          set_file_attributes(path, options)
+          registry_files << path.to_s
         end
       end
 
@@ -27,11 +27,11 @@ module Superhosting
           script = options.delete(:source) || save_to_mapper.name if script.nil?
           script = script.to_s.end_with?('.erb') ? script : "#{script}.erb"
           raise NetStatus::Exception, error: :error, code: :can_not_pass_an_absolute_path, data: { path: script } if Pathname.new(script).absolute?
-          script_mapper = self.config_mapper(options).config_templates.f(script)
+          script_mapper = config_mapper(options).config_templates.f(script)
           raise NetStatus::Exception, error: :error, code: :file_does_not_exists, data: { path: script_mapper.path.to_s } if script_mapper.nil?
           save_to_mapper.put!(script_mapper)
-          self.set_file_attributes(save_to_mapper.path, options)
-          self.registry_files << save_to_mapper.path.to_s
+          set_file_attributes(save_to_mapper.path, options)
+          registry_files << save_to_mapper.path.to_s
         end
       end
 
@@ -53,16 +53,16 @@ module Superhosting
                   cmd
                 end
 
-          self.commands << cmd
+          commands << cmd
         end
       end
 
       def run_commands
-        self.commands.each do |cmd|
+        commands.each do |cmd|
           if cmd == :container_restart
-            self.container.lib.signature.delete!(logger: false)
+            container.lib.signature.delete!(logger: false)
           else
-            self.command! cmd
+            command! cmd
           end
         end
       end
@@ -75,12 +75,12 @@ module Superhosting
       end
 
       def base_mapper
-        self.container
+        container
       end
 
       def config_mapper(options)
-        self.base_mapper.erb_options = instance_variables_to_hash(self).merge(options)
-        self.base_mapper
+        base_mapper.erb_options = instance_variables_to_hash(self).merge(options)
+        base_mapper
       end
     end
   end

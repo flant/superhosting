@@ -6,16 +6,16 @@ module Superhosting
       def initialize(**kwargs)
         super(**kwargs)
         @admins_mapper = @config.admins
-        self.index
+        index
       end
 
       def index
-        self.class.index ||= self.reindex
+        self.class.index ||= reindex
       end
 
       def reindex
         self.class.index = {}
-        @admins_mapper.grep_dirs.each { |dir_name| self.reindex_admin(name: dir_name.name) }
+        @admins_mapper.grep_dirs.each { |dir_name| reindex_admin(name: dir_name.name) }
         self.class.index
       end
 
@@ -24,7 +24,7 @@ module Superhosting
         if @admins_mapper.f(name).nil?
           self.class.index.delete(name)
         else
-          admin_container_controller = self.get_controller(Admin::Container, name: name)
+          admin_container_controller = get_controller(Admin::Container, name: name)
           self.class.index[name] = admin_container_controller._users_list || []
         end
       end

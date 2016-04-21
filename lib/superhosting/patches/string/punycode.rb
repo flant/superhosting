@@ -3,7 +3,7 @@ module Superhosting
     module String
       module Punycode
         def punycode
-          parts = self.split('.').map do |label|
+          parts = split('.').map do |label|
             encoded = ::Punycode.encode(Unicode.normalize_KC(Unicode.downcase(label)))
             if encoded =~ /-$/
               encoded.chop!

@@ -25,7 +25,7 @@ module Superhosting
     end
 
     def get_controller(controller, **kwargs)
-      controller.new(**self.base_controller_options.merge!(kwargs))
+      controller.new(**base_controller_options.merge!(kwargs))
     end
   end
 end

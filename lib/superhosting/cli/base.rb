@@ -51,7 +51,7 @@ module Superhosting
         @logger.formatter = proc { |severity, datetime, progname, msg| format("%s\n", msg.to_s) }
         self.__logger = @logger
 
-        self.help if config[:help] || self.class == Base
+        help if config[:help] || self.class == Base
       end
 
       def help
@@ -69,7 +69,7 @@ module Superhosting
           end
         end
 
-        self.info("#{opt_parser.to_s}\n#{get_childs_banners(@node) if self.class == Base}".strip)
+        info("#{opt_parser.to_s}\n#{get_childs_banners(@node) if self.class == Base}".strip)
 
         exit 1
       end
@@ -79,7 +79,7 @@ module Superhosting
         net_status ||= {}
 
         raise Error::Controller, net_status unless net_status[:error].nil?
-        self.debug('Done!')
+        debug('Done!')
 
         unless (data = net_status[:data]).nil?
           @node_class.after_action(data, config) if @node_class.respond_to? :after_action
@@ -94,10 +94,10 @@ module Superhosting
         method.parameters.each do |req, name|
           next unless req.to_s.start_with? 'key'
           opt = config[name]
-          self.help if name == :name && !(opt = @pos_args.shift)
+          help if name == :name && !(opt = @pos_args.shift)
           opts.merge!(name => opt)
         end
-        self.help unless @pos_args.empty? # only one position argument
+        help unless @pos_args.empty? # only one position argument
 
         method.parameters.empty? ? method.call : method.call(**opts)
       end
@@ -123,7 +123,7 @@ module Superhosting
           end
 
           CONTROLLER_BASE_OPTIONS.each { |opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
-          opts[:logger] = self.__logger
+          opts[:logger] = __logger
           node.new(**opts).method(m_name)
         end
 
@@ -152,7 +152,7 @@ module Superhosting
             args
           end
 
-          self.prepend
+          prepend
           cmd, node = cmd_and_node(args)
           args = clear_args(args, cmd)
           cmd.new(args, node).run
@@ -164,7 +164,7 @@ module Superhosting
           i18n_initialize
         end
 
-        def set_banners(node = self.commands_hierarchy, path = [])
+        def set_banners(node = commands_hierarchy, path = [])
           node.each do |k, v|
             path_ = path.dup
             path_ << k
@@ -193,7 +193,7 @@ module Superhosting
         end
 
         def splited_class_name
-          self.toggle_case_name(self.name.split('::').last)
+          toggle_case_name(name.split('::').last)
         end
 
         def toggle_case_name(klass)
@@ -206,7 +206,7 @@ module Superhosting
           end
 
           args = positional_arguments(args)
-          node = self.commands_hierarchy
+          node = commands_hierarchy
           path = []
           key = ''
           cmd = nil

@@ -13,8 +13,8 @@ module Superhosting
           etc_mapper.model.put!(model) unless model.nil?
 
           # config
-          self.reindex_container(name: name)
-          mapper = self.index[name][:mapper]
+          reindex_container(name: name)
+          mapper = index[name][:mapper]
 
           # lib
           mapper.lib.config.create!
@@ -28,8 +28,8 @@ module Superhosting
       end
 
       def uninstall_data(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = self.index[name][:mapper]
+        if (resp = existing_validation(name: name)).net_status_ok?
+          mapper = index[name][:mapper]
 
           # lib
           safe_unlink!(mapper.web.path)
@@ -41,7 +41,7 @@ module Superhosting
           # config
           mapper.delete!
 
-          self.reindex_container(name: name)
+          reindex_container(name: name)
           {}
         else
           resp
@@ -49,18 +49,18 @@ module Superhosting
       end
 
       def install_users(name:, model:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = self.index[name][:mapper]
+        if (resp = existing_validation(name: name)).net_status_ok?
+          mapper = index[name][:mapper]
 
           # user / group
-          user_controller = self.get_controller(User)
+          user_controller = get_controller(User)
           user_controller._group_add(name: name)
           unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?
             return resp
           end
           user = user_controller._get(name: name)
 
-          self.with_dry_run do |dry_run|
+          with_dry_run do |dry_run|
             user_gid = if dry_run
                          'XXXX' if user.nil?
                        else
@@ -100,10 +100,10 @@ module Superhosting
       end
 
       def uninstall_users(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = self.index[name][:mapper]
+        if (resp = existing_validation(name: name)).net_status_ok?
+          mapper = index[name][:mapper]
 
-          user_controller = self.get_controller(User)
+          user_controller = get_controller(User)
           if (user = user_controller._get(name: name))
             mapper.lib.config.f('etc-group').remove_line!("#{name}:x:#{user.gid}:")
           end
@@ -121,8 +121,8 @@ module Superhosting
       end
 
       def configure(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          self._each_site(name: name) do |controller, site_name, state|
+        if (resp = existing_validation(name: name)).net_status_ok?
+          _each_site(name: name) do |controller, site_name, state|
             controller.configure(name: site_name).net_status_ok!
           end
           super
@@ -132,8 +132,8 @@ module Superhosting
       end
 
       def unconfigure(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          self._each_site(name: name) do |controller, site_name, state|
+        if (resp = existing_validation(name: name)).net_status_ok?
+          _each_site(name: name) do |controller, site_name, state|
             controller.unconfigure(name: site_name).net_status_ok!
           end
           super
@@ -143,8 +143,8 @@ module Superhosting
       end
 
       def apply(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          self._each_site(name: name) do |controller, site_name, state|
+        if (resp = existing_validation(name: name)).net_status_ok?
+          _each_site(name: name) do |controller, site_name, state|
             controller.apply(name: site_name).net_status_ok!
           end
           super
@@ -154,8 +154,8 @@ module Superhosting
       end
 
       def configure_with_apply(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          self._each_site(name: name) do |controller, site_name, state|
+        if (resp = existing_validation(name: name)).net_status_ok?
+          _each_site(name: name) do |controller, site_name, state|
             controller.reconfigure(name: site_name).net_status_ok!
           end
           super
@@ -165,10 +165,10 @@ module Superhosting
       end
 
       def run(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = self.index[name][:mapper]
+        if (resp = existing_validation(name: name)).net_status_ok?
+          mapper = index[name][:mapper]
 
-          if (resp = self._collect_docker_options(mapper: mapper)).net_status_ok?
+          if (resp = _collect_docker_options(mapper: mapper)).net_status_ok?
             docker_options = resp[:data]
             command_options, image, command = docker_options
             dump_command_option = (command_options + [command]).join("\n")
@@ -176,7 +176,7 @@ module Superhosting
 
             restart = (!mapper.docker.image.compare_with(mapper.lib.image) || (dummy_signature_md5 != mapper.lib.signature.md5))
 
-            if (resp = self._safe_run_docker(command_options, image, command, name: name, restart: restart)).net_status_ok?
+            if (resp = _safe_run_docker(command_options, image, command, name: name, restart: restart)).net_status_ok?
               mapper.lib.image.put!(image, logger: false)
               mapper.lib.signature.put!(dump_command_option, logger: false)
               mapper.lib.docker_options.put!(Marshal.dump(docker_options), logger: false)
@@ -188,11 +188,11 @@ module Superhosting
 
       def run_mux(name:)
         resp = {}
-        mapper = self.index[name][:mapper]
+        mapper = index[name][:mapper]
 
         if (mux_mapper = mapper.mux).file?
           mux_name = mux_mapper.value
-          mux_controller = self.get_controller(Mux)
+          mux_controller = get_controller(Mux)
           resp = mux_controller.add(name: mux_name) if mux_controller.not_running_validation(name: mux_name).net_status_ok?
           mux_controller.index_push(mux_name, name)
         end
@@ -201,12 +201,12 @@ module Superhosting
       end
 
       def stop_mux(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          mapper = self.index[name][:mapper]
+        if (resp = existing_validation(name: name)).net_status_ok?
+          mapper = index[name][:mapper]
 
           if (mux_mapper = mapper.mux).file?
             mux_name = mux_mapper.value
-            mux_controller = self.get_controller(Mux)
+            mux_controller = get_controller(Mux)
             mux_controller.index_pop(mux_name, name)
             mux_controller._delete(name: mux_name) unless mux_controller.index.include?(mux_name)
           end
@@ -215,19 +215,19 @@ module Superhosting
       end
 
       def stop(name:)
-        if (resp = self.existing_validation(name: name)).net_status_ok?
-          self._delete_docker(name: name)
-          self.get_controller(Mux).reindex
+        if (resp = existing_validation(name: name)).net_status_ok?
+          _delete_docker(name: name)
+          get_controller(Mux).reindex
         end
         resp
       end
 
       def _config_options(name:, on_reconfig:, on_config:)
-        mapper = self.index[name][:mapper]
+        mapper = index[name][:mapper]
         model = mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
         registry_mapper = mapper.lib.registry.f('container')
-        mux_mapper = self.index[name][:mux_mapper]
+        mux_mapper = index[name][:mux_mapper]
 
         {
           container: mapper,
@@ -251,22 +251,22 @@ module Superhosting
       end
 
       def _recreate_docker(*docker_options, name:)
-        docker_options ||= self._collect_docker_options(mapper: self.index[name][:mapper]).net_status_ok!
-        self._delete_docker(name: name)
-        self._run_docker(*docker_options, name: name)
+        docker_options ||= _collect_docker_options(mapper: index[name][:mapper]).net_status_ok!
+        _delete_docker(name: name)
+        _run_docker(*docker_options, name: name)
       end
 
       def _run_docker(*docker_options, name:)
-        docker_options = self._collect_docker_options(mapper: self.index[name][:mapper]).net_status_ok![:data] if docker_options.empty?
+        docker_options = _collect_docker_options(mapper: index[name][:mapper]).net_status_ok![:data] if docker_options.empty?
         @docker_api.container_run(name, *docker_options)
       end
 
       def _safe_run_docker(*docker_options, name:, restart: false)
         if restart
-          self._recreate_docker(*docker_options, name: name)
+          _recreate_docker(*docker_options, name: name)
         elsif @docker_api.container_exists?(name)
           if @docker_api.container_dead?(name)
-            self._recreate_docker(*docker_options, name: name)
+            _recreate_docker(*docker_options, name: name)
           elsif @docker_api.container_exited?(name)
             @docker_api.container_start!(name)
           elsif @docker_api.container_paused?(name)
@@ -278,9 +278,9 @@ module Superhosting
             end
           end
         else
-          self._run_docker(*docker_options, name: name)
+          _run_docker(*docker_options, name: name)
         end
-        self.running_validation(name: name)
+        running_validation(name: name)
       end
 
       def _collect_docker_options(mapper:, model_or_mux: nil)
@@ -299,7 +299,7 @@ module Superhosting
       end
 
       def _each_site(name:)
-        site_controller = self.get_controller(Superhosting::Controller::Site)
+        site_controller = get_controller(Superhosting::Controller::Site)
         site_controller.reindex_container_sites(container_name: name)
         site_controller.container_sites(container_name: name).each do |site_name, index|
           yield site_controller, site_name, index[:state]

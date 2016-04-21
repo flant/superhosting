@@ -10,7 +10,7 @@ module Superhosting
         self.inheritors_tree = {}
       end
 
-      def collect_inheritors_tree(m = @mapper, node = self.inheritors_tree, mux: false)
+      def collect_inheritors_tree(m = @mapper, node = inheritors_tree, mux: false)
         type = mux ? 'mux' : 'model'
         m_key = m.name
         node[m_key] ||= {}
@@ -36,11 +36,11 @@ module Superhosting
       end
 
       def collect_inheritor(mapper)
-        self.inheritors << mapper
+        inheritors << mapper
       end
 
       def inheritance(mapper)
-        self.inheritors.reverse_each do |inheritor|
+        inheritors.reverse_each do |inheritor|
           type_dir_mapper = (@type == 'model' || @type.nil?) ? inheritor : inheritor.f(@type)
 
           if type_dir_mapper.dir?

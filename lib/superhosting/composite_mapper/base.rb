@@ -10,7 +10,7 @@ module Superhosting
       end
 
       def method_missing(m, *args, &block)
-        self.etc.send(m, *args, &block)
+        etc.send(m, *args, &block)
       end
     end
   end

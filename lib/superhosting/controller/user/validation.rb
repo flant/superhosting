@@ -4,8 +4,8 @@ module Superhosting
       NAME_FORMAT = /^[a-zA-Z][-a-zA-Z0-9_]{,31}$/
 
       def adding_validation(name:, container_name:)
-        resp = self.not_existing_validation(name: name, container_name: container_name)
-        resp = self.name_validation(name: name) if resp.net_status_ok?
+        resp = not_existing_validation(name: name, container_name: container_name)
+        resp = name_validation(name: name) if resp.net_status_ok?
         resp
       end
 
@@ -23,7 +23,7 @@ module Superhosting
       end
 
       def not_existing_validation(name:, container_name:)
-        self.existing_validation(name: name, container_name: container_name).net_status_ok? ? { error: :logical_error, code: :user_exists, data: { name: "#{container_name}_#{name}" } } : {}
+        existing_validation(name: name, container_name: container_name).net_status_ok? ? { error: :logical_error, code: :user_exists, data: { name: "#{container_name}_#{name}" } } : {}
       end
     end
   end

@@ -70,32 +70,32 @@ module SpecHelpers
 
       def container_base(**kwargs)
         name = kwargs[:name]
-        etc_mapper = self.container_etc(name)
-        lib_mapper = self.container_lib(name)
-        web_mapper = self.container_web(name)
+        etc_mapper = container_etc(name)
+        lib_mapper = container_lib(name)
+        web_mapper = container_web(name)
 
         yield name, etc_mapper, lib_mapper, web_mapper
       end
 
       def container_add_exps(**kwargs)
-        self.container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+        container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
           model_name = kwargs[:model]
-          models_mapper = self.config.models
+          models_mapper = config.models
 
           # /etc/sx
           expect_dir(etc_mapper)
-          expect_file(self.config.default_model)
+          expect_file(config.default_model)
           expect_dir(models_mapper)
 
           # /etc/sx/models
           if model_name.nil?
-            model_name = self.config.default_model
+            model_name = config.default_model
           else
             expect_file(etc_mapper.model)
           end
           model_mapper = models_mapper.f(model_name)
           expect_dir(model_mapper)
-          self.model_exps(:"container_add_#{model_name}_exps", **kwargs)
+          model_exps(:"container_add_#{model_name}_exps", **kwargs)
 
           # /var/sx
           expect_file(lib_mapper.state)
@@ -108,20 +108,20 @@ module SpecHelpers
           expect_file(lib_mapper.registry.container)
 
           # /web/
-          expect_dir(self.web)
+          expect_dir(web)
           expect_dir(web_mapper)
           expect_file_owner(web_mapper, name)
 
           # group / user
           expect_group(name)
           expect_user(name)
-          expect_in_file(self.etc.passwd, %r{#{name}.*\/usr\/sbin\/nologin})
+          expect_in_file(etc.passwd, %r{#{name}.*\/usr\/sbin\/nologin})
           expect_in_file(lib_mapper.config.f('etc-passwd'), %r{#{name}.*\/usr\/sbin\/nologin})
           expect_in_file(lib_mapper.config.f('etc-group'), /#{name}.*/)
 
           # docker.conf
-          expect_file(self.etc.security.f('docker.conf'))
-          expect_in_file(self.etc.security.f('docker.conf'), "@#{name} #{name}")
+          expect_file(etc.security.f('docker.conf'))
+          expect_in_file(etc.security.f('docker.conf'), "@#{name} #{name}")
 
           # container
           expect(docker_api.container_running?(name)).to be_truthy
@@ -129,13 +129,13 @@ module SpecHelpers
       end
 
       def container_delete_exps(**kwargs)
-        self.container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+        container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
           # /etc/sx
           not_expect_dir(etc_mapper)
 
           # model
-          model_name = etc_mapper.f('model', default: self.config.default_model)
-          self.model_exps(:"container_delete_#{model_name}_exps", **kwargs)
+          model_name = etc_mapper.f('model', default: config.default_model)
+          model_exps(:"container_delete_#{model_name}_exps", **kwargs)
 
           # /var/sx
           not_expect_dir(lib_mapper)
@@ -146,10 +146,10 @@ module SpecHelpers
           # group / user
           not_expect_group(name)
           not_expect_user(name)
-          not_expect_in_file(self.etc.passwd, %r{^#{name}:.*\/usr\/sbin\/nologin})
+          not_expect_in_file(etc.passwd, %r{^#{name}:.*\/usr\/sbin\/nologin})
 
           # docker
-          not_expect_in_file(self.etc.security.f('docker.conf'), "@#{name} #{name}")
+          not_expect_in_file(etc.security.f('docker.conf'), "@#{name} #{name}")
 
           # container
           expect(docker_api.container_not_exists?(name)).to be_truthy
@@ -170,7 +170,7 @@ module SpecHelpers
       end
 
       def container_add_fcgi_m_exps(**kwargs)
-        self.container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+        container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
           # /var/sx
           config_supervisord = lib_mapper.config.supervisor.f('supervisord.conf')
           expect_file(config_supervisord)
@@ -183,7 +183,7 @@ module SpecHelpers
       end
 
       def container_delete_fcgi_m_exps(**kwargs)
-        self.container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+        container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
           # /var/sx
           config_supervisord = lib_mapper.supervisor.f('supervisord.conf')
           not_expect_file(config_supervisord)

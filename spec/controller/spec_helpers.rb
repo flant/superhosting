@@ -9,9 +9,9 @@ module SpecHelpers
       name = opts.delete(:name)
       yield_args = to_yield.empty? ? [name] : to_yield
       delete_kwargs = to_delete.empty? ? { name: name } : to_delete
-      with_logger(logger: false) { self.send("#{action}_add_with_exps", name: name, **opts) }
+      with_logger(logger: false) { send("#{action}_add_with_exps", name: name, **opts) }
       yield *yield_args if block_given?
-      with_logger(logger: false) { self.send("#{action}_delete_with_exps", **delete_kwargs) }
+      with_logger(logger: false) { send("#{action}_delete_with_exps", **delete_kwargs) }
     end
   end
 end
