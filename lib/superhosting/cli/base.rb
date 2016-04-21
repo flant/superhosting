@@ -75,19 +75,17 @@ module Superhosting
       end
 
       def run
-        begin
-          net_status = action
-          net_status ||= {}
+        net_status = action
+        net_status ||= {}
 
-          raise Error::Controller, net_status unless net_status[:error].nil?
-          self.debug('Done!')
+        raise Error::Controller, net_status unless net_status[:error].nil?
+        self.debug('Done!')
 
-          unless (data = net_status[:data]).nil?
-            @node_class.after_action(data, config) if @node_class.respond_to? :after_action
-          end
-        rescue NetStatus::Exception => e
-          raise Error::Controller, e.net_status
+        unless (data = net_status[:data]).nil?
+          @node_class.after_action(data, config) if @node_class.respond_to? :after_action
         end
+      rescue NetStatus::Exception => e
+        raise Error::Controller, e.net_status
       end
 
       def action
@@ -117,10 +115,10 @@ module Superhosting
           params.each do |req, name|
             next unless req.to_s.start_with? 'key'
             opt = if name == :name
-              subcontroller_option
-            elsif config.key? name
-              config[name]
-            end
+                    subcontroller_option
+                  elsif config.key? name
+                    config[name]
+                  end
             opts.merge!(name => opt) unless opt.nil?
           end
 
@@ -146,6 +144,8 @@ module Superhosting
       end
 
       class << self
+        attr_accessor :commands_hierarchy
+
         def start(args)
           def clear_args(args, cmd)
             toggle_case_name(cmd).length.times { args.shift }
@@ -164,7 +164,7 @@ module Superhosting
           i18n_initialize
         end
 
-        def set_banners(node = @@commands_hierarchy, path = [])
+        def set_banners(node = self.commands_hierarchy, path = [])
           node.each do |k, v|
             path_ = path.dup
             path_ << k
@@ -182,7 +182,7 @@ module Superhosting
 
         def set_commands_hierarchy
           commands = COMMANDS_MODULE.constants.select { |c| COMMANDS_MODULE.const_get(c).is_a?(Class) }
-          @@commands_hierarchy = commands.sort_by { |k1, k2| toggle_case_name(k1).one? ? 0 : 1 }.each_with_object({}) do |k, h|
+          self.commands_hierarchy = commands.sort_by { |k1, k2| toggle_case_name(k1).one? ? 0 : 1 }.each_with_object({}) do |k, h|
             node = h
             parts = toggle_case_name(k)
             parts.each do |cmd|
@@ -206,7 +206,7 @@ module Superhosting
           end
 
           args = positional_arguments(args)
-          node = @@commands_hierarchy
+          node = self.commands_hierarchy
           path = []
           key = ''
           cmd = nil

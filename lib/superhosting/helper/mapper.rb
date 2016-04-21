@@ -12,18 +12,25 @@ module Superhosting
 
       def mapper_type(mapper)
         case mapper.name
-          when 'containers' then 'container'
-          when 'web', 'sites' then 'site'
-          when 'models' then 'model'
-          when 'muxs' then 'mux'
-          else mapper_type(mapper.parent)
+          when 'containers' then
+            'container'
+          when 'web', 'sites' then
+            'site'
+          when 'models' then
+            'model'
+          when 'muxs' then
+            'mux'
+          else
+            mapper_type(mapper.parent)
         end
       end
 
       def mapper_name(mapper)
         case mapper.parent.name
-          when 'containers', 'models', 'muxs' then mapper.name
-          else mapper_name(mapper.parent)
+          when 'containers', 'models', 'muxs' then
+            mapper.name
+          else
+            mapper_name(mapper.parent)
         end
       end
 

@@ -2,11 +2,9 @@ module Superhosting
   module Controller
     class User
       def _group_get(name:)
-        begin
-          Etc.getgrnam(name)
-        rescue ArgumentError => e
-          nil
-        end
+        Etc.getgrnam(name)
+      rescue ArgumentError => e
+        nil
       end
 
       def _group_get_users(name:)

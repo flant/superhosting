@@ -62,10 +62,10 @@ module Superhosting
 
           self.with_dry_run do |dry_run|
             user_gid = if dry_run
-              'XXXX' if user.nil?
-            else
-              user.gid
-            end
+                         'XXXX' if user.nil?
+                       else
+                         user.gid
+                       end
 
             mapper.lib.config.f('etc-group').append_line!("#{name}:x:#{user_gid}:") unless user_gid.nil?
           end

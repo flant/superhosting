@@ -1,6 +1,7 @@
 module Superhosting
   module Controller
     class Mux
+      class << self; attr_accessor :index end
       attr_writer :index
 
       def initialize(**kwargs)
@@ -10,11 +11,11 @@ module Superhosting
       end
 
       def index
-        @@index ||= self.reindex
+        self.class.index ||= self.reindex
       end
 
       def reindex
-        @@index ||= {}
+        self.class.index ||= {}
         @container_controller.index.each do |container_name, data|
           container_mapper = @container_controller.index[container_name][:mapper]
           next unless (mux_mapper = container_mapper.mux).file?
@@ -25,19 +26,19 @@ module Superhosting
             self.index_pop(mux_name, container_name)
           end
         end
-        @@index
+        self.class.index
       end
 
       def index_pop(mux_name, container_name)
-        if self.index.key? mux_name
-          self.index[mux_name].delete(container_name)
-          self.index.delete(mux_name) if self.index[mux_name].empty?
+        if self.class.index.key? mux_name
+          self.class.index[mux_name].delete(container_name)
+          self.class.index.delete(mux_name) if self.class.index[mux_name].empty?
         end
       end
 
       def index_push(mux_name, container_name)
-        self.index[mux_name] ||= []
-        self.index[mux_name] << container_name unless self.index[mux_name].include? container_name
+        self.class.index[mux_name] ||= []
+        self.class.index[mux_name] << container_name unless self.class.index[mux_name].include? container_name
       end
     end
   end

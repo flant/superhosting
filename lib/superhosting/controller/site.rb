@@ -146,10 +146,10 @@ module Superhosting
 
       def _reconfigure(name:, **kwargs)
         lib_sites_mapper = if (container_name = kwargs[:container_name])
-          @container_controller.index[container_name][:mapper].lib.sites
-        else
-          self.index[name][:container_mapper].lib.sites
-        end
+                             @container_controller.index[container_name][:mapper].lib.sites
+                           else
+                             self.index[name][:container_mapper].lib.sites
+                           end
         state_mapper = lib_sites_mapper.f(name)
 
         states = {

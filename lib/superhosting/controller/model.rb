@@ -68,7 +68,7 @@ module Superhosting
       def inheritance(name:)
         if (resp = self.existing_validation(name: name)).net_status_ok?
           model_mapper = @config.models.f(name)
-          inheritance = MapperInheritance::Model.new(model_mapper).inheritors_mapper
+          inheritance = MapperInheritance::Model.new(model_mapper).inheritors
           inheritance.delete(model_mapper)
           { data: inheritance.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } } }
         else

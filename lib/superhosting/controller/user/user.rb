@@ -2,11 +2,9 @@ module Superhosting
   module Controller
     class User
       def _get(name:)
-        begin
-          Etc.getpwnam(name)
-        rescue ArgumentError => e
-          nil
-        end
+        Etc.getpwnam(name)
+      rescue ArgumentError => e
+        nil
       end
 
       def _add(name:, container_name:, shell: '/usr/sbin/nologin', home_dir: "/web/#{container_name}")
@@ -70,19 +68,19 @@ module Superhosting
 
       def _create_password(generate: false)
         password = if generate
-          SecureRandom.hex
-        else
-          loop do
-            if (pass = ask('Enter password: ') { |q| q.echo = false }) != ask('Repeat password: ') { |q| q.echo = false }
-              self.info('Passwords does not match')
-            elsif !StrongPassword::StrengthChecker.new(pass).is_strong?(min_entropy: @config.f('password_strength', default: '15').to_i)
-              self.info('Password is weak')
-            else
-              break
-            end
-          end
-          pass
-        end
+                     SecureRandom.hex
+                   else
+                     loop do
+                       if (pass = ask('Enter password: ') { |q| q.echo = false }) != ask('Repeat password: ') { |q| q.echo = false }
+                         self.info('Passwords does not match')
+                       elsif !StrongPassword::StrengthChecker.new(pass).is_strong?(min_entropy: @config.f('password_strength', default: '15').to_i)
+                         self.info('Password is weak')
+                       else
+                         break
+                       end
+                     end
+                     pass
+                   end
         encrypted_password = UnixCrypt::SHA512.build(password)
         { password: password, encrypted_password: encrypted_password }
       end

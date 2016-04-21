@@ -1,6 +1,8 @@
 module Superhosting
   module Controller
     class Site
+      class << self; attr_accessor :index end
+
       def initialize(**kwargs)
         super(**kwargs)
         @container_controller = self.get_controller(Container)
@@ -8,14 +10,14 @@ module Superhosting
       end
 
       def index
-        @@index ||= self.reindex
+        self.class.index ||= self.reindex
       end
 
       def reindex
         @config.containers.grep_dirs.each do |container_mapper|
           reindex_container_sites(container_name: container_mapper.name)
         end
-        @@index ||= {}
+        self.class.index ||= {}
       end
 
       def reindex_container_sites(container_name:)
@@ -33,8 +35,8 @@ module Superhosting
       end
 
       def reindex_site(name:, container_name:)
-        @@index ||= {}
-        @@index[name][:names].each { |n| @@index.delete(n) } if @@index[name]
+        self.class.index ||= {}
+        self.class.index[name][:names].each { |n| self.class.index.delete(n) } if self.class.index[name]
 
         container_mapper = @container_controller.index[container_name][:mapper]
         model_name = @container_controller.index[container_name][:model_name]
@@ -44,7 +46,7 @@ module Superhosting
         state_mapper = container_mapper.lib.sites.f(name).state
 
         if etc_mapper.nil?
-          @@index.delete(name)
+          self.class.index.delete(name)
           return
         end
 
@@ -54,13 +56,13 @@ module Superhosting
         mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
         etc_mapper.erb_options = { site: mapper, container: mapper, etc: @config, lib: @lib }
 
-        if @@index.key?(name) && @@index[name][:mapper].path != mapper.path
+        if self.class.index.key?(name) && self.class.index[name][:mapper].path != mapper.path
           raise NetStatus::Exception, code: :container_site_name_conflict,
-                                      data: { site1: @@index[name][:mapper].path, site2: mapper.path }
+                                      data: { site1: self.class.index[name][:mapper].path, site2: mapper.path }
         end
 
         names = ([mapper.name] + mapper.aliases)
-        names.each { |name| @@index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, names: names } }
+        names.each { |name| self.class.index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, names: names } }
       end
     end
   end

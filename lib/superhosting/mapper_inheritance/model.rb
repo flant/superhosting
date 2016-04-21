@@ -16,9 +16,11 @@ module Superhosting
         raise NetStatus::Exception, error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: @mapper.name } if @mapper.abstract?
 
         @type = case type = mapper_type(mapper)
-          when 'container', 'site', 'model' then type
-          else raise NetStatus::Exception, error: :logical_error, code: :mapper_type_not_supported, data: { name: type }
-        end
+                  when 'container', 'site', 'model' then
+                    type
+                  else
+                    raise NetStatus::Exception, error: :logical_error, code: :mapper_type_not_supported, data: { name: type }
+                end
 
         inheritance(mapper)
       end

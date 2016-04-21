@@ -12,3 +12,27 @@ Style/CaseIndentation:
 
 Style/ElseAlignment:
   Enabled: false
+
+#Metrics/MethodLength:
+#  Enabled: false
+#
+#Metrics/ClassLength:
+#  Enabled: false
+#
+#Metrics/ModuleLength:
+#  Enabled: false
+#
+#Metrics/LineLength:
+#  Max: 120
+#
+#Metrics/CyclomaticComplexity:
+#  Enabled: false
+#
+#Lint/NestedMethodDefinition:
+#  Enabled: false
+#
+#Lint/RescueException:
+#  Enabled: false
+#
+#Lint/EndAlignment:
+#  Enabled: false
