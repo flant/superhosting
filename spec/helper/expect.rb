@@ -16,7 +16,7 @@ module SpecHelpers
         expect { send(:"#{expect_method}", *args, &block) }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
       end
 
-      def method_with_expectation(controller_method, *args, &block)
+      def method_with_expectation(controller_method, *args)
         expectation_method = "#{controller_method}_exps"
 
         kwargs = args.extract_options!
@@ -73,7 +73,7 @@ module SpecHelpers
         expect(File.stat(maybe_path).gid).to be owner.gid
       end
 
-      def expect_exception_code(exc = NetStatus::Exception, code: nil)
+      def expect_exception_code(_exc = NetStatus::Exception, code: nil)
         expect { yield }.to raise_error { |error| expect(error.net_status[:code]).to be(code) }
       end
 
@@ -89,7 +89,7 @@ module SpecHelpers
         expect(hash).to_not include(:error)
       end
 
-      def expect_file_mtime(*file_path, &b)
+      def expect_file_mtime(*file_path)
         files = file_path.map { |path| [path, File.mtime(path)] }
         yield
         files.each { |path, time| expect(time).to_not eq File.mtime(path) }

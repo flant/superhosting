@@ -10,7 +10,7 @@ module SpecHelpers
 
       # methods
 
-      def model_list(**kwargs)
+      def model_list(**_kwargs)
         model_controller.list
       end
 

@@ -41,7 +41,7 @@ module SpecHelpers
       end
 
       def user_add_exps(**kwargs)
-        user_base(**kwargs) do |name, container_name, container_lib_mapper|
+        user_base(**kwargs) do |name, _container_name, container_lib_mapper|
           # group / user
           shell = kwargs[:shell] || kwargs[:ftp_only] ? '/usr/sbin/nologin' : '/bin/bash'
           expect_user(name)
@@ -51,7 +51,7 @@ module SpecHelpers
       end
 
       def user_delete_exps(**kwargs)
-        user_base(**kwargs) do |name, container_name, container_lib_mapper|
+        user_base(**kwargs) do |name, _container_name, container_lib_mapper|
           # group / user
           not_expect_user(name)
           not_expect_in_file(etc.passwd, /#{name}/)
@@ -60,7 +60,7 @@ module SpecHelpers
       end
 
       def user_passwd_exps(**kwargs)
-        user_base(**kwargs) do |name, container_name, container_lib_mapper|
+        user_base(**kwargs) do |name, _container_name, _container_lib_mapper|
           # /etc/shadow
           expect_in_file(etc.shadow, /#{name}:(?!!)/)
         end

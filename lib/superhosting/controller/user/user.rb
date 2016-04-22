@@ -3,7 +3,7 @@ module Superhosting
     class User
       def _get(name:)
         Etc.getpwnam(name)
-      rescue ArgumentError => e
+      rescue ArgumentError => _e
         nil
       end
 
@@ -39,8 +39,9 @@ module Superhosting
                 user_gid, user_uid = dry_run ? %w(XXXX XXXX) : [user.gid, user.uid]
                 passwd_mapper.append_line!("#{name}:x:#{user_uid}:#{user_gid}::#{home_dir}:#{shell}")
               end
+
+              blk.call(code: :added)
             end
-            blk.call(code: :added)
             resp
           end
         end
@@ -69,7 +70,8 @@ module Superhosting
                      SecureRandom.hex
                    else
                      loop do
-                       if (pass = ask('Enter password: ') { |q| q.echo = false }) != ask('Repeat password: ') { |q| q.echo = false }
+                       pass_ask = ->(msg) { ask(msg) { |q| q.echo = false } }
+                       if (pass = pass_ask.call('Enter password: ')) != pass_ask.call('Repeat password: ')
                          info('Passwords does not match')
                        elsif !StrongPassword::StrengthChecker.new(pass).is_strong?(min_entropy: @config.f('password_strength', default: '15').to_i)
                          info('Password is weak')
@@ -102,7 +104,7 @@ module Superhosting
         end
       end
 
-      def admin?(name:, container_name:)
+      def admin?(name:, **_kwargs)
         name.include?('_admin_')
       end
     end

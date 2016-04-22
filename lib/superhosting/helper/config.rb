@@ -66,7 +66,7 @@ module Superhosting
         _save_registry!(registry_mapper, registry_files) if on_config
       end
 
-      def _config_options(name:, on_reconfig:, on_config:)
+      def _config_options(**_kwargs)
         {}
       end
 

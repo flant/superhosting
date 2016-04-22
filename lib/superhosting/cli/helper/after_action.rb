@@ -112,7 +112,7 @@ module Superhosting
         end
 
         def show_options(data, config)
-          def show(options)
+          show = lambda do |options|
             options.each { |k, v| info("#{k} = #{v.inspect}") }
           end
 
@@ -122,12 +122,12 @@ module Superhosting
                 next if options.empty?
                 info(name)
                 indent_step
-                show(options)
+                show.call(options)
                 indent_step_back
               end
             end
           else
-            show(data)
+            show.call(data)
           end
         end
 
@@ -152,23 +152,23 @@ module Superhosting
         end
 
         def show_models_tree(data, ignore_type: false)
-          def show_tree(node, ignore_type)
-            %w(model mux).each do |type|
-              (node[type] || []).each { |v| show_node(v, type, ignore_type) }
+          show_tree = lambda do |node|
+            show_node = lambda do |node_, type|
+              node_.each do |k, hash|
+                info("#{"#{type}: " if !ignore_type && type == 'mux'}#{k}")
+                indent_step
+                show_tree.call(hash)
+                indent_step_back
+              end
             end
-          end
 
-          def show_node(node, type, ignore_type)
-            node.each do |k, hash|
-              info("#{"#{type}: " if !ignore_type && type == 'mux'}#{k}")
-              indent_step
-              show_tree(hash, ignore_type)
-              indent_step_back
+            %w(model mux).each do |type|
+              (node[type] || []).each { |v| show_node.call(v, type) }
             end
           end
 
           old = indent
-          show_tree(data, ignore_type)
+          show_tree.call(data)
           self.indent = old
         end
       end

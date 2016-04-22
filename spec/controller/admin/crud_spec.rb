@@ -30,7 +30,7 @@ describe Superhosting::Controller::Admin do
 
   it 'container_add' do
     with_container do |container_name|
-      with_admin do |admin_name|
+      with_admin do |_admin_name|
         admin_container_add_with_exps(name: container_name)
       end
     end
@@ -62,14 +62,14 @@ describe Superhosting::Controller::Admin do
   end
 
   it 'container_add:container_does_not_exists' do
-    with_admin do |admin_name|
+    with_admin do |_admin_name|
       admin_container_add_with_exps(name: @container_name, code: :container_does_not_exists)
     end
   end
 
   it 'container_add:user_exists' do
     with_container do |container_name|
-      with_admin do |admin_name|
+      with_admin do |_admin_name|
         admin_container_add_with_exps(name: container_name)
         admin_container_add_with_exps(name: container_name, code: :user_exists)
       end
@@ -77,7 +77,7 @@ describe Superhosting::Controller::Admin do
   end
 
   it 'container_delete:container_does_not_exists' do
-    with_admin do |admin_name|
+    with_admin do |_admin_name|
       admin_container_delete_with_exps(name: @container_name, code: :container_does_not_exists)
     end
   end

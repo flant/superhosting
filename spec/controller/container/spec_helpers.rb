@@ -30,15 +30,15 @@ module SpecHelpers
         container_controller.update(**kwargs)
       end
 
-      def container_list(**kwargs)
+      def container_list(**_kwargs)
         container_controller.list
       end
 
-      def container_model_name(**kwargs)
+      def container_model_name(**_kwargs)
         container_controller.model(name: @container_name).name
       end
 
-      def container_model_tree(**kwargs)
+      def container_model_tree(**_kwargs)
         container_controller.model(name: @container_name).tree
       end
 
@@ -62,7 +62,7 @@ module SpecHelpers
         container_controller.admin(name: @container_name).delete(**kwargs)
       end
 
-      def container_admin_list(**kwargs)
+      def container_admin_list(**_kwargs)
         container_controller.admin(name: @container_name).list
       end
 
@@ -170,7 +170,7 @@ module SpecHelpers
       end
 
       def container_add_fcgi_m_exps(**kwargs)
-        container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+        container_base(**kwargs) do |name, _etc_mapper, lib_mapper, web_mapper|
           # /var/sx
           config_supervisord = lib_mapper.config.supervisor.f('supervisord.conf')
           expect_file(config_supervisord)
@@ -183,7 +183,7 @@ module SpecHelpers
       end
 
       def container_delete_fcgi_m_exps(**kwargs)
-        container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+        container_base(**kwargs) do |_name, _etc_mapper, lib_mapper, web_mapper|
           # /var/sx
           config_supervisord = lib_mapper.supervisor.f('supervisord.conf')
           not_expect_file(config_supervisord)

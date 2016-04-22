@@ -1,5 +1,5 @@
 AllCops:
-  TargetRubyVersion: 2.3
+  TargetRubyVersion: 2.2
 
 Style/FrozenStringLiteralComment:
   Enabled: false
@@ -13,26 +13,16 @@ Style/CaseIndentation:
 Style/ElseAlignment:
   Enabled: false
 
+#Metrics/LineLength:
+#  Max: 150
+#
+#Metrics/AbcSize:
+#  Max: 25
+#
 #Metrics/MethodLength:
-#  Enabled: false
+#  Max: 15
 #
 #Metrics/ClassLength:
-#  Enabled: false
-#
-#Metrics/ModuleLength:
-#  Enabled: false
-#
-#Metrics/LineLength:
-#  Max: 120
-#
-#Metrics/CyclomaticComplexity:
-#  Enabled: false
-#
-#Lint/NestedMethodDefinition:
-#  Enabled: false
-#
-#Lint/RescueException:
-#  Enabled: false
-#
-#Lint/EndAlignment:
-#  Enabled: false
+#  Max: 300
+
+inherit_from: .rubocop_todo.yml

@@ -12,11 +12,11 @@ module Superhosting
       end
 
       def inheritors_mapper(mapper)
-        @type = case
+        @type = case type = mapper_type(mapper)
                   when 'container', 'site'
                     raise NetStatus::Exception, error: :input_error, code: :model_does_not_exists, data: { name: @mapper.name } unless @mapper.dir?
                     raise NetStatus::Exception, error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: @mapper.name } if @mapper.abstract?
-                    mapper_type(mapper)
+                    type
                   when 'model'
                     nil
                   else

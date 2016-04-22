@@ -48,7 +48,7 @@ module Superhosting
         end
       end
 
-      def install_users(name:, model:)
+      def install_users(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           mapper = index[name][:mapper]
 
@@ -122,7 +122,7 @@ module Superhosting
 
       def unconfigure(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          _each_site(name: name) do |controller, site_name, state|
+          _each_site(name: name) do |controller, site_name, _state|
             controller.unconfigure(name: site_name).net_status_ok!
           end
           super
@@ -133,7 +133,7 @@ module Superhosting
 
       def apply(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          _each_site(name: name) do |controller, site_name, state|
+          _each_site(name: name) do |controller, site_name, _state|
             controller.apply(name: site_name).net_status_ok!
           end
           super
@@ -144,7 +144,7 @@ module Superhosting
 
       def configure_with_apply(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          _each_site(name: name) do |controller, site_name, state|
+          _each_site(name: name) do |controller, site_name, _state|
             controller.reconfigure(name: site_name).net_status_ok!
           end
           super

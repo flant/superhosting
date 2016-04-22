@@ -16,7 +16,7 @@ describe Superhosting::Controller::Container do
 
   it 'reconfig' do
     with_container(model: 'test') do |container_name|
-      with_site do |site_name|
+      with_site do |_site_name|
         container_reconfigure_with_exps(name: container_name)
       end
     end
@@ -24,7 +24,7 @@ describe Superhosting::Controller::Container do
 
   it 'reconfig with model' do
     with_container do |container_name|
-      with_site do |site_name|
+      with_site do |_site_name|
         container_reconfigure_with_exps(name: container_name, model: 'test')
       end
     end
@@ -65,7 +65,7 @@ describe Superhosting::Controller::Container do
   end
 
   it 'list' do
-    with_container do |container_name|
+    with_container do |_container_name|
       expect(container_list_with_exps[:data].first).to include('name', 'state', 'model', 'options', 'users')
     end
   end
@@ -102,7 +102,7 @@ describe Superhosting::Controller::Container do
 
   it 'admin_add' do
     with_admin do |admin_name|
-      with_container do |container_name|
+      with_container do |_container_name|
         container_admin_add_with_exps(name: admin_name)
       end
     end
@@ -165,13 +165,13 @@ describe Superhosting::Controller::Container do
   end
 
   it 'admin_add:admin_does_not_exists' do
-    with_container do |container_name|
+    with_container do |_container_name|
       container_admin_add_with_exps(name: @admin_name, code: :admin_does_not_exists)
     end
   end
 
   it 'admin_delete:admin_does_not_exists' do
-    with_container do |container_name|
+    with_container do |_container_name|
       container_admin_add_with_exps(name: 'incorrect_admin_name', code: :admin_does_not_exists)
     end
   end

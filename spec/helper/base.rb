@@ -58,24 +58,26 @@ module SpecHelpers
       end
 
       def cli(*args)
-        def with_thread_options
-          old_logger = Thread.current[:logger]
-          old_dry_run = Thread.current[:debug]
-          old_verbose = Thread.current[:verbose]
-          yield
-        ensure
-          Thread.current[:logger] = old_logger
-          Thread.current[:debug] = old_dry_run
-          Thread.current[:verbose] = old_verbose
+        with_thread_options = lambda do |&b|
+          begin
+            old_logger = Thread.current[:logger]
+            old_dry_run = Thread.current[:debug]
+            old_verbose = Thread.current[:verbose]
+            b.call
+          ensure
+            Thread.current[:logger] = old_logger
+            Thread.current[:debug] = old_dry_run
+            Thread.current[:verbose] = old_verbose
+          end
         end
 
         begin
-          with_thread_options do
+          with_thread_options.call do
             Superhosting::Cli::Base.start(args)
           end
         rescue SystemExit => e
           raise unless e.status == 1
-        rescue Exception => e
+        rescue StandardError => e
           net_status = e.net_status.net_status_normalize
           $stderr.puts(net_status[:message] || [net_status[:error], net_status[:code]].compact.join(': '))
           raise
@@ -87,8 +89,8 @@ module SpecHelpers
                           Superhosting::DockerApi.new
                         else
                           docker_instance = instance_double('Superhosting::DockerApi')
-                          allow(docker_instance).to receive(:method_missing) { |method, *args, &block| true }
-                          [:container_list, :grab_container_options].each { |m| allow(docker_instance).to receive(m) { |options| [] } }
+                          allow(docker_instance).to receive(:method_missing) { |_method, *_args| true }
+                          [:container_list, :grab_container_options].each { |m| allow(docker_instance).to receive(m) { |_options| [] } }
                           docker_instance
                         end
       end

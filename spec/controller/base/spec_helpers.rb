@@ -10,11 +10,11 @@ module SpecHelpers
 
       # methods
 
-      def base_repair(**kwargs)
+      def base_repair(**_kwargs)
         base_controller.repair
       end
 
-      def base_update(**kwargs)
+      def base_update(**_kwargs)
         base_controller.update
       end
     end

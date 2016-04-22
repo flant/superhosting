@@ -28,14 +28,12 @@ module Superhosting
         home_dir = ftp_dir.nil? ? web_mapper.path : web_mapper.f(ftp_dir).path
 
         if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
-          if !File.exists? home_dir
+          if !File.exist? home_dir
             resp = { error: :logical_error, code: :incorrect_ftp_dir, data: { dir: home_dir.to_s } }
           elsif (resp = not_existing_validation(name: name, container_name: container_name)).net_status_ok?
             shell = ftp_only ? '/usr/sbin/nologin' : '/bin/bash'
-            if (resp = _add(name: name, container_name: container_name, home_dir: home_dir, shell: shell)).net_status_ok?
-              if generate
-                resp = passwd(name: name, container_name: container_name, generate: generate)
-              end
+            if (resp = _add(name: name, container_name: container_name, home_dir: home_dir, shell: shell)).net_status_ok? && generate
+              resp = passwd(name: name, container_name: container_name, generate: generate)
             end
           end
         end

@@ -58,7 +58,7 @@ module SpecHelpers
         site_controller.alias(name: @site_name).delete(**kwargs)
       end
 
-      def site_alias_list(**kwargs)
+      def site_alias_list(**_kwargs)
         site_controller.alias(name: @site_name).list
       end
 
@@ -79,7 +79,7 @@ module SpecHelpers
       end
 
       def site_add_exps(**kwargs)
-        site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, aliases_mapper, container_name, container_etc_mapper, container_lib_mapper|
+        site_base(**kwargs) do |_name, etc_mapper, lib_mapper, web_mapper, state_mapper, _aliases_mapper, container_name, container_etc_mapper, _container_lib_mapper|
           # /etc/sx
           expect_dir(container_etc_mapper.sites)
           expect_dir(etc_mapper)
@@ -99,7 +99,7 @@ module SpecHelpers
       end
 
       def site_delete_exps(**kwargs)
-        site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, aliases_mapper, container_name, container_etc_mapper, container_lib_mapper|
+        site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, aliases_mapper, _container_name, container_etc_mapper, container_lib_mapper|
           # /etc/sx
           not_expect_dir(etc_mapper)
 
@@ -127,7 +127,7 @@ module SpecHelpers
       def site_alias_add_exps(**kwargs)
         alias_name = kwargs.delete(:name)
 
-        site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, aliases_mapper, container_name, container_etc_mapper, container_lib_mapper|
+        site_base(**kwargs) do |_name, _etc_mapper, _lib_mapper, _web_mapper, _state_mapper, aliases_mapper, _container_name, container_etc_mapper, _container_lib_mapper|
           expect_file(aliases_mapper)
           expect_in_file(aliases_mapper, /^#{alias_name}$/)
 
@@ -139,7 +139,7 @@ module SpecHelpers
       def site_alias_delete_exps(**kwargs)
         alias_name = kwargs.delete(:name)
 
-        site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, aliases_mapper, container_name, container_etc_mapper, container_lib_mapper|
+        site_base(**kwargs) do |_name, _etc_mapper, _lib_mapper, _web_mapper, _state_mapper, aliases_mapper, _container_name, container_etc_mapper, _container_lib_mapper|
           model_name = container_etc_mapper.f('model', default: config.default_model)
           model_exps(:"site_alias_#{model_name}_exps", **kwargs)
 
@@ -149,7 +149,7 @@ module SpecHelpers
       end
 
       def site_add_fcgi_m_exps(**kwargs)
-        site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, aliases_mapper, container_name, container_etc_mapper, container_lib_mapper|
+        site_base(**kwargs) do |name, _etc_mapper, _lib_mapper, web_mapper, _state_mapper, _aliases_mapper, container_name, _container_etc_mapper, _container_lib_mapper|
           nginx_mapper = etc.nginx.sites
           config_name = "#{container_name}-#{name}.conf"
           expect_file(nginx_mapper.f(config_name))
@@ -159,14 +159,14 @@ module SpecHelpers
       end
 
       def site_delete_fcgi_m_exps(**kwargs)
-        site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, aliases_mapper, container_name, container_etc_mapper, container_lib_mapper|
+        site_base(**kwargs) do |name, _etc_mapper, _lib_mapper, _web_mapper, _state_mapper, _aliases_mapper, container_name, _container_etc_mapper, _container_lib_mapper|
           nginx_mapper = etc.nginx.sites
           not_expect_file(nginx_mapper.f("#{container_name}-#{name}.conf"))
         end
       end
 
       def site_alias_fcgi_m_exps(**kwargs)
-        site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, aliases_mapper, container_name, container_etc_mapper, container_lib_mapper|
+        site_base(**kwargs) do |name, _etc_mapper, _lib_mapper, _web_mapper, _state_mapper, aliases_mapper, container_name, _container_etc_mapper, _container_lib_mapper|
           nginx_mapper = etc.nginx.sites
           config_name = "#{container_name}-#{name}.conf"
           expect_in_file(nginx_mapper.f(config_name), "server_name #{([name] + aliases_mapper.lines).map(&:punycode).join(' ')};")

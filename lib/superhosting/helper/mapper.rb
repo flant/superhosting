@@ -35,11 +35,11 @@ module Superhosting
       end
 
       def get_mapper_options(mapper, erb: false)
-        def exclude_erb_extension(h)
+        exclude_erb_extension = lambda do |h|
           new_hash = {}
           h.each do |k, v|
             if v.is_a? Hash
-              new_hash[k] = exclude_erb_extension(h[k])
+              new_hash[k] = exclude_erb_extension.call(h[k])
             else
               new_hash[k[/(.*(?=\.erb))|(.*)/]] = h.delete(k)
             end
@@ -48,17 +48,17 @@ module Superhosting
         end
 
         hash = mapper.to_hash(eval_erb: !erb, exclude_files: [/^config.rb$/, /^inherit$/, /^abstract$/], exclude_dirs: [/^config_templates$/])
-        exclude_erb_extension(hash)
+        exclude_erb_extension.call(hash)
       end
 
       def get_mapper_options_pathes(mapper, erb: false)
-        def get_pathes(h, path = [])
+        get_pathes = lambda do |h, path = []|
           options = {}
           h.each do |k, v|
             path_ = path.dup
             path_ << k
             if v.is_a? Hash
-              options.merge!(get_pathes(h[k], path_))
+              options.merge!(get_pathes.call(h[k], path_))
             else
               options.merge!(path_.join('.') => v)
             end
@@ -67,7 +67,7 @@ module Superhosting
         end
 
         hash = get_mapper_options(mapper, erb: erb)
-        get_pathes(hash)
+        get_pathes.call(hash)
       end
 
       def inspect(name:, inheritance: false, erb: false)

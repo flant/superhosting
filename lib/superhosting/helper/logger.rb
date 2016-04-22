@@ -40,7 +40,7 @@ module Superhosting
         Thread.current[:debug]
       end
 
-      def info(msg = nil, indent: true, desc: nil, **kwargs, &b)
+      def info(msg = nil, indent: true, **_kwargs, &b)
         unless __logger.nil?
           msg = indent ? with_indent(msg) : msg.chomp
           __logger.info(msg, &b)
@@ -65,13 +65,13 @@ module Superhosting
 
         status = :failed
         diff = nil
-        resp = b.call do |resp|
-          status = resp[:code] || :ok
-          diff = resp[:diff]
+        resp = b.call do |res|
+          status = res[:code] || :ok
+          diff = res[:diff]
         end
 
         resp
-      rescue Exception => e
+      rescue StandardError => _e
         raise
       ensure
         desc[:code] = :"#{desc[:code]}.#{status}"
@@ -80,7 +80,7 @@ module Superhosting
         self.indent = old
       end
 
-      def debug_block(desc: nil, operation: false, &b)
+      def debug_block(desc: nil)
         old = indent
 
         debug(desc: desc)
@@ -91,7 +91,7 @@ module Superhosting
         status = :ok
 
         resp
-      rescue Exception => e
+      rescue StandardError => _e
         raise
       ensure
         debug(desc: { code: status })
@@ -102,7 +102,7 @@ module Superhosting
         code = desc[:code]
         data = desc[:data]
         ::I18n.t [:debug, context, code].join('.'), [:debug, code].join('.'), **data, raise: true
-      rescue ::I18n::MissingTranslationData => e
+      rescue ::I18n::MissingTranslationData => _e
         raise NetStatus::Exception, code: :missing_translation, data: { code: code }
       end
 

@@ -6,7 +6,7 @@ module Superhosting
           true
         end
 
-        def self.after_action(data, config)
+        def self.after_action(data, _config)
           show_models_tree(data, ignore_type: true)
         end
       end

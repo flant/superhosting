@@ -26,8 +26,8 @@ describe Superhosting::Controller::Model do
   end
 
   it 'reconfig', :docker do
-    with_container(model: 'test_with_mux') do |container_name|
-      with_site do |site_name|
+    with_container(model: 'test_with_mux') do |_container_name|
+      with_site do |_site_name|
         model_reconfigure_with_exps(name: 'test_with_mux')
       end
     end

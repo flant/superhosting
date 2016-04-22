@@ -3,7 +3,7 @@ module Superhosting
     class User
       def _group_get(name:)
         Etc.getgrnam(name)
-      rescue ArgumentError => e
+      rescue ArgumentError => _e
         nil
       end
 

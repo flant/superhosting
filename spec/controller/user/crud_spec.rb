@@ -11,7 +11,7 @@ describe Superhosting::Controller::User do
   end
 
   it 'delete' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_user
     end
   end
@@ -85,7 +85,7 @@ describe Superhosting::Controller::User do
   # other
 
   it 'recreate', :docker do
-    with_container do |container_name|
+    with_container do |_container_name|
       2.times.each { with_user }
     end
   end

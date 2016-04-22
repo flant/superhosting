@@ -11,7 +11,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'name' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         expect(site_name_with_exps(name: site_name)[:data]).to eq site_name
       end
@@ -19,7 +19,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'name by alias' do
-    with_site_alias do |container_name, site_name, alias_name|
+    with_site_alias do |_container_name, site_name, alias_name|
       expect(site_name_with_exps(name: alias_name)[:data]).to eq site_name
     end
   end
@@ -33,13 +33,13 @@ describe Superhosting::Controller::Site do
   end
 
   it 'container by alias' do
-    with_site_alias do |container_name, site_name, alias_name|
+    with_site_alias do |container_name, _site_name, alias_name|
       expect(site_container_with_exps(name: alias_name)[:data]).to eq container_name
     end
   end
 
   it 'delete' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site
     end
   end
@@ -107,7 +107,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'reconfig', :docker do
-    with_container(model: 'test_with_mux') do |container_name|
+    with_container(model: 'test_with_mux') do |_container_name|
       with_site do |site_name|
         site_reconfigure_with_exps(name: site_name)
       end
@@ -115,21 +115,21 @@ describe Superhosting::Controller::Site do
   end
 
   it 'reconfig by alias' do
-    with_site_alias do |container_name, site_name, alias_name|
+    with_site_alias do |_container_name, _site_name, alias_name|
       site_reconfigure_with_exps(name: alias_name)
     end
   end
 
   it 'list' do
     with_container do |container_name|
-      with_site do |site_name|
+      with_site do |_site_name|
         expect(site_list_with_exps(container_name: container_name)[:data].first).to include('name', 'state', 'aliases', 'options')
       end
     end
   end
 
   it 'inspect' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         expect(site_inspect_with_exps(name: site_name)[:data].keys).to include('name', 'state', 'aliases', 'options')
       end
@@ -137,7 +137,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'inheritance' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         expect(site_inheritance_with_exps(name: site_name)).to include(:data)
       end
@@ -145,7 +145,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'options' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         expect(site_options_with_exps(name: site_name)).to include(:data)
       end
@@ -153,7 +153,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'alias_add' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         alias_name = "alias-#{site_name}"
         site_alias_add_with_exps(name: alias_name)
@@ -162,7 +162,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'alias_delete' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         alias_name = "alias-#{site_name}"
         site_alias_add_with_exps(name: alias_name)
@@ -172,7 +172,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'alias_list' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         alias_name = "alias-#{site_name}"
         site_alias_add_with_exps(name: alias_name)
@@ -203,13 +203,13 @@ describe Superhosting::Controller::Site do
   end
 
   it 'rename:site_does_not_exists' do
-    with_container do |container_name|
+    with_container do |_container_name|
       site_rename_with_exps(name: @site_name, new_name: "new.#{@site_name}", code: :site_does_not_exists)
     end
   end
 
   it 'rename:invalid_site_name' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         INVALID_SITE_NAMES.each { |name| site_rename_with_exps(name: site_name, new_name: name, code: :invalid_site_name) }
       end
@@ -217,7 +217,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'rename:site_exists' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         site_rename_with_exps(name: site_name, new_name: site_name, code: :site_exists)
       end
@@ -231,15 +231,15 @@ describe Superhosting::Controller::Site do
   end
 
   it 'alias_add:invalid_site_name' do
-    with_container do |container_name|
-      with_site do |site_name|
+    with_container do |_container_name|
+      with_site do |_site_name|
         INVALID_SITE_NAMES.each { |name| site_alias_add_with_exps(name: name, code: :invalid_site_name) }
       end
     end
   end
 
   it 'alias_add:alias_exists' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         alias_name = "alias-#{site_name}"
         site_alias_add_with_exps(name: alias_name)
@@ -249,7 +249,7 @@ describe Superhosting::Controller::Site do
   end
 
   it 'alias_add:site_exists' do
-    with_container do |container_name|
+    with_container do |_container_name|
       with_site do |site_name|
         site_alias_add_with_exps(name: site_name, code: :site_exists)
       end

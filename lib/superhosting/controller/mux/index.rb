@@ -16,7 +16,7 @@ module Superhosting
 
       def reindex
         self.class.index ||= {}
-        @container_controller.index.each do |container_name, data|
+        @container_controller.index.each do |container_name, _data|
           container_mapper = @container_controller.index[container_name][:mapper]
           next unless (mux_mapper = container_mapper.mux).file?
           mux_name = mux_mapper.value
@@ -30,10 +30,9 @@ module Superhosting
       end
 
       def index_pop(mux_name, container_name)
-        if self.class.index.key? mux_name
-          self.class.index[mux_name].delete(container_name)
-          self.class.index.delete(mux_name) if self.class.index[mux_name].empty?
-        end
+        return unless self.class.index.key? mux_name
+        self.class.index[mux_name].delete(container_name)
+        self.class.index.delete(mux_name) if self.class.index[mux_name].empty?
       end
 
       def index_push(mux_name, container_name)

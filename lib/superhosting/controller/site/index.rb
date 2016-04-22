@@ -62,7 +62,7 @@ module Superhosting
         end
 
         names = ([mapper.name] + mapper.aliases)
-        names.each { |name| self.class.index[name] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, names: names } }
+        names.each { |n| self.class.index[n] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, names: names } }
       end
     end
   end

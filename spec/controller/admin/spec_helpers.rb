@@ -18,7 +18,7 @@ module SpecHelpers
         admin_controller.delete(**kwargs)
       end
 
-      def admin_list(**kwargs)
+      def admin_list(**_kwargs)
         admin_controller.list
       end
 
@@ -34,7 +34,7 @@ module SpecHelpers
         admin_controller.container(name: @admin_name).delete(**kwargs)
       end
 
-      def admin_container_list(**kwargs)
+      def admin_container_list(**_kwargs)
         admin_controller.container(name: @admin_name).list
       end
 
@@ -49,7 +49,7 @@ module SpecHelpers
       end
 
       def admin_add_exps(**kwargs)
-        admin_base(**kwargs) do |name, mapper, admins_mapper|
+        admin_base(**kwargs) do |_name, mapper, admins_mapper|
           # /etc/sx/admins
           expect_dir(admins_mapper)
           expect_dir(mapper)
@@ -58,14 +58,14 @@ module SpecHelpers
       end
 
       def admin_passwd_exps(**kwargs)
-        admin_base(**kwargs) do |name, mapper, admins_mapper|
+        admin_base(**kwargs) do |name, mapper, _admins_mapper|
           # /etc/sx/admins
           expect_in_file(mapper.passwd, /#{name}:(?!!)/)
         end
       end
 
       def admin_delete_exps(**kwargs)
-        admin_base(**kwargs) do |name, mapper, admins_mapper|
+        admin_base(**kwargs) do |name, mapper, _admins_mapper|
           etc_passwd_mapper = etc.passwd
 
           # /etc/sx/admins

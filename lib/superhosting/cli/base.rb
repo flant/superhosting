@@ -48,18 +48,18 @@ module Superhosting
 
         @logger = Logger.new(STDOUT)
         @logger.level = (config[:debug] || config[:dry_run] || config[:verbose]) ? Logger::DEBUG : Logger::INFO
-        @logger.formatter = proc { |severity, datetime, progname, msg| format("%s\n", msg.to_s) }
+        @logger.formatter = proc { |_severity, _datetime, _progname, msg| format("%s\n", msg.to_s) }
         self.__logger = @logger
 
         help if config[:help] || self.class == Base
       end
 
       def help
-        def get_childs_banners(node)
+        banners = lambda do |node|
           if node.is_a? Hash
             node.map do |k, v|
               if v.is_a? Hash
-                get_childs_banners(node[k])
+                banners.call(node[k])
               else
                 v.banner
               end
@@ -69,7 +69,7 @@ module Superhosting
           end
         end
 
-        info("#{opt_parser.to_s}\n#{get_childs_banners(@node) if self.class == Base}".strip)
+        info("#{opt_parser}\n#{banners.call(@node) if self.class == Base}".strip)
 
         exit 1
       end
@@ -103,19 +103,19 @@ module Superhosting
       end
 
       def controller_method
-        def subcontroller_option
+        subcontroller_option = lambda do
           key = :"#{self.class.splited_class_name.first}_name"
           config[key] unless config[key].nil?
         end
 
-        def get_method(m_name, node)
+        action_method = lambda do |m_name, node|
           params = node.instance_method(:initialize).parameters
 
           opts = {}
           params.each do |req, name|
             next unless req.to_s.start_with? 'key'
             opt = if name == :name
-                    subcontroller_option
+                    subcontroller_option.call
                   elsif config.key? name
                     config[name]
                   end
@@ -137,7 +137,7 @@ module Superhosting
           if node.respond_to?(:constants) && node.constants.include?(c_name)
             node = node.const_get(c_name)
           elsif node.respond_to?(:instance_methods) && node.instance_methods(false).include?(m_name)
-            return get_method(m_name, node)
+            return action_method.call(m_name, node)
           end
         end
         raise NetStatus::Exception, code: :cmd_is_not_valid, data: { cmd: self.class.inspect }
@@ -147,14 +147,14 @@ module Superhosting
         attr_accessor :commands_hierarchy
 
         def start(args)
-          def clear_args(args, cmd)
-            toggle_case_name(cmd).length.times { args.shift }
-            args
+          clear_args = lambda do |arr, cmd|
+            toggle_case_name(cmd).length.times { arr.shift }
+            arr
           end
 
           prepend
           cmd, node = cmd_and_node(args)
-          args = clear_args(args, cmd)
+          args = clear_args.call(args, cmd)
           cmd.new(args, node).run
         end
 
@@ -182,7 +182,7 @@ module Superhosting
 
         def set_commands_hierarchy
           commands = COMMANDS_MODULE.constants.select { |c| COMMANDS_MODULE.const_get(c).is_a?(Class) }
-          self.commands_hierarchy = commands.sort_by { |k1, k2| toggle_case_name(k1).one? ? 0 : 1 }.each_with_object({}) do |k, h|
+          self.commands_hierarchy = commands.sort_by { |k1, _k2| toggle_case_name(k1).one? ? 0 : 1 }.each_with_object({}) do |k, h|
             node = h
             parts = toggle_case_name(k)
             parts.each do |cmd|
@@ -201,11 +201,11 @@ module Superhosting
         end
 
         def cmd_and_node(args)
-          def positional_arguments(args)
-            args.select { |arg| arg =~ /^([[:alnum:]\_\-]+)$/ }
+          positional_arguments = lambda do |arr|
+            arr.select { |arg| arg =~ /^([[:alnum:]\_\-]+)$/ }
           end
 
-          args = positional_arguments(args)
+          args = positional_arguments.call(args)
           node = commands_hierarchy
           path = []
           key = ''

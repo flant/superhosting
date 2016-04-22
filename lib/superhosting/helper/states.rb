@@ -22,7 +22,7 @@ module Superhosting
           break if (current_state = state[:next]).nil?
         end
         {}
-      rescue Exception => e
+      rescue StandardError => _e
         undo_method = state[:undo] || :"undo_#{method}"
 
         if respond_to? undo_method
@@ -38,7 +38,7 @@ module Superhosting
       def method_options(method_name, options)
         method = self.method(method_name)
         opts = {}
-        method.parameters.each do |req, name|
+        method.parameters.each do |_req, name|
           opt = options[name]
           opts.merge!(name => opt)
         end

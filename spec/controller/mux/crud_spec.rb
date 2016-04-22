@@ -6,8 +6,8 @@ describe Superhosting::Controller::Mux do
   # positive
 
   it 'reconfig', :docker do
-    with_container(model: 'test_with_mux') do |container_name|
-      with_site do |site_name|
+    with_container(model: 'test_with_mux') do |_container_name|
+      with_site do |_site_name|
         mux_reconfigure_with_exps(name: 'test')
       end
     end

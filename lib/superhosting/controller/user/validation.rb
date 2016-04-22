@@ -23,7 +23,8 @@ module Superhosting
       end
 
       def not_existing_validation(name:, container_name:)
-        existing_validation(name: name, container_name: container_name).net_status_ok? ? { error: :logical_error, code: :user_exists, data: { name: "#{container_name}_#{name}" } } : {}
+        user_name = "#{container_name}_#{name}"
+        existing_validation(name: name, container_name: container_name).net_status_ok? ? { error: :logical_error, code: :user_exists, data: { name: user_name } } : {}
       end
     end
   end
