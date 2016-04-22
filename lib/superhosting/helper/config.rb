@@ -1,13 +1,6 @@
 module Superhosting
   module Helper
     module Config
-      def configure(name:)
-        if (resp = existing_validation(name: name)).net_status_ok?
-          _config(name: name, on_reconfig: false, on_config: true)
-        end
-        resp
-      end
-
       def unconfigure(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           case mapper_type(index[name][:mapper])
@@ -55,14 +48,6 @@ module Superhosting
         else
           resp
         end
-      end
-
-      def reconfig(name:)
-        if (resp = existing_validation(name: name)).net_status_ok?
-          unconfigure(name: name)
-          configure(name: name)
-        end
-        resp
       end
 
       def _config(name:, on_reconfig:, on_config:)

@@ -120,17 +120,6 @@ module Superhosting
         end
       end
 
-      def configure(name:)
-        if (resp = existing_validation(name: name)).net_status_ok?
-          _each_site(name: name) do |controller, site_name, state|
-            controller.configure(name: site_name).net_status_ok!
-          end
-          super
-        else
-          resp
-        end
-      end
-
       def unconfigure(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           _each_site(name: name) do |controller, site_name, state|
