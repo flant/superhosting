@@ -140,7 +140,7 @@ module Superhosting
             return get_method(m_name, node)
           end
         end
-        raise NetStatus::Exception, message: 'Method doesn\'t found'
+        raise NetStatus::Exception, code: :cmd_is_not_valid, data: { cmd: self.class.inspect }
       end
 
       class << self
@@ -220,7 +220,7 @@ module Superhosting
               when 0
                 break
               else
-                raise Error::AmbiguousCommand, path: path, commands: res
+                raise NetStatus::Exception, error: :input_error, code: :ambiguous_command, data: { path: path.join(' '), commands: res.join('|') }
             end
 
             path << key

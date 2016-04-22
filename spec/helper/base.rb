@@ -73,6 +73,8 @@ module SpecHelpers
           with_thread_options do
             Superhosting::Cli::Base.start(args)
           end
+        rescue SystemExit => e
+          raise unless e.status == 1
         rescue Exception => e
           net_status = e.net_status.net_status_normalize
           $stderr.puts(net_status[:message] || [net_status[:error], net_status[:code]].compact.join(': '))

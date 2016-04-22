@@ -73,6 +73,10 @@ module SpecHelpers
         expect(File.stat(maybe_path).gid).to be owner.gid
       end
 
+      def expect_exception_code(exc = NetStatus::Exception, code: nil)
+        expect { yield }.to raise_error { |error| expect(error.net_status[:code]).to be(code) }
+      end
+
       def expect_net_status(hash, code: nil)
         if code
           expect(hash).to include(code: code)
