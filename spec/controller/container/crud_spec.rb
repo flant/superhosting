@@ -7,7 +7,7 @@ describe Superhosting::Controller::Container do
   # positive
 
   it 'add' do
-    container_add_with_exps(name: @container_name)
+    container_add_with_exps(name: @container_name, model: 'test')
   end
 
   it 'delete' do

@@ -71,7 +71,7 @@ module Superhosting
 
       def set_file_attributes(path, user: nil, group: nil, mode: nil, **kwargs)
         chown!(user, group, path) if user && group
-        chmod!(mode, path) if user && mode
+        chmod!(mode, path) if mode
       end
 
       def base_mapper
