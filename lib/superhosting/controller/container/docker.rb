@@ -24,9 +24,7 @@ module Superhosting
         if restart
           _recreate_docker(*docker_options, name: name)
         elsif @docker_api.container_exists?(name)
-          if @docker_api.container_dead?(name)
-            _recreate_docker(*docker_options, name: name)
-          elsif @docker_api.container_exited?(name)
+          if @docker_api.container_exited?(name)
             @docker_api.container_start!(name)
           elsif @docker_api.container_paused?(name)
             @docker_api.container_unpause!(name)
@@ -35,6 +33,8 @@ module Superhosting
               break unless @docker_api.container_restarting?(name)
               sleep 2
             end
+          else
+            _recreate_docker(*docker_options, name: name)
           end
         else
           _run_docker(*docker_options, name: name)

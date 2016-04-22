@@ -113,10 +113,11 @@ module Superhosting
       with_dry_run do |dry_run|
         return true if dry_run && storage[name] == status
         resp = container_info(name)
+        state = resp['State'][status.capitalize]
         if resp.nil?
           false
         else
-          resp['State'][status.capitalize]
+          state.nil? ? false : state
         end
       end
     end

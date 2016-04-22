@@ -216,7 +216,7 @@ describe Superhosting::Controller::Container do
       expect(docker_api.container_running?(name)).to be_truthy
     end
 
-    with_container do |container_name|
+    with_container(model: 'test') do |container_name|
       docker_api.container_stop!(container_name)
       up_docker(container_name)
 
