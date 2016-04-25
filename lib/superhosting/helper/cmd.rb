@@ -3,7 +3,7 @@ module Superhosting
     module Cmd
       def command!(*command_args, **kwargs)
         _command(*command_args, **kwargs) do |cmd|
-          raise NetStatus::Exception.new, error: :error, code: :command_with_error, data: { error: [cmd.stdout, cmd.stderr].join("\n") }
+          raise NetStatus::Exception, error: :error, code: :command_with_error, data: { error: [cmd.stdout, cmd.stderr].join("\n") }
         end
       end
 

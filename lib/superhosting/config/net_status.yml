@@ -51,7 +51,7 @@ en:
     file_does_not_exists: "File '%{path}' does not exist."
     can_not_pass_an_absolute_path: "Can't pass an absolute path '%{path}'."
 
-    command_with_error: "Command output:\n %{error}."
+    command_with_error: "Command output: %{error}"
     ambiguous_command: "Ambiguous command: '%{path}' '%{commands}'."
     cmd_is_not_valid: "Controller for command '%{cmd}' does not found."
     invalid_cli_option: "%{message}"
