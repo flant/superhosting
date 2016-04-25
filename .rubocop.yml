@@ -13,16 +13,31 @@ Style/CaseIndentation:
 Style/ElseAlignment:
   Enabled: false
 
+Style/ClassVars:
+  Exclude:
+    - 'lib/superhosting/helper/logger.rb'
+
+Performance/RedundantBlockCall:
+  Exclude:
+    - 'lib/superhosting/helper/logger.rb'
+
+Metrics/ParameterLists:
+  Exclude:
+    - 'spec/**/spec_helpers.rb'
+
 #Metrics/LineLength:
 #  Max: 150
 #
 #Metrics/AbcSize:
 #  Max: 25
-#
+
 #Metrics/MethodLength:
 #  Max: 15
-#
-#Metrics/ClassLength:
-#  Max: 300
 
-inherit_from: .rubocop_todo.yml
+Metrics/ClassLength:
+  Max: 300
+
+Metrics/ModuleLength:
+  Max: 200
+
+#inherit_from: .rubocop_todo.yml

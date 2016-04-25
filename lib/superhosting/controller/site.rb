@@ -133,7 +133,7 @@ module Superhosting
 
       def move(name:, new_container_name:)
         if (resp = available_validation(name: name)).net_status_ok? &&
-          (resp = @container_controller.available_validation(name: new_container_name)).net_status_ok?
+           (resp = @container_controller.available_validation(name: new_container_name)).net_status_ok?
           service_name = "renaming.#{name}"
           _rename(name: name, new_name: service_name, new_container_name: new_container_name).net_status_ok!
           _rename(name: service_name, new_name: name).net_status_ok!

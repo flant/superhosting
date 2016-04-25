@@ -102,31 +102,31 @@ module Superhosting
         method.parameters.empty? ? method.call : method.call(**opts)
       end
 
+      def subcontroller_option
+        key = :"#{self.class.splited_class_name.first}_name"
+        config[key] unless config[key].nil?
+      end
+
+      def action_method(m_name, node)
+        params = node.instance_method(:initialize).parameters
+
+        opts = {}
+        params.each do |req, name|
+          next unless req.to_s.start_with? 'key'
+          opt = if name == :name
+                  subcontroller_option
+                elsif config.key? name
+                  config[name]
+                end
+          opts.merge!(name => opt) unless opt.nil?
+        end
+
+        CONTROLLER_BASE_OPTIONS.each { |opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
+        opts[:logger] = __logger
+        node.new(**opts).method(m_name)
+      end
+
       def controller_method
-        subcontroller_option = lambda do
-          key = :"#{self.class.splited_class_name.first}_name"
-          config[key] unless config[key].nil?
-        end
-
-        action_method = lambda do |m_name, node|
-          params = node.instance_method(:initialize).parameters
-
-          opts = {}
-          params.each do |req, name|
-            next unless req.to_s.start_with? 'key'
-            opt = if name == :name
-                    subcontroller_option.call
-                  elsif config.key? name
-                    config[name]
-                  end
-            opts.merge!(name => opt) unless opt.nil?
-          end
-
-          CONTROLLER_BASE_OPTIONS.each { |opt| opts.merge!(opt => config[opt]) unless config[opt].nil? }
-          opts[:logger] = __logger
-          node.new(**opts).method(m_name)
-        end
-
         names = self.class.splited_class_name
         node = names.one? ? CONTROLLERS_MODULE::Base : CONTROLLERS_MODULE
 
@@ -137,7 +137,7 @@ module Superhosting
           if node.respond_to?(:constants) && node.constants.include?(c_name)
             node = node.const_get(c_name)
           elsif node.respond_to?(:instance_methods) && node.instance_methods(false).include?(m_name)
-            return action_method.call(m_name, node)
+            return action_method(m_name, node)
           end
         end
         raise NetStatus::Exception, code: :cmd_is_not_valid, data: { cmd: self.class.inspect }
