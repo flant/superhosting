@@ -99,46 +99,50 @@ module Superhosting
       end
 
       def rename(name:, new_name:, keep_name_as_alias: false)
-        _rename(name: name, new_name: new_name, keep_name_as_alias: keep_name_as_alias)
-      end
-
-      def _rename(name:, new_name:, keep_name_as_alias: false, new_container_name: nil)
         if (resp = available_validation(name: name)).net_status_ok? &&
-           ((resp = adding_validation(name: new_name)).net_status_ok? ||
-             (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
-          mapper = index[name][:mapper]
-          status_name = "#{name}_to_#{new_name}"
-          state_mapper = @lib.process_status.f(status_name).create!
-          actual_name = mapper.name
-          container_name = index[name][:container_mapper].name
-          new_container_name ||= container_name
-
-          states = {
-            none: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
-            unconfigured: { action: :new_up, next: :new_upped },
-            new_upped: { action: :copy, next: :copied },
-            copied: { action: :new_reconfigure, next: :new_reconfigured },
-            new_reconfigured: { action: :delete, next: :deleted },
-            deleted: { action: :keep_name_as_alias }
-          }
-
-          on_state(state_mapper: state_mapper, states: states,
-                   name: actual_name, new_name: new_name,
-                   container_name: container_name, new_container_name: new_container_name,
-                   is_alias: is_alias, keep_name_as_alias: keep_name_as_alias)
+          ((resp = adding_validation(name: new_name)).net_status_ok? ||
+            (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
+          _rename(name: name, new_name: new_name, keep_name_as_alias: keep_name_as_alias, is_alias: is_alias)
         else
           resp
         end
       end
 
+      def _rename(name:, new_name: nil, new_container_name: nil, keep_name_as_alias: false, is_alias: false)
+        status_name = if new_container_name
+                        "#{name}_to_#{new_container_name}"
+                      else
+                        "#{name}_to_#{new_name}"
+                      end
+        state_mapper = @lib.process_status.f(status_name).create!
+        container_name = index[name][:container_mapper].name
+        mapper = index[name][:mapper]
+        actual_name = mapper.name
+        new_container_name ||= container_name
+        new_name ||= actual_name
+
+        states = {
+          none: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
+          unconfigured: { action: :new_up, next: :new_upped },
+          new_upped: { action: :copy, next: :copied },
+          copied: { action: :new_reconfigure, next: :new_reconfigured },
+          new_reconfigured: { action: :keep_name_as_alias }
+        }
+
+        on_state(state_mapper: state_mapper, states: states,
+                 mapper: mapper,
+                 name: actual_name, new_name: new_name,
+                 container_name: container_name, new_container_name: new_container_name,
+                 is_alias: is_alias, keep_name_as_alias: keep_name_as_alias)
+      end
+
       def move(name:, new_container_name:)
         if (resp = available_validation(name: name)).net_status_ok? &&
            (resp = @container_controller.available_validation(name: new_container_name)).net_status_ok?
-          service_name = "renaming.#{name}"
-          _rename(name: name, new_name: service_name, new_container_name: new_container_name).net_status_ok!
-          _rename(name: service_name, new_name: name).net_status_ok!
+          _rename(name: name, new_container_name: new_container_name)
+        else
+          resp
         end
-        resp
       end
 
       def reconfigure(name:)

@@ -1,8 +1,8 @@
 module Superhosting
   module Controller
     class Site
-      def new_up(name:, new_name:, container_name:, new_container_name:, is_alias:)
-        mapper = index[name][:mapper]
+      def new_up(mapper:, new_name:, container_name:, new_container_name:, is_alias:)
+        name = mapper.name
         mapper.aliases_mapper.remove_line!(new_name) if is_alias
         reindex_site(name: name, container_name: container_name)
         _reconfigure(name: new_name, container_name: new_container_name)
@@ -12,20 +12,18 @@ module Superhosting
         delete(name: new_name)
       end
 
-      def copy(name:, new_name:)
-        mapper = index[name][:mapper]
+      def copy(mapper:, new_name:)
         new_mapper = index[new_name][:mapper]
 
         mapper.etc.rename!(new_mapper.etc.path)
         mapper.lib.rename!(new_mapper.lib.path)
-        mapper.aliases_mapper.rename!(new_mapper.aliases_mapper.path)
+        mapper.aliases_mapper.parent.rename!(new_mapper.aliases_mapper.parent.path)
 
         {}
       end
 
-      def undo_copy(name:, new_name:)
+      def undo_copy(mapper:, new_name:)
         new_mapper = index[new_name][:mapper]
-        mapper = index[name][:mapper]
 
         unless mapper.nil?
           new_mapper.etc.safe_rename!(mapper.etc.path)
