@@ -40,4 +40,4 @@ Metrics/ClassLength:
 Metrics/ModuleLength:
   Max: 200
 
-#inherit_from: .rubocop_todo.yml
+inherit_from: .rubocop_todo.yml

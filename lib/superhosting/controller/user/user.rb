@@ -66,21 +66,21 @@ module Superhosting
       end
 
       def _create_password(generate: false)
-        password = if generate
-                     SecureRandom.hex
-                   else
-                     loop do
-                       pass_ask = ->(msg) { ask(msg) { |q| q.echo = false } }
-                       if (pass = pass_ask.call('Enter password: ')) != pass_ask.call('Repeat password: ')
-                         info('Passwords does not match')
-                       elsif !StrongPassword::StrengthChecker.new(pass).is_strong?(min_entropy: @config.f('password_strength', default: '15').to_i)
-                         info('Password is weak')
-                       else
-                         break
-                       end
-                     end
-                     pass
-                   end
+        if generate
+          password = SecureRandom.hex
+        else
+         loop do
+           pass_ask = ->(msg) { ask(msg) { |q| q.echo = false } }
+           if (password = pass_ask.call('Enter password: ')) != pass_ask.call('Repeat password: ')
+             info('Passwords does not match')
+           elsif !StrongPassword::StrengthChecker.new(password).is_strong?(min_entropy: @config.f('password_strength', default: '15').to_i)
+             info('Password is weak')
+           else
+             break
+           end
+         end
+        end
+
         encrypted_password = UnixCrypt::SHA512.build(password)
         { password: password, encrypted_password: encrypted_password }
       end
