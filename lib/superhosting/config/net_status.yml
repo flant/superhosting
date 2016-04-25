@@ -26,6 +26,8 @@ en:
     user_does_not_exists: "User '%{name}' doesn't exists."
     user_exists: "User '%{name}' already exists."
 
+    invalid_mysql_user_name: "Invalid user name '%{name}' only '%{regex}' are allowed."
+
     admin_does_not_exists: "Admin '%{name}' doesn't exists."
     admin_exists: "Admin '%{name}' already exists."
 
