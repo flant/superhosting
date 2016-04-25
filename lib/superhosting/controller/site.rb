@@ -99,6 +99,10 @@ module Superhosting
       end
 
       def rename(name:, new_name:, keep_name_as_alias: false)
+        _rename(name: name, new_name: new_name, keep_name_as_alias: keep_name_as_alias)
+      end
+
+      def _rename(name:, new_name:, keep_name_as_alias: false, new_container_name: nil)
         if (resp = available_validation(name: name)).net_status_ok? &&
            ((resp = adding_validation(name: new_name)).net_status_ok? ||
              (is_alias = alias_existing_validation(name: name, alias_name: new_name)))
@@ -107,6 +111,7 @@ module Superhosting
           state_mapper = @lib.process_status.f(status_name).create!
           actual_name = mapper.name
           container_name = index[name][:container_mapper].name
+          new_container_name ||= container_name
 
           states = {
             none: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
@@ -118,18 +123,29 @@ module Superhosting
           }
 
           on_state(state_mapper: state_mapper, states: states,
-                   name: actual_name, new_name: new_name, container_name: container_name,
+                   name: actual_name, new_name: new_name,
+                   container_name: container_name, new_container_name: new_container_name,
                    is_alias: is_alias, keep_name_as_alias: keep_name_as_alias)
         else
           resp
         end
       end
 
+      def move(name:, new_container_name:)
+        if (resp = available_validation(name: name)).net_status_ok? &&
+          (resp = @container_controller.available_validation(name: new_container_name)).net_status_ok?
+          service_name = "renaming.#{name}"
+          _rename(name: name, new_name: service_name, new_container_name: new_container_name).net_status_ok!
+          _rename(name: service_name, new_name: name).net_status_ok!
+        end
+        resp
+      end
+
       def reconfigure(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           actual_name = index[name][:mapper].name
-          set_state(state: :data_installed, state_mapper: state(name: actual_name))
-          _reconfigure(name: actual_name)
+          set_state(state: :none, state_mapper: state(name: actual_name))
+          _reconfigure(name: actual_name, container_name: index[name][:container_mapper].name)
         end
         resp
       end

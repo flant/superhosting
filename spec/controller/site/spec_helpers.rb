@@ -30,6 +30,10 @@ module SpecHelpers
         site_controller.rename(**kwargs)
       end
 
+      def site_move(**kwargs)
+        site_controller.move(**kwargs)
+      end
+
       def site_reconfigure(**kwargs)
         site_controller.reconfigure(**kwargs)
       end
@@ -121,6 +125,11 @@ module SpecHelpers
 
       def site_rename_exps(**kwargs)
         site_add_exps(name: kwargs.delete(:new_name))
+        site_delete_exps(name: kwargs.delete(:name))
+      end
+
+      def site_move_exps(**kwargs)
+        site_add_exps(name: kwargs.delete(:new_name), container_name: kwargs.delete(:new_container_name))
         site_delete_exps(name: kwargs.delete(:name))
       end
 

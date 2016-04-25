@@ -53,6 +53,15 @@ describe Superhosting::Controller::Site do
     end
   end
 
+  it 'move' do
+    with_container do |container_name|
+      with_container(name: "#{@container_name}2") do |container2_name|
+        site_add_with_exps(name: @site_name, container_name: container_name)
+        site_move_with_exps(name: @site_name, new_container_name: container2_name)
+      end
+    end
+  end
+
   it 'rename' do
     with_container do |container_name|
       site_add_with_exps(name: @site_name, container_name: container_name)

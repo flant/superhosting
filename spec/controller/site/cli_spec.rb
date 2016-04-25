@@ -70,6 +70,12 @@ describe 'Superhosting::Controller::Site (cli)' do
     expect { cli('site', 'rename', @site_name, '-r', 'testSname.com') }.to_not raise_error
   end
 
+  it 'site move' do
+    add_site
+    container_add(name: "#{@container_name}2", model: 'test')
+    expect { cli('site', 'move', @site_name, '-c', "#{@container_name}2") }.to_not raise_error
+  end
+
   it 'site alias add' do
     add_site
     expect { cli('site', 'alias', 'add', "new.#{@site_name}", '-s', @site_name) }.to_not raise_error

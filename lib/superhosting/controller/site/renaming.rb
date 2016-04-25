@@ -1,11 +1,11 @@
 module Superhosting
   module Controller
     class Site
-      def new_up(name:, new_name:, container_name:, is_alias:)
+      def new_up(name:, new_name:, container_name:, new_container_name:, is_alias:)
         mapper = index[name][:mapper]
         mapper.aliases_mapper.remove_line!(new_name) if is_alias
         reindex_site(name: name, container_name: container_name)
-        _reconfigure(name: new_name, container_name: container_name)
+        _reconfigure(name: new_name, container_name: new_container_name)
       end
 
       def undo_new_up(new_name:)
