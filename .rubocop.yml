@@ -25,9 +25,9 @@ Metrics/ParameterLists:
   Exclude:
     - 'spec/**/spec_helpers.rb'
 
-#Metrics/LineLength:
-#  Max: 150
-#
+Metrics/LineLength:
+  Max: 150
+
 #Metrics/AbcSize:
 #  Max: 25
 
