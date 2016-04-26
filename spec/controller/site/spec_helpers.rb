@@ -200,12 +200,12 @@ module SpecHelpers
 
       included do
         before :each do
-          @site_name = "testS#{SecureRandom.hex[0..5]}.com"
+          @site_name = "tS#{SecureRandom.hex[0..5]}.com"
         end
 
         after :each do
           with_logger(logger: false) do
-            command('rm -rf /etc/nginx/sites/test*')
+            command('rm -rf /etc/nginx/sites/tS*')
           end
         end
       end

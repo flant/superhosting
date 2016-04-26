@@ -12,6 +12,7 @@ en:
     container_does_not_exists: "Container '%{name}' doesn't exists."
     container_exists: "Container '%{name}' already exists."
     container_is_not_available: "Container '%{name}' is not available."
+    container_name_is_not_specified: "Container name is not specified."
 
     invalid_site_name: "Invalid site name '%{name}' only '%{regex}' are allowed."
     site_does_not_exists: "Site '%{name}' doesn't exists."
@@ -26,7 +27,13 @@ en:
     user_does_not_exists: "User '%{name}' doesn't exists."
     user_exists: "User '%{name}' already exists."
 
-    invalid_mysql_user_name: "Invalid user name '%{name}' only '%{regex}' are allowed."
+    invalid_mysql_user_name: "Invalid mysql user name '%{name}' only '%{regex}' are allowed."
+    mysql_user_does_not_exists: "Mysql user '%{name}' doesn't exists."
+    mysql_user_exists: "Mysql user '%{name}' already exists."
+
+    invalid_mysql_db_name: "Invalid mysql db name '%{name}' only '%{regex}' are allowed."
+    mysql_db_does_not_exists: "Mysql db '%{name}' doesn't exists."
+    mysql_db_exists: "Mysql db '%{name}' already exists."
 
     admin_does_not_exists: "Admin '%{name}' doesn't exists."
     admin_exists: "Admin '%{name}' already exists."

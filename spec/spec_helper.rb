@@ -23,6 +23,7 @@ require 'controller/site/spec_helpers'
 require 'controller/mux/spec_helpers'
 require 'controller/base/spec_helpers'
 require 'controller/model/spec_helpers'
+require 'controller/mysql/spec_helpers'
 
 def logger
   Logger.new(STDOUT).tap do |logger|

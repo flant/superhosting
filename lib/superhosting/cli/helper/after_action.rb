@@ -111,6 +111,14 @@ module Superhosting
           end
         end
 
+        def show_mysql_user_list(data, config)
+          if config[:json]
+            show_json(data, sortby: 'name')
+          else
+            show_list(data.map { |u| u['name'] })
+          end
+        end
+
         def show_options(data, config)
           show = lambda do |options|
             options.each { |k, v| info("#{k} = #{v.inspect}") }

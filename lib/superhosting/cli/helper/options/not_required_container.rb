@@ -2,14 +2,13 @@ module Superhosting
   module Cli
     module Helper
       module Options
-        module Database
+        module NotRequiredContainer
           extend ActiveSupport::Concern
 
           included do
-            option :database_name,
-                   short: '-d NAME',
-                   long: '--database NAME',
-                   required: true
+            option :container_name,
+                   short: '-c NAME',
+                   long: '--container NAME'
           end
         end
       end

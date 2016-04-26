@@ -2,14 +2,14 @@ module Superhosting
   module Cli
     module Helper
       module Options
-        module Database
+        module User
           extend ActiveSupport::Concern
 
           included do
-            option :database_name,
-                   short: '-d NAME',
-                   long: '--database NAME',
-                   required: true
+            option :user_name,
+                   short: '-u NAME',
+                   long: '--user NAME',
+                   required: false
           end
         end
       end

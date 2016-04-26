@@ -79,7 +79,7 @@ module SpecHelpers
 
       included do
         before :each do
-          @user_name = "testU#{SecureRandom.hex[0..5]}"
+          @user_name = "tU#{SecureRandom.hex[0..5]}"
         end
       end
     end

@@ -210,14 +210,14 @@ module SpecHelpers
 
       included do
         before :each do
-          @container_name = "testC#{SecureRandom.hex[0..4]}"
+          @container_name = "tC#{SecureRandom.hex[0..4]}"
         end
 
         after :each do
           with_logger(logger: false) do
             container_delete(name: @container_name)
 
-            %w(new test).each do |prefix|
+            %w(new tC).each do |prefix|
               command("docker ps --filter 'name=#{prefix}' -a | xargs docker unpause")
               command("docker ps --filter 'name=#{prefix}' -a | xargs docker kill")
               command("docker ps --filter 'name=#{prefix}' -a | xargs docker rm")

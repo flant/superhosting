@@ -2,14 +2,12 @@ module Superhosting
   module Controller
     class Mysql
       class User
-        class << self; attr_accessor :index end
+        class << self; attr_accessor :index, :grant_index end
 
         def initialize(**kwargs)
           super
           @container_controller = get_controller(Container)
           @mysql_controller = get_controller(Mysql)
-          @db_controller = get_controller(Db)
-          @grand_controller = get_controller(Grant)
           @client = @mysql_controller.client
           index
         end
@@ -18,15 +16,44 @@ module Superhosting
           self.class.index ||= reindex
         end
 
+        def grant_index
+          self.class.grant_index ||= reindex
+        end
+
+        def container_users(container_name:)
+          self.class.index.select { |u| u.start_with? container_name }
+        end
+
         def reindex
           @config.containers.grep_dirs.each do |container_mapper|
-            reindex_container_users(container_name: container_mapper.name)
+            reindex_container(container_name: container_mapper.name)
           end
           self.class.index ||= {}
         end
 
-        def reindex_container_users(container_name:)
-          info(@client.prepare("select User from mysql.user where Host = '%' and User like ?").execute("'#{container_name}_%'").to_a.inspect)
+        def reindex_grant
+          reindex
+          self.class.grant_index ||= {}
+        end
+
+        def reindex_container(container_name:)
+          self.class.index ||= {}
+          self.class.grant_index ||= {}
+
+          @client.query("select User from mysql.user where Host = '%' and User like '#{container_name}_%'").each do |obj|
+            name = obj['User']
+            @client.query("SHOW GRANTS FOR #{name}@'%'").tap do |result|
+              field_name = result.fields.first
+              index_name = (self.class.index[name] ||= [])
+              result.each do |grant_obj|
+                grant = grant_obj[field_name]
+                next if grant.start_with? 'GRANT USAGE ON *.*'
+                grant_index_name = (self.class.grant_index[grant[/ON `(.*)`/, 1]] ||= [])
+                index_name << grant[/ON `(.*)`/, 1]
+                grant_index_name << name unless grant_index_name.include? name
+              end
+            end
+          end
         end
       end
     end

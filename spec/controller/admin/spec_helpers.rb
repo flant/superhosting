@@ -99,7 +99,7 @@ module SpecHelpers
 
       included do
         before :each do
-          @admin_name = "testA#{SecureRandom.hex[0..5]}"
+          @admin_name = "tA#{SecureRandom.hex[0..5]}"
         end
 
         after :each do

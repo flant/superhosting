@@ -2,9 +2,9 @@ module Superhosting
   module Cli
     module Cmd
       class MysqlUserAdd < Base
+        include Helper::Options::NotRequiredContainer
         include Helper::Options::Generate
-        include Helper::Options::Container
-        include Helper::Options::Database
+        include Helper::Options::Databases
 
         def self.required_param?
           true
