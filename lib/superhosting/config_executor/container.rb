@@ -6,7 +6,6 @@ module Superhosting
       def initialize(container:, on_reconfig:, on_config:, mux: nil, **kwargs)
         self.container = container
         self.mux = mux
-        self.mux_name = mux.nil? ? mux : "mux-#{mux.name}"
         self.registry_files = []
         @on_config = on_config
         @on_reconfig = on_reconfig
@@ -37,16 +36,16 @@ module Superhosting
         return unless @on_config
         in_option = kwargs[:in]
         cmd = if in_option
-                container = case in_option
+                container_name = case in_option
                               when :container then
                                 container.name
                               when :mux then
-                                mux_name
+                                mux.name
                               else
                                 raise NetStatus::Exception, error: :error, code: :on_reconfig_not_supported_option_value, data: { value: in_option, option: 'in' }
-                            end
+                                 end
 
-                "docker exec #{container} #{cmd}"
+                "docker exec #{container_name} #{cmd}"
               else
                 cmd
               end

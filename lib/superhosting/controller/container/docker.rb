@@ -23,6 +23,7 @@ module Superhosting
       def _safe_run_docker(*docker_options, name:, restart: false)
         if restart
           _recreate_docker(*docker_options, name: name)
+        elsif @docker_api.container_running?(name)
         elsif @docker_api.container_exists?(name)
           if @docker_api.container_exited?(name)
             @docker_api.container_start!(name)

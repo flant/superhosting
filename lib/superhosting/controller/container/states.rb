@@ -218,9 +218,16 @@ module Superhosting
         registry_mapper = mapper.lib.registry.f('container')
         mux_mapper = index[name][:mux_mapper]
 
+        mux = if mux_mapper.nil?
+                PathMapper.new("/tmp/sx/null/#{SecureRandom.uuid}")
+              else
+                @lib.muxs.f(mux_mapper.name)
+              end
+        composite_mux_mapper = CompositeMapper::Mux.new(lib_mapper: mux)
+
         {
           container: mapper,
-          mux: mux_mapper,
+          mux: composite_mux_mapper,
           model: model_mapper,
           registry_mapper: registry_mapper,
           on_reconfig: on_reconfig,

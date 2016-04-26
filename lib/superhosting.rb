@@ -75,6 +75,7 @@ require 'superhosting/composite_mapper'
 require 'superhosting/composite_mapper/base'
 require 'superhosting/composite_mapper/container'
 require 'superhosting/composite_mapper/site'
+require 'superhosting/composite_mapper/mux'
 
 require 'superhosting/config_executor'
 require 'superhosting/config_executor/base'

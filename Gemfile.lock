@@ -74,7 +74,7 @@ GEM
     minitest (5.8.4)
     mixlib-cli (1.5.0)
     mixlib-shellout (2.2.6)
-    multi_json (1.11.2)
+    multi_json (1.11.3)
     multipart-post (2.0.0)
     net-http-persistent (2.9.4)
     net-http-pipeline (1.0.1)
