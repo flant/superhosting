@@ -32,7 +32,7 @@ module Superhosting
           mapper = MapperInheritance::Model.new(@config.models.f(name)).inheritors_mapper(@config.models.f(name))
           if inheritance
             data = separate_inheritance(mapper) do |_base, inheritors|
-              inheritors.inject([]) do |total, m|
+              inheritors.reverse.inject([]) do |total, m|
                 total << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: true) }
               end
             end
@@ -50,7 +50,7 @@ module Superhosting
           mapper = MapperInheritance::Model.new(@config.models.f(name)).inheritors_mapper(@config.models.f(name))
           if inheritance
             data = separate_inheritance(mapper) do |_base, inheritors|
-              inheritors.inject([]) do |total, m|
+              inheritors.reverse.inject([]) do |total, m|
                 type = mapper_type(m)
                 name = mapper_name(m)
                 total << { "#{"#{type}: " if type == 'mux'}#{name}" => get_mapper_options_pathes(m, erb: true) }
@@ -70,7 +70,7 @@ module Superhosting
           model_mapper = @config.models.f(name)
           inheritance = MapperInheritance::Model.new(model_mapper).inheritors
           inheritance.delete(model_mapper)
-          { data: inheritance.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } } }
+          { data: inheritance.reverse.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } } }
         else
           resp
         end

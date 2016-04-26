@@ -74,7 +74,7 @@ module Superhosting
         if inheritance
           mapper = index[name][:mapper]
           separate_inheritance(mapper) do |base, inheritors|
-            ([base] + inheritors).inject([]) do |total, m|
+            ([base] + inheritors).reverse.inject([]) do |total, m|
               total << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
             end
           end
@@ -88,7 +88,7 @@ module Superhosting
         mapper_type = mapper_type(mapper)
         if inheritance
           separate_inheritance(mapper) do |base, inheritors|
-            ([base] + inheritors).inject([]) do |total, m|
+            ([base] + inheritors).reverse.inject([]) do |total, m|
               type = mapper_type(m)
               name = mapper_name(m)
               name = type if type == mapper_type
@@ -102,7 +102,7 @@ module Superhosting
 
       def inheritance(name:)
         mapper = index[name][:mapper]
-        mapper.inheritance.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } }
+        mapper.inheritance.reverse.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } }
       end
     end
   end
