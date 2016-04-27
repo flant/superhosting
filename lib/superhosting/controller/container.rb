@@ -120,6 +120,7 @@ module Superhosting
 
       def reconfigure(name:, model: nil)
         if (resp = existing_validation(name: name)).net_status_ok?
+          stop_mux(name: name) if model && index[name][:model_name] != model
           state = model ? :none : :data_installed
           set_state(state: state, state_mapper: self.state(name: name))
           resp = _reconfigure(name: name, model: model)
