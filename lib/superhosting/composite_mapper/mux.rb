@@ -2,17 +2,18 @@ module Superhosting
   module CompositeMapper
     class Mux
       include Helper::Logger
-      attr_accessor :lib
+      attr_accessor :lib, :etc
 
-      def initialize(lib_mapper:)
+      def initialize(etc_mapper:, lib_mapper:)
+        self.etc = etc_mapper
         self.lib = lib_mapper
       end
 
       def method_missing(m, *args, &block)
-        if lib.nil?
+        if etc.nil?
           warn('No mux available!')
         else
-          lib.send(m, *args, &block)
+          etc.send(m, *args, &block)
         end
       end
 

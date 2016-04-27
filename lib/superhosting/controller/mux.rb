@@ -3,18 +3,25 @@ module Superhosting
     class Mux < Base
       def add(name:)
         if (resp = adding_validation(name: name))
-          mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).inheritors_mapper
-
-          # docker
-          mapper.erb_options = { mux: mapper }
-          if (resp = @container_controller._collect_docker_options(mapper: mapper, model_or_mux: name)).net_status_ok?
-            docker_options = resp[:data]
-            @lib.muxs.f(name).docker_options.put!(Marshal.dump(docker_options), logger: false)
-            @container_controller._safe_run_docker(*docker_options, name: _container_name(name: name)).net_status_ok!
-          end
+          _refresh_container(name: name)
         else
           resp
         end
+      end
+
+      def _refresh_container(name:)
+        etc_mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).inheritors_mapper
+        lib_mapper = @lib.muxs.f(name).create!
+        lib_mapper.config.create!
+        mapper = CompositeMapper::Mux.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper)
+        mapper.erb_options = { mux: mapper }
+        @container_controller._refresh_container(mapper: mapper, docker_options: _docker_options(mapper: mapper))
+      end
+
+      def _docker_options(mapper:)
+        command_options, image, command = @container_controller._collect_docker_options(mapper: mapper).net_status_ok![:data]
+        command_options << "--volume #{mapper.config.path}/:/.config:ro"
+        [command_options, image, command]
       end
 
       def _delete(name:)
@@ -34,11 +41,11 @@ module Superhosting
       def update(name:)
         if (resp = useable_validation(name: name)).net_status_ok?
           mux_mapper = @container_controller.index[index[name].first][:mux_mapper]
-          @container_controller._update(name: _container_name(name: name), docker_options: Marshal.load(@container_controller._lib_docker_options(lib_mapper: @lib.muxs.f(name))))
+          @container_controller._update(name: _container_name(name: name), docker_options: @container_controller._load_docker_options(lib_mapper: @lib.muxs.f(name)))
           @docker_api.image_pull(mux_mapper.container.docker.image.value)
           index[name].each do |container_name|
             @container_controller.instance_eval do
-              docker_options = Marshal.load(_lib_docker_options(lib_mapper: index[container_name][:mapper].lib))
+              docker_options = _load_docker_options(lib_mapper: index[container_name][:mapper].lib)
               _update(name: container_name, docker_options: docker_options, with_pull: false)
             end
           end

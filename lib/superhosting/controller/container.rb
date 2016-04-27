@@ -81,7 +81,7 @@ module Superhosting
       def update(name:)
         if (resp = existing_validation(name: name)).net_status_ok? && @docker_api.container_exists?(name)
           mapper = index[name][:mapper]
-          _update(name: name, docker_options: Marshal.load(_lib_docker_options(lib_mapper: mapper.lib)))
+          _update(name: name, docker_options: _load_docker_options(lib_mapper: mapper.lib))
         end
         resp
       end
