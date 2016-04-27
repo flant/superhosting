@@ -3,6 +3,14 @@ module Superhosting
     class Container
       include Helper::States
 
+      def stop_old_mux(name:, model:)
+        if (existing_validation(name: name)).net_status_ok? && model && index[name][:model_name] != model
+          stop_mux(name: name)
+        else
+          {}
+        end
+      end
+
       def install_data(name:, model: nil)
         if (model_ = model || @config.containers.f(name).f('model', default: @config.default_model)).nil?
           { error: :input_error, code: :no_model_given }
@@ -172,7 +180,7 @@ module Superhosting
 
         restart = (!mapper.docker.image.compare_with(mapper.lib.image) || (dummy_signature_md5 != mapper.lib.signature.md5))
 
-        if (resp = _safe_run_docker(command_options, image, command, name: mapper.name, restart: restart)).net_status_ok?
+        if (resp = _safe_run_docker(command_options, image, command, name: mapper.container_name, restart: restart)).net_status_ok?
           mapper.lib.image.put!(image, logger: false)
           mapper.lib.signature.put!(dump_command_option, logger: false)
           mapper.lib.docker_options.put!(Marshal.dump(docker_options), logger: false)
