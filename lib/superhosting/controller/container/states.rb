@@ -53,6 +53,9 @@ module Superhosting
           mapper = index[name][:mapper]
 
           # user / group
+          mapper.lib.config.f('etc-group').append_line!('root:x:0:')
+          mapper.lib.config.f('etc-passwd').append_line!('root:x:0:0:root:/root:/bin/bash')
+
           user_controller = get_controller(User)
           user_controller._group_add(name: name)
           unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?

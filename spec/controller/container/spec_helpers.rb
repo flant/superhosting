@@ -224,9 +224,8 @@ module SpecHelpers
 
               PathMapper.new('/etc/security/docker.conf').remove_line!("@#{@container_name} #{@container_name}")
 
-              Etc.passwd do |user|
-                command("userdel #{user.name}") if user.name.start_with? prefix
-              end
+              Etc.passwd { |user| command("userdel #{user.name}") if user.name.start_with? prefix }
+              Etc.group { |group| command("groupdel #{group.name}") if group.name.start_with? prefix }
 
               command("rm -rf /etc/sx/containers/#{prefix}*")
               command("rm -rf /var/sx/containers/#{prefix}*")

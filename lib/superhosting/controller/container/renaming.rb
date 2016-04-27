@@ -60,7 +60,8 @@ module Superhosting
           user_name = parts.first
           shell = parts.pop
           home_dir = parts.pop
-          next if user_name == name # base_user
+          next if user_name == name || # base_user
+                  line.start_with?('root')
 
           if user_controller.admin?(name: user_name, container_name: name)
             _name, admin_name = user_name.split('_admin_')
