@@ -19,6 +19,13 @@ module Superhosting
         registry_files << path.to_s
       end
 
+      def touch(path, **options)
+        return unless @on_config
+        touch!(path)
+        set_file_attributes(path, options)
+        registry_files << path.to_s
+      end
+
       def config(save_to, script = nil, **options)
         return unless @on_config
         save_to_mapper = PathMapper.new(save_to)

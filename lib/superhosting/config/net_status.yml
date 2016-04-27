@@ -129,3 +129,6 @@ en:
     chmod:
       failed: "Command: chmod '%{mode}' '%{path}'... FAILED"
       ok: "Command: chmod '%{mode}' '%{path}'... OK"
+    touch:
+      failed: "Command: touch '%{path}'... FAILED"
+      ok: "Command: touch '%{path}'... OK"

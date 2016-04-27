@@ -4,6 +4,10 @@ module Superhosting
       module DirNode
         include Helper
 
+        def _create!
+          _action!(:directory, path: @path) { super }
+        end
+
         def _delete!(full: false)
           _action!(:directory, path: @path) { super }
         end

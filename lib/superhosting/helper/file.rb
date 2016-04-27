@@ -51,6 +51,15 @@ module Superhosting
           end
         end
       end
+
+      def touch!(path)
+        debug_operation(desc: { code: :touch, data: { path: path } }) do |&blk|
+          with_dry_run do |dry_run|
+            FileUtils.touch(path) unless dry_run
+            blk.call(code: :ok)
+          end
+        end
+      end
     end
   end
 end
