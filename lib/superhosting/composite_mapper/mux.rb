@@ -21,7 +21,7 @@ module Superhosting
         lib.config
       end
 
-      def name
+      def container_name
         "mux-#{lib.name}"
       end
     end

@@ -40,7 +40,7 @@ module Superhosting
                               when :container then
                                 container.name
                               when :mux then
-                                mux.name
+                                mux.container_name
                               else
                                 raise NetStatus::Exception, error: :error, code: :on_reconfig_not_supported_option_value, data: { value: in_option, option: 'in' }
                                  end
