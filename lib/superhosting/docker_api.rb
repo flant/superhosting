@@ -3,7 +3,7 @@ module Superhosting
     include Helper::Cmd
     include Helper::Logger
 
-    AVAILABLE_DOCKER_OPTIONS = [:user, :cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap].freeze
+    AVAILABLE_DOCKER_OPTIONS = [:user, :cpu_period, :cpu_quota, :cpu_shares, :memory, :memory_swap, :restart].freeze
 
     def initialize(**kwargs)
       @socket = kwargs[:socket] || '/var/run/docker.sock'
@@ -189,8 +189,11 @@ module Superhosting
     def grab_container_options(command_options)
       options = []
       AVAILABLE_DOCKER_OPTIONS.map do |k|
-        unless (value = command_options[k]).nil?
-          value.lines.each { |val| options << "--#{k.to_s.sub('_', '-')} #{val}" }
+        next if (option = command_options[k]).nil?
+        if k == :restart && option == 'yes'
+          options << '--restart=always'
+        else
+          option.lines.each { |val| options << "--#{k.to_s.sub('_', '-')} #{val}" }
         end
       end
       options
