@@ -5,7 +5,8 @@ engines:
     enabled: true
     config:
       languages:
-      - ruby
+        ruby:
+          mass_threshold: 20
     exclude_fingerprints:
     - 4a5a14eb5d1c04a8105c8312f8aeec3c
     - c7a139773ba36caf7d6b3ad8a6e11570
@@ -15,6 +16,8 @@ engines:
     - c50b8172207b772f68099caf8596a62e
     - 4e6bfe07ae8edd777aa8beb88026c59e
     - 6dfbea23b06a53065592cd5a7977652c
+    - 95d0e8b886db02ca0bbfeaa06dcbb883
+    - fd381318104a9ffc7924dadac430e93b
   fixme:
     enabled: true
   rubocop:
@@ -31,3 +34,4 @@ exclude_paths:
 - lib/superhosting/helper/*
 - lib/superhosting/docker_api.rb
 - lib/superhosting/cli/cmd/*
+- lib/superhosting/cli/helper/*
