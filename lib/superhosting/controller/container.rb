@@ -81,7 +81,7 @@ module Superhosting
       def update(name:)
         if (resp = existing_validation(name: name)).net_status_ok? && @docker_api.container_exists?(name)
           mapper = index[name][:mapper]
-          _update(name: name, docker_options: Marshal.load(_lib_docker_options(lib_mapper: mapper.lib)))
+          _update(name: name, docker_options: _load_docker_options(lib_mapper: mapper.lib))
         end
         resp
       end
@@ -131,7 +131,8 @@ module Superhosting
         lib_mapper = @lib.containers.f(name)
 
         states = {
-          none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
+          none: { action: :stop_old_mux, undo: :run_mux, next: :old_mux_stopped },
+          old_mux_stopped: { action: :install_data, undo: :uninstall_data, next: :data_installed },
           data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
           users_installed: { action: :run_mux, undo: :stop_mux, next: :mux_runned },
           mux_runned: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :configuration_applied },

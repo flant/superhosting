@@ -23,6 +23,7 @@ module Superhosting
       def _safe_run_docker(*docker_options, name:, restart: false)
         if restart
           _recreate_docker(*docker_options, name: name)
+        elsif @docker_api.container_running?(name)
         elsif @docker_api.container_exists?(name)
           if @docker_api.container_exited?(name)
             @docker_api.container_start!(name)
@@ -48,7 +49,6 @@ module Superhosting
 
         all_options = mapper.docker.grep_files.map { |n| [n.name[/(.*(?=\.erb))|(.*)/].to_sym, n.value] }.to_h
         return { error: :logical_error, code: :docker_command_not_found } if (command = all_options[:command]).nil?
-
         command_options = @docker_api.grab_container_options(all_options)
         volume_opts = []
         mapper.docker.f('volume', overlay: false).each { |v| volume_opts += v.lines unless v.nil? }
@@ -57,10 +57,10 @@ module Superhosting
         { data: [command_options, image.value, command] }
       end
 
-      def _lib_docker_options(lib_mapper:)
-        lib_mapper.docker_options.tap do |docker_options|
-          { error: :logical_error, code: :no_docker_options_specified_in_container_or_mux, data: { name: mapper_name(lib_mapper) } }.net_status_ok! if docker_options.nil?
-        end.value
+      def _load_docker_options(lib_mapper:)
+        docker_options = lib_mapper.docker_options
+        { error: :logical_error, code: :no_docker_options_specified_in_container_or_mux, data: { name: mapper_name(lib_mapper) } }.net_status_ok! if docker_options.nil?
+        Marshal.load(docker_options)
       end
     end
   end

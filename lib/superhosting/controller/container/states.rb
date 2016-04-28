@@ -3,6 +3,14 @@ module Superhosting
     class Container
       include Helper::States
 
+      def stop_old_mux(name:, model:)
+        if (existing_validation(name: name)).net_status_ok? && model && index[name][:model_name] != model
+          stop_mux(name: name)
+        else
+          {}
+        end
+      end
+
       def install_data(name:, model: nil)
         if (model_ = model || @config.containers.f(name).f('model', default: @config.default_model)).nil?
           { error: :input_error, code: :no_model_given }
@@ -53,6 +61,9 @@ module Superhosting
           mapper = index[name][:mapper]
 
           # user / group
+          mapper.lib.config.f('etc-group').append_line!('root:x:0:')
+          mapper.lib.config.f('etc-passwd').append_line!('root:x:0:0:root:/root:/bin/bash')
+
           user_controller = get_controller(User)
           user_controller._group_add(name: name)
           unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?
@@ -156,23 +167,31 @@ module Superhosting
       def run(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           mapper = index[name][:mapper]
+          _refresh_container(mapper: mapper, docker_options: _docker_options(mapper: mapper))
+        else
+          resp
+        end
+      end
 
-          if (resp = _collect_docker_options(mapper: mapper)).net_status_ok?
-            docker_options = resp[:data]
-            command_options, image, command = docker_options
-            dump_command_option = (command_options + [command]).join("\n")
-            dummy_signature_md5 = Digest::MD5.new.digest(dump_command_option)
+      def _refresh_container(mapper:, docker_options: [])
+        command_options, image, command = docker_options
+        dump_command_option = (command_options + [command]).join("\n")
+        dummy_signature_md5 = Digest::MD5.new.digest(dump_command_option)
 
-            restart = (!mapper.docker.image.compare_with(mapper.lib.image) || (dummy_signature_md5 != mapper.lib.signature.md5))
+        restart = (!mapper.docker.image.compare_with(mapper.lib.image) || (dummy_signature_md5 != mapper.lib.signature.md5))
 
-            if (resp = _safe_run_docker(command_options, image, command, name: name, restart: restart)).net_status_ok?
-              mapper.lib.image.put!(image, logger: false)
-              mapper.lib.signature.put!(dump_command_option, logger: false)
-              mapper.lib.docker_options.put!(Marshal.dump(docker_options), logger: false)
-            end
-          end
+        if (resp = _safe_run_docker(command_options, image, command, name: mapper.container_name, restart: restart)).net_status_ok?
+          mapper.lib.image.put!(image, logger: false)
+          mapper.lib.signature.put!(dump_command_option, logger: false)
+          mapper.lib.docker_options.put!(Marshal.dump(docker_options), logger: false)
         end
         resp
+      end
+
+      def _docker_options(mapper:)
+        command_options, image, command = _collect_docker_options(mapper: mapper).net_status_ok![:data]
+        ["#{mapper.lib.web.path}:#{mapper.web.path}", "#{mapper.config.path}/:/.config:ro"].each { |v| command_options << "--volume #{v}" }
+        [command_options, image, command]
       end
 
       def run_mux(name:)
@@ -182,8 +201,8 @@ module Superhosting
         if (mux_mapper = mapper.mux).file?
           mux_name = mux_mapper.value
           mux_controller = get_controller(Mux)
-          resp = mux_controller.add(name: mux_name) if mux_controller.not_running_validation(name: mux_name).net_status_ok?
-          mux_controller.index_push(mux_name, name)
+          mux_controller._reconfigure(name: mux_name)
+          mux_controller.index_push_container(mux_name, name)
         end
 
         resp
@@ -196,8 +215,8 @@ module Superhosting
           if (mux_mapper = mapper.mux).file?
             mux_name = mux_mapper.value
             mux_controller = get_controller(Mux)
-            mux_controller.index_pop(mux_name, name)
-            mux_controller._delete(name: mux_name) unless mux_controller.index.include?(mux_name)
+            mux_controller.index_pop_container(mux_name, name)
+            mux_controller._delete(name: mux_name) if mux_controller.index_mux_containers(name: mux_name).empty?
           end
         end
         resp
@@ -211,24 +230,13 @@ module Superhosting
         resp
       end
 
-      def _config_options(name:, on_reconfig:, on_config:)
+      def _config_options(name:, **_kwargs)
         mapper = index[name][:mapper]
         model = mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
-        registry_mapper = mapper.lib.registry.f('container')
         mux_mapper = index[name][:mux_mapper]
-
-        {
-          container: mapper,
-          mux: mux_mapper,
-          model: model_mapper,
-          registry_mapper: registry_mapper,
-          on_reconfig: on_reconfig,
-          on_config: on_config,
-          etc: @config,
-          lib: @lib,
-          docker_api: @docker_api
-        }
+        registry_mapper = mapper.lib.registry.f('container')
+        super.merge!(container: mapper, mux: mux_mapper, model: model_mapper, registry_mapper: registry_mapper)
       end
 
       def _each_site(name:)

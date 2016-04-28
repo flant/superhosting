@@ -45,6 +45,10 @@ module SpecHelpers
         lib.containers.f(container_name)
       end
 
+      def mux_lib(mux_name)
+        lib.muxs.f(mux_name)
+      end
+
       def site_aliases(container_name, site_name)
         container_lib(container_name).sites.f(site_name).aliases
       end

@@ -4,6 +4,10 @@ module Superhosting
       def config
         lib.config
       end
+
+      def container_name
+        etc.name
+      end
     end
   end
 end

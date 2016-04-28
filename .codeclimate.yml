@@ -1,0 +1,37 @@
+engines:
+  bundler-audit:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+        ruby:
+          mass_threshold: 20
+    exclude_fingerprints:
+    - 4a5a14eb5d1c04a8105c8312f8aeec3c
+    - c7a139773ba36caf7d6b3ad8a6e11570
+    - 412972179500b63823966665e344b4ed
+    - af35d143d6a9fbe6a19951cf7c253164
+    - 2b7e8d63b0ffc6364de0d40d517700fb
+    - c50b8172207b772f68099caf8596a62e
+    - 4e6bfe07ae8edd777aa8beb88026c59e
+    - 6dfbea23b06a53065592cd5a7977652c
+    - 95d0e8b886db02ca0bbfeaa06dcbb883
+    - fd381318104a9ffc7924dadac430e93b
+  fixme:
+    enabled: true
+  rubocop:
+    enabled: true
+ratings:
+  paths:
+  - Gemfile.lock
+  - "**.inc"
+  - "**.module"
+  - "**.rb"
+exclude_paths:
+- spec/**/*
+- lib/superhosting/patches/**/*
+- lib/superhosting/helper/*
+- lib/superhosting/docker_api.rb
+- lib/superhosting/cli/cmd/*
+- lib/superhosting/cli/helper/*

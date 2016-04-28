@@ -53,4 +53,21 @@ describe Superhosting::Controller::Mux do
   it 'reconfig:mux_does_not_used' do
     mux_reconfigure_with_exps(name: 'test', code: :mux_does_not_used)
   end
+
+  it 'reconfig@signature', :docker do
+    with_container(model: 'test_with_mux') do |_container_name|
+      signature_path = mux_lib('test').signature.path
+      expect_file_mtime signature_path do
+        begin
+          command_mapper = config.muxs.base.docker.command
+          command = command_mapper.value
+          command_mapper.put!("/bin/bash -lec 'while true ; do date ; sleep 2; done'")
+
+          mux_reconfigure_with_exps(name: 'test')
+        ensure
+          command_mapper.put!(command)
+        end
+      end
+    end
+  end
 end

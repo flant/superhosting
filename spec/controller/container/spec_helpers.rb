@@ -215,18 +215,19 @@ module SpecHelpers
 
         after :each do
           with_logger(logger: false) do
-            container_delete(name: @container_name)
-
             %w(new tC).each do |prefix|
+              PathMapper.new('/etc/sx/containers').grep(/#{prefix}/).each do |container_mapper|
+                container_delete(name: container_mapper.name)
+              end
+
               command("docker ps --filter 'name=#{prefix}' -a | xargs docker unpause")
               command("docker ps --filter 'name=#{prefix}' -a | xargs docker kill")
               command("docker ps --filter 'name=#{prefix}' -a | xargs docker rm")
 
-              PathMapper.new('/etc/security/docker.conf').remove_line!("@#{@container_name} #{@container_name}")
+              PathMapper.new('/etc/security/docker.conf').remove_line!(/@#{prefix}/)
 
-              Etc.passwd do |user|
-                command("userdel #{user.name}") if user.name.start_with? prefix
-              end
+              Etc.passwd { |user| command("userdel #{user.name}") if user.name.start_with? prefix }
+              Etc.group { |group| command("groupdel #{group.name}") if group.name.start_with? prefix }
 
               command("rm -rf /etc/sx/containers/#{prefix}*")
               command("rm -rf /var/sx/containers/#{prefix}*")

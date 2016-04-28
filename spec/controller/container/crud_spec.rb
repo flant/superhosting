@@ -209,9 +209,16 @@ describe Superhosting::Controller::Container do
     expect(docker_api.container_running?('mux-test')).to be_falsey
   end
 
+  it 'reconfig@stop_mux', :docker do
+    with_container(model: 'test_with_mux') do |container_name|
+      expect(docker_api.container_running?('mux-test')).to be_truthy
+      container_reconfigure_with_exps(name: container_name, model: 'test')
+      expect(docker_api.container_running?('mux-test')).to be_falsey
+    end
+  end
+
   it 'reconfig@up_docker', :docker do
     def up_docker(name)
-      expect(docker_api.container_running?(name)).to be_falsey
       container_reconfigure_with_exps(name: name)
       expect(docker_api.container_running?(name)).to be_truthy
     end

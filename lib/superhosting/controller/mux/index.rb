@@ -16,28 +16,44 @@ module Superhosting
 
       def reindex
         self.class.index ||= {}
+        @config.muxs.grep_dirs.each do |mux_mapper|
+          next if mux_mapper.abstract?
+          name = mux_mapper.name
+
+          etc_mapper = MapperInheritance::Mux.new(mux_mapper).inheritors_mapper
+          mapper = CompositeMapper::Mux.new(etc_mapper: etc_mapper, lib_mapper: @lib.muxs.f(name))
+          mapper.erb_options = { mux: mapper }
+
+          self.class.index[name] ||= {}
+          self.class.index[name][:containers] = []
+          self.class.index[name][:mapper] = mapper
+          self.class.index[name][:state_mapper] = mapper.lib.state
+        end
+
         @container_controller.index.each do |container_name, _data|
-          container_mapper = @container_controller.index[container_name][:mapper]
-          next unless (mux_mapper = container_mapper.mux).file?
-          mux_name = mux_mapper.value
+          container_index = @container_controller.index[container_name]
+          next unless (mux_mapper = container_index[:mapper].mux).file?
+          name = mux_mapper.value
           if @container_controller.running_validation(name: container_name).net_status_ok?
-            index_push(mux_name, container_name)
+            index_push_container(name, container_name)
           else
-            index_pop(mux_name, container_name)
+            index_pop_container(name, container_name)
           end
         end
         self.class.index
       end
 
-      def index_pop(mux_name, container_name)
-        return unless self.class.index.key? mux_name
-        self.class.index[mux_name].delete(container_name)
-        self.class.index.delete(mux_name) if self.class.index[mux_name].empty?
+      def index_mux_containers(name:)
+        existing_validation(name: name).net_status_ok!
+        self.class.index[name][:containers]
       end
 
-      def index_push(mux_name, container_name)
-        self.class.index[mux_name] ||= []
-        self.class.index[mux_name] << container_name unless self.class.index[mux_name].include? container_name
+      def index_pop_container(name, container_name)
+        index_mux_containers(name: name).delete(container_name)
+      end
+
+      def index_push_container(name, container_name)
+        index_mux_containers(name: name) << container_name unless self.class.index[name][:containers].include? container_name
       end
     end
   end
