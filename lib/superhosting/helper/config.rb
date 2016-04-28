@@ -3,14 +3,18 @@ module Superhosting
     module Config
       def unconfigure(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          case mapper_type(index[name][:mapper])
-            when 'container'
-              registry_mapper = index[name][:mapper].lib.registry.container
-            when 'site'
-              registry_mapper = index[name][:container_mapper].lib.registry.sites.f(name)
-            else
-              raise NetStatus::Exception, error: :logical_error, code: :mapper_type_not_supported, data: { name: type }
-          end
+          registry_mapper = case mapper_type(index[name][:mapper])
+                              when 'container'
+                                index[name][:mapper].lib.registry.container
+                              when 'site'
+                                index[name][:container_mapper].lib.registry.sites.f(name)
+                              when 'mux'
+                                index[name][:mapper].lib.registry.mux
+                              else
+                                raise NetStatus::Exception, error: :logical_error,
+                                                            code: :mapper_type_not_supported,
+                                                            data: { name: type }
+                            end
 
           unless registry_mapper.nil?
             registry_mapper.lines.each { |path| PathMapper.new(path).delete! }
@@ -66,8 +70,14 @@ module Superhosting
         _save_registry!(registry_mapper, registry_files) if on_config
       end
 
-      def _config_options(**_kwargs)
-        {}
+      def _config_options(on_reconfig:, on_config:, **_kwargs)
+        {
+          on_reconfig: on_reconfig,
+          on_config: on_config,
+          etc: @config,
+          lib: @lib,
+          docker_api: @docker_api
+        }
       end
 
       def _save_registry!(registry_mapper, registry_files)

@@ -1,37 +1,22 @@
 module Superhosting
   module Controller
     class Mux < Base
-      def add(name:)
-        if (resp = adding_validation(name: name))
-          _refresh_container(name: name)
-        else
-          resp
-        end
-      end
-
-      def _refresh_container(name:)
-        etc_mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).inheritors_mapper
-        lib_mapper = @lib.muxs.f(name).create!
-        lib_mapper.config.create!
-        mapper = CompositeMapper::Mux.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper)
-        mapper.erb_options = { mux: mapper }
-        @container_controller._refresh_container(mapper: mapper, docker_options: _docker_options(mapper: mapper))
-      end
-
-      def _docker_options(mapper:)
-        command_options, image, command = @container_controller._collect_docker_options(mapper: mapper).net_status_ok![:data]
-        command_options << "--volume #{mapper.config.path}/:/.config:ro"
-        [command_options, image, command]
-      end
-
       def _delete(name:)
-        @lib.muxs.f(name).delete!
-        @container_controller._delete_docker(name: _container_name(name: name))
+        lib_mapper = index[name][:mapper].lib
+
+        states = {
+          up: { action: :stop, undo: :run, next: :configuration_applied },
+          configuration_applied: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :data_installed },
+          data_installed: { action: :uninstall_data, undo: :install_data }
+        }
+
+        on_state(state_mapper: lib_mapper, states: states, name: name)
       end
 
       def reconfigure(name:)
         if (resp = useable_validation(name: name)).net_status_ok?
-          index[name].each do |container_name|
+          _reconfigure(name: name)
+          index_mux_containers(name: name).each do |container_name|
             break unless (resp = @container_controller.reconfigure(name: container_name)).net_status_ok?
           end
         end
@@ -40,10 +25,10 @@ module Superhosting
 
       def update(name:)
         if (resp = useable_validation(name: name)).net_status_ok?
-          mux_mapper = @container_controller.index[index[name].first][:mux_mapper]
-          @container_controller._update(name: _container_name(name: name), docker_options: @container_controller._load_docker_options(lib_mapper: @lib.muxs.f(name)))
-          @docker_api.image_pull(mux_mapper.container.docker.image.value)
-          index[name].each do |container_name|
+          mapper = index[name][:mapper]
+          @container_controller._update(name: mapper.container_name, docker_options: @container_controller._load_docker_options(lib_mapper: mapper.lib))
+          @docker_api.image_pull(mapper.container.docker.image.value)
+          index_mux_containers(name: name).each do |container_name|
             @container_controller.instance_eval do
               docker_options = _load_docker_options(lib_mapper: index[container_name][:mapper].lib)
               _update(name: container_name, docker_options: docker_options, with_pull: false)
@@ -107,8 +92,17 @@ module Superhosting
         end
       end
 
-      def _container_name(name:)
-        "mux-#{name}"
+      def _reconfigure(name:)
+        set_state(state: 'none', state_mapper: state(name: name))
+        lib_mapper = index[name][:mapper].lib
+
+        states = {
+          none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
+          data_installed: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :configuration_applied },
+          configuration_applied: { action: :run, undo: :stop, next: :up },
+        }
+
+        on_state(state_mapper: lib_mapper, states: states, name: name)
       end
     end
   end

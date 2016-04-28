@@ -37,8 +37,9 @@ module Superhosting
 
         etc_mapper.erb_options = { container: mapper, etc: @config, lib: @lib }
         mux_mapper = if (mux_file_mapper = etc_mapper.mux).file?
-                       etc_mapper = MapperInheritance::Mux.new(@config.muxs.f(mux_file_mapper)).inheritors_mapper
-                       CompositeMapper::Mux.new(etc_mapper: etc_mapper, lib_mapper: @lib.muxs.f(mux_file_mapper))
+                       mux_name = mux_file_mapper.value
+                       mux_controller = get_controller(Mux)
+                       mux_controller.index[mux_name][:mapper] if mux_controller.existing_validation(name: mux_name).net_status_ok!
                      else
                        plug = PathMapper.new("/tmp/sx/null/#{SecureRandom.uuid}")
                        CompositeMapper::Mux.new(etc_mapper: plug, lib_mapper: plug)

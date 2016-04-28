@@ -201,12 +201,8 @@ module Superhosting
         if (mux_mapper = mapper.mux).file?
           mux_name = mux_mapper.value
           mux_controller = get_controller(Mux)
-          if (mux_controller.useable_validation(name: mux_name)).net_status_ok?
-            mux_controller._refresh_container(name: mux_name)
-          else
-            resp = mux_controller.add(name: mux_name) if mux_controller.not_running_validation(name: mux_name).net_status_ok?
-            mux_controller.index_push(mux_name, name)
-          end
+          mux_controller._reconfigure(name: mux_name)
+          mux_controller.index_push_container(mux_name, name)
         end
 
         resp
@@ -219,8 +215,8 @@ module Superhosting
           if (mux_mapper = mapper.mux).file?
             mux_name = mux_mapper.value
             mux_controller = get_controller(Mux)
-            mux_controller.index_pop(mux_name, name)
-            mux_controller._delete(name: mux_name) unless mux_controller.index.include?(mux_name)
+            mux_controller.index_pop_container(mux_name, name)
+            mux_controller._delete(name: mux_name) if mux_controller.index_mux_containers(name: mux_name).empty?
           end
         end
         resp
@@ -234,24 +230,13 @@ module Superhosting
         resp
       end
 
-      def _config_options(name:, on_reconfig:, on_config:)
+      def _config_options(name:, **_kwargs)
         mapper = index[name][:mapper]
         model = mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
-        registry_mapper = mapper.lib.registry.f('container')
         mux_mapper = index[name][:mux_mapper]
-
-        {
-          container: mapper,
-          mux: mux_mapper,
-          model: model_mapper,
-          registry_mapper: registry_mapper,
-          on_reconfig: on_reconfig,
-          on_config: on_config,
-          etc: @config,
-          lib: @lib,
-          docker_api: @docker_api
-        }
+        registry_mapper = mapper.lib.registry.f('container')
+        super.merge!(container: mapper, mux: mux_mapper, model: model_mapper, registry_mapper: registry_mapper)
       end
 
       def _each_site(name:)

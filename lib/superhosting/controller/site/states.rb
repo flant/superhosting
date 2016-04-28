@@ -35,8 +35,10 @@ module Superhosting
           name: container_mapper.name,
           on_reconfig: on_reconfig,
           on_config: on_config
-        ).merge!(site: mapper,
-                 registry_mapper: registry_mapper)
+        ).merge!(
+          site: mapper,
+          registry_mapper: registry_mapper
+        )
       end
     end
   end
