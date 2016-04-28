@@ -24,6 +24,10 @@ module Superhosting
           self.class.index.select { |u| u.start_with? container_name }
         end
 
+        def container_grants(container_name:)
+          self.class.grant_index.select { |u| u.start_with? container_name }
+        end
+
         def reindex
           @config.containers.grep_dirs.each do |container_mapper|
             reindex_container(container_name: container_mapper.name)
@@ -39,6 +43,8 @@ module Superhosting
         def reindex_container(container_name:)
           self.class.index ||= {}
           self.class.grant_index ||= {}
+          container_users(container_name: container_name).each { |k, _v| self.class.index.delete(k) }
+          container_grants(container_name: container_name).each { |k, _v| self.class.index.delete(k) }
 
           @client.query("select User from mysql.user where Host = '%' and User like '#{container_name}_%'").each do |obj|
             name = obj['User']

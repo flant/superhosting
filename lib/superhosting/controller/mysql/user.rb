@@ -36,8 +36,10 @@ module Superhosting
 
         def delete(name:)
           if (resp = existing_validation(name: name)).net_status_ok?
+            container_name = name.split('_').first
             index[name].each { |db_name| @mysql_controller._revoke(user_name: name, database_name: db_name) }
             @client.query("DROP USER #{name}")
+            reindex_container(container_name: container_name)
           end
           resp
         end

@@ -32,14 +32,16 @@ module Superhosting
             password = user_controller._add(name: user_name, databases: [name], generate: generate )
             [user_name, password].join if generate
           end.compact
-          reindex_container_dbs(container_name: container_name)
+          reindex_container(container_name: container_name)
           passwords
         end
 
         def delete(name:)
           if (resp = existing_validation(name: name)).net_status_ok?
+            container_name = name.split('_').first
             index[name].each {|user_name| @mysql_controller._revoke(name: user_name, database_name: name) }
             @client.query("DROP DATABASE #{name}")
+            reindex_container(container_name: container_name)
           end
           resp
         end

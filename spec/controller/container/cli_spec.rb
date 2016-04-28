@@ -3,7 +3,7 @@ describe 'Superhosting::Controller::Container (cli)' do
   include SpecHelpers::Controller::Container
 
   def add_container
-    container_add(name: @container_name)
+    container_add_with_exps(name: @container_name)
   end
 
   it 'container add' do
@@ -63,7 +63,7 @@ describe 'Superhosting::Controller::Container (cli)' do
 
   it 'container rename' do
     add_container
-    expect { cli('container', 'rename', @container_name, '-r', 'test_container_name') }.to_not raise_error
+    expect { cli('container', 'rename', @container_name, '-r', 'tC_rename') }.to_not raise_error
   end
 
   it 'container restore' do

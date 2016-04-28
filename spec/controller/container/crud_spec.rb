@@ -219,6 +219,7 @@ describe Superhosting::Controller::Container do
 
   it 'reconfig@up_docker', :docker do
     def up_docker(name)
+      expect(docker_api.container_running?(name)).to be_falsey
       container_reconfigure_with_exps(name: name)
       expect(docker_api.container_running?(name)).to be_truthy
     end

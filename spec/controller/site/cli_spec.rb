@@ -67,7 +67,7 @@ describe 'Superhosting::Controller::Site (cli)' do
 
   it 'site rename' do
     add_site
-    expect { cli('site', 'rename', @site_name, '-r', 'testSname.com') }.to_not raise_error
+    expect { cli('site', 'rename', @site_name, '-r', 'tSname.com') }.to_not raise_error
   end
 
   it 'site move' do

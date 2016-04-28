@@ -22,13 +22,14 @@ module Superhosting
 
         def reindex
           @config.containers.grep_dirs.each do |container_mapper|
-            reindex_container_dbs(container_name: container_mapper.name)
+            reindex_container(container_name: container_mapper.name)
           end
           self.class.index ||= {}
         end
 
-        def reindex_container_dbs(container_name:)
+        def reindex_container(container_name:)
           self.class.index ||= {}
+          container_dbs(container_name: container_name).each { |k, _v| self.class.index.delete(k) }
           user_controller = get_controller(User)
           @client.query("SHOW DATABASES LIKE '#{container_name}_%'").tap do |result|
             field_name = result.fields.first
