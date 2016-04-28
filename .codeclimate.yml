@@ -1,0 +1,24 @@
+engines:
+  bundler-audit:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+        ruby:
+          mass_threshold: 20
+  fixme:
+    enabled: true
+  rubocop:
+    enabled: true
+ratings:
+  paths:
+  - Gemfile.lock
+  - "**.inc"
+  - "**.module"
+  - "**.rb"
+exclude_paths:
+- spec/**/*
+- lib/superhosting/patches/**/*
+- lib/superhosting/helper/*
+- lib/superhosting/docker_api.rb
