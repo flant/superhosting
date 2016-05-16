@@ -195,14 +195,16 @@ module Superhosting
       end
 
       def run_mux(name:)
-        resp = {}
-        mapper = index[name][:mapper]
+        if (resp = existing_validation(name: name)).net_status_ok?
+          resp = {}
+          mapper = index[name][:mapper]
 
-        if (mux_mapper = mapper.mux).file?
-          mux_name = mux_mapper.value
-          mux_controller = get_controller(Mux)
-          mux_controller._reconfigure(name: mux_name)
-          mux_controller.index_push_container(mux_name, name)
+          if (mux_mapper = mapper.mux).file?
+            mux_name = mux_mapper.value
+            mux_controller = get_controller(Mux)
+            mux_controller._reconfigure(name: mux_name)
+            mux_controller.index_push_container(mux_name, name)
+          end
         end
 
         resp

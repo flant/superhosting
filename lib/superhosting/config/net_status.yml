@@ -58,6 +58,7 @@ en:
 
     missing_translation: "Missing translation for code: '%{code}'."
 
+    bad_value_of_docker_option: "Bad value '%{value}' of docker option '%{option}'."
     on_reconfig_not_supported_option_value: "Config.rb: value '%{value}' of option '%{option}' not supported."
 
   debug:

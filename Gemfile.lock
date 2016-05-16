@@ -1,8 +1,8 @@
 GIT
   remote: https://github.com/flant/net_status.git
-  revision: 5a91caf2daaa74985699ede3bc5a9f8ac60a71d8
+  revision: c92c96773c134bf4f15faf3fcc4ed49598e8c60f
   specs:
-    net_status (0.0.2)
+    net_status (0.1.0)
       i18n (~> 0.7)
 
 GIT
@@ -42,7 +42,7 @@ GEM
     backports (3.6.8)
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
-    byebug (8.2.4)
+    byebug (9.0.3)
     codeclimate-test-reporter (0.5.0)
       simplecov (>= 0.7.1, < 1.0.0)
     coderay (1.1.1)
@@ -50,7 +50,7 @@ GEM
     diff-lcs (1.2.5)
     diffy (3.1.0)
     docile (1.1.5)
-    ethon (0.8.1)
+    ethon (0.9.0)
       ffi (>= 1.3.0)
     excon (0.49.0)
     faraday (0.9.2)
@@ -72,9 +72,9 @@ GEM
       addressable (~> 2.3)
     method_source (0.8.2)
     minitest (5.8.4)
-    mixlib-cli (1.5.0)
+    mixlib-cli (1.6.0)
     mixlib-shellout (2.2.6)
-    multi_json (1.11.3)
+    multi_json (1.12.0)
     multipart-post (2.0.0)
     net-http-persistent (2.9.4)
     net-http-pipeline (1.0.1)
@@ -83,8 +83,8 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
-    pry-byebug (3.3.0)
-      byebug (~> 8.0)
+    pry-byebug (3.4.0)
+      byebug (~> 9.0)
       pry (~> 0.10)
     pry-stack_explorer (0.4.9.2)
       binding_of_caller (>= 0.7)
