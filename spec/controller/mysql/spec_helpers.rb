@@ -89,7 +89,7 @@ module SpecHelpers
         with_container do |container_name|
           with_base('mysql_user', default: { name: alternative_name(name: @mysql_user_name,
                                                                     container_name: container_name) },
-                    to_yield: [container_name, @mysql_user_name], **kwargs, &b)
+                                  to_yield: [container_name, @mysql_user_name], **kwargs, &b)
         end
       end
 
