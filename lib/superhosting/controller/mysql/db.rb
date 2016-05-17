@@ -25,39 +25,43 @@ module Superhosting
         end
 
         def _add(name:, users: [], generate: false)
+          container_name = name.split('_').first
+
           debug_operation(desc: { code: :mysql_database, data: { name: name } }) do |&blk|
             with_dry_run do |dry_run|
-              container_name = name.split('_').first
-
               @client.query("CREATE DATABASE #{name}") unless dry_run
               blk.call(code: :added)
-
-              user_controller = controller(User)
-              passwords = users.map do |user_name|
-                password = user_controller._add(name: user_name, databases: [name], generate: generate )
-                [user_name, password].join if generate
-              end.compact
-              reindex_container(container_name: container_name)
-              passwords
             end
           end
+
+          user_controller = controller(User)
+          passwords = users.map do |user_name|
+            password = user_controller._add(name: user_name, databases: [name], generate: generate )
+            [user_name, password].join if generate
+          end.compact
+          reindex_container(container_name: container_name)
+          passwords
         end
 
         def delete(name:)
           if (resp = existing_validation(name: name)).net_status_ok?
-            debug_operation(desc: { code: :mysql_database, data: { name: name } }) do |&blk|
-              with_dry_run do |dry_run|
-                container_name = name.split('_').first
-                index[name].each {|user_name| @mysql_controller._revoke(user_name: user_name, database_name: name) }
-
-                @client.query("DROP DATABASE #{name}") unless dry_run
-                blk.call(code: :dropped)
-
-                reindex_container(container_name: container_name)
-              end
-            end
+            _delete(name: name)
           end
           resp
+        end
+
+        def _delete(name:)
+          container_name = name.split('_').first
+          index[name].each {|user_name| @mysql_controller._revoke(user_name: user_name, database_name: name) }
+
+          debug_operation(desc: { code: :mysql_database, data: { name: name } }) do |&blk|
+            with_dry_run do |dry_run|
+              @client.query("DROP DATABASE #{name}") unless dry_run
+              blk.call(code: :dropped)
+            end
+          end
+
+          reindex_container(container_name: container_name)
         end
 
         def dump

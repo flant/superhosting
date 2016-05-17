@@ -41,17 +41,17 @@ module Superhosting
       end
 
       def _grant(user_name:, database_name:)
+        user_controller = controller(User)
+        container_name = user_name.split('_').first
+
         debug_operation(desc: { code: :mysql_grant, data: { database: database_name, name:  user_name } }) do |&blk|
           with_dry_run do |dry_run|
-            user_controller = controller(User)
-            container_name = user_name.split('_').first
-
             client.query("GRANT ALL PRIVILEGES ON #{database_name}.* TO '#{user_name}'@'%' WITH GRANT OPTION ")
             blk.call(code: :added)
-
-            user_controller.reindex_container(container_name: container_name)
           end
         end
+
+        user_controller.reindex_container(container_name: container_name)
       end
 
       def revoke(user_name:, database_name:)
@@ -65,17 +65,17 @@ module Superhosting
       end
 
       def _revoke(user_name:, database_name:)
+        user_controller = controller(User)
+        container_name = user_name.split('_').first
+
         debug_operation(desc: { code: :mysql_grant, data: { database: database_name, name:  user_name } }) do |&blk|
           with_dry_run do |dry_run|
-            user_controller = controller(User)
-            container_name = user_name.split('_').first
-
             client.query("REVOKE ALL PRIVILEGES ON #{database_name}.* FROM '#{user_name}'@'%'")
             blk.call(code: :revoked)
-
-            user_controller.reindex_container(container_name: container_name)
           end
         end
+
+        user_controller.reindex_container(container_name: container_name)
       end
     end
   end

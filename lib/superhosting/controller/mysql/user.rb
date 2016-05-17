@@ -25,20 +25,20 @@ module Superhosting
         end
 
         def _add(name:, databases: [], generate: false)
+          container_name = name.split('_').first
+          user_controller = controller(Controller::User)
+          password = user_controller._create_password(generate: generate)[:password]
+
           debug_operation(desc: { code: :mysql_user, data: { name: name } }) do |&blk|
             with_dry_run do |dry_run|
-              container_name = name.split('_').first
-              user_controller = controller(Controller::User)
-              password = user_controller._create_password(generate: generate)[:password]
-
               @client.query("CREATE USER #{name}@'%' IDENTIFIED BY '#{password}'") unless dry_run
               blk.call(code: :added)
-
-              databases.each {|db_name| @mysql_controller._grant(user_name: name, database_name: db_name) }
-              reindex_container(container_name: container_name)
-              password if generate
             end
           end
+
+          databases.each {|db_name| @mysql_controller._grant(user_name: name, database_name: db_name) }
+          reindex_container(container_name: container_name)
+          password if generate
         end
 
         def delete(name:)
@@ -49,17 +49,17 @@ module Superhosting
         end
 
         def _delete(name:)
+          container_name = name.split('_').first
+          index[name].each { |db_name| @mysql_controller._revoke(user_name: name, database_name: db_name) }
+
           debug_operation(desc: { code: :mysql_user, data: { name: name } }) do |&blk|
             with_dry_run do |dry_run|
-              container_name = name.split('_').first
-              index[name].each { |db_name| @mysql_controller._revoke(user_name: name, database_name: db_name) }
-
               @client.query("DROP USER #{name}") unless dry_run
               blk.call(code: :dropped)
-
-              reindex_container(container_name: container_name)
             end
           end
+
+          reindex_container(container_name: container_name)
         end
       end
     end
