@@ -192,6 +192,15 @@ module Superhosting
         next if (option = command_options[k]).nil?
         if k == :restart && option == 'yes'
           options << '--restart=always'
+        elsif k == :user
+          begin
+            user, group = option.split(':')
+            uid = Etc.getpwnam(user).uid
+            gid = group.nil? ? nil : Etc.getgrnam(group).gid
+            options << "--#{k.to_s.sub('_', '-')} #{[uid, gid].compact.join(':')}"
+          rescue ArgumentError => _e
+            raise NetStatus::Exception, code: :bad_value_of_docker_option, data: { option: k, value: option }
+          end
         else
           option.lines.each { |val| options << "--#{k.to_s.sub('_', '-')} #{val}" }
         end

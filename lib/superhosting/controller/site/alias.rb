@@ -4,7 +4,7 @@ module Superhosting
       class Alias < Base
         def initialize(name:, **kwargs)
           super(kwargs)
-          @site_controller = get_controller(Site)
+          @site_controller = controller(Site)
           @site_controller.existing_validation(name: name).net_status_ok!
 
           site = @site_controller.index[name]

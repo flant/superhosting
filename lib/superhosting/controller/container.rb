@@ -26,7 +26,7 @@ module Superhosting
       def _inspect(name:, erb: false)
         mapper = index[name][:mapper]
         model_name = index[name][:model_name]
-        user_controller = get_controller(User)
+        user_controller = controller(User)
         {
           'name' => name,
           'state' => state(name: name).value,
@@ -150,11 +150,11 @@ module Superhosting
       end
 
       def admin(name:)
-        get_controller(Admin, name: name)
+        controller(Admin, name: name)
       end
 
       def model(name:)
-        get_controller(Model, name: name)
+        controller(Model, name: name)
       end
     end
   end

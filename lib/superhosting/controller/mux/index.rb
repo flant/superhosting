@@ -6,7 +6,7 @@ module Superhosting
 
       def initialize(**kwargs)
         super
-        @container_controller = get_controller(Container)
+        @container_controller = controller(Container)
         index
       end
 
@@ -15,19 +15,16 @@ module Superhosting
       end
 
       def reindex
-        self.class.index ||= {}
+        self.class.index = {}
         @config.muxs.grep_dirs.each do |mux_mapper|
           next if mux_mapper.abstract?
           name = mux_mapper.name
 
-          etc_mapper = MapperInheritance::Mux.new(mux_mapper).inheritors_mapper
+          etc_mapper = MapperInheritance::Mux.set_inheritance(mux_mapper)
           mapper = CompositeMapper::Mux.new(etc_mapper: etc_mapper, lib_mapper: @lib.muxs.f(name))
           mapper.erb_options = { mux: mapper }
 
-          self.class.index[name] ||= {}
-          self.class.index[name][:containers] = []
-          self.class.index[name][:mapper] = mapper
-          self.class.index[name][:state_mapper] = mapper.lib.state
+          self.class.index[name] ||= { containers: [], mapper: mapper, state_mapper: mapper.lib.state }
         end
 
         @container_controller.index.each do |container_name, _data|

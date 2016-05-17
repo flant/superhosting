@@ -83,7 +83,11 @@ module SpecHelpers
       end
 
       def site_add_exps(**kwargs)
-        site_base(**kwargs) do |_name, etc_mapper, lib_mapper, web_mapper, state_mapper, _aliases_mapper, container_name, container_etc_mapper, _container_lib_mapper|
+        site_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper, state_mapper, _aliases_mapper, container_name, container_etc_mapper, _container_lib_mapper|
+          # index
+          expect(site_controller.index).to include(name)
+          expect(site_controller.index[name][:container_mapper].name).to eq container_name
+
           # /etc/sx
           expect_dir(container_etc_mapper.sites)
           expect_dir(etc_mapper)

@@ -5,12 +5,12 @@ module Superhosting
         def initialize(name:, **kwargs)
           super(kwargs)
           @container_name = name
-          @container_controller = get_controller(Container)
+          @container_controller = controller(Container)
         end
 
         def tree
           if (resp = @container_controller.existing_validation(name: @container_name)).net_status_ok?
-            model_controller = get_controller(Controller::Model)
+            model_controller = controller(Controller::Model)
             tree = model_controller.tree(name: @container_controller.index[@container_name][:model_name]).net_status_ok![:data]
             { data: tree }
           else

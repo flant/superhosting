@@ -138,6 +138,9 @@ describe Superhosting::Controller::Container do
     container_add_with_exps(name: @container_name, model: :incorrect_model_name, code: :model_does_not_exists)
   end
 
+  xit 'add:bad_value_of_docker_option' do # TODO
+  end
+
   it 'rename:no_model_given' do
     container_add_with_exps(name: @container_name)
     begin

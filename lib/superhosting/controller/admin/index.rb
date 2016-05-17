@@ -24,7 +24,7 @@ module Superhosting
         if @admins_mapper.f(name).nil?
           self.class.index.delete(name)
         else
-          admin_container_controller = get_controller(Admin::Container, name: name)
+          admin_container_controller = controller(Admin::Container, name: name)
           self.class.index[name] = admin_container_controller._users_list || []
         end
       end

@@ -3,7 +3,7 @@ module Superhosting
     class User < Base
       def initialize(**kwargs)
         super(**kwargs)
-        @container_controller = get_controller(Container)
+        @container_controller = controller(Container)
       end
 
       def list(container_name:)

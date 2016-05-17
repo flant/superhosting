@@ -5,7 +5,7 @@ module Superhosting
 
       def initialize(**kwargs)
         super(**kwargs)
-        @container_controller = get_controller(Container)
+        @container_controller = controller(Container)
         index
       end
 
@@ -51,7 +51,7 @@ module Superhosting
         end
 
         model_mapper = @config.models.f(model_name)
-        etc_mapper = MapperInheritance::Model.new(model_mapper).inheritors_mapper(etc_mapper)
+        etc_mapper = MapperInheritance::Model.set_inheritance(model_mapper, etc_mapper)
 
         mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
         etc_mapper.erb_options = { site: mapper, container: mapper, etc: @config, lib: @lib }

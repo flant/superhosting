@@ -64,7 +64,7 @@ module Superhosting
           mapper.lib.config.f('etc-group').append_line!('root:x:0:')
           mapper.lib.config.f('etc-passwd').append_line!('root:x:0:0:root:/root:/bin/bash')
 
-          user_controller = get_controller(User)
+          user_controller = controller(User)
           user_controller._group_add(name: name)
           unless (resp = user_controller._add_custom(name: name, group: name)).net_status_ok?
             return resp
@@ -114,7 +114,7 @@ module Superhosting
         if (resp = existing_validation(name: name)).net_status_ok?
           mapper = index[name][:mapper]
 
-          user_controller = get_controller(User)
+          user_controller = controller(User)
           if (user = user_controller._get(name: name))
             mapper.lib.config.f('etc-group').remove_line!("#{name}:x:#{user.gid}:")
           end
@@ -195,14 +195,16 @@ module Superhosting
       end
 
       def run_mux(name:)
-        resp = {}
-        mapper = index[name][:mapper]
+        if (resp = existing_validation(name: name)).net_status_ok?
+          resp = {}
+          mapper = index[name][:mapper]
 
-        if (mux_mapper = mapper.mux).file?
-          mux_name = mux_mapper.value
-          mux_controller = get_controller(Mux)
-          mux_controller._reconfigure(name: mux_name)
-          mux_controller.index_push_container(mux_name, name)
+          if (mux_mapper = mapper.mux).file?
+            mux_name = mux_mapper.value
+            mux_controller = controller(Mux)
+            mux_controller._reconfigure(name: mux_name)
+            mux_controller.index_push_container(mux_name, name)
+          end
         end
 
         resp
@@ -214,7 +216,7 @@ module Superhosting
 
           if (mux_mapper = mapper.mux).file?
             mux_name = mux_mapper.value
-            mux_controller = get_controller(Mux)
+            mux_controller = controller(Mux)
             mux_controller.index_pop_container(mux_name, name)
             mux_controller._delete(name: mux_name) if mux_controller.index_mux_containers(name: mux_name).empty?
           end
@@ -225,7 +227,7 @@ module Superhosting
       def stop(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           _delete_docker(name: name)
-          get_controller(Mux).reindex
+          controller(Mux).reindex
         end
         resp
       end
@@ -240,7 +242,7 @@ module Superhosting
       end
 
       def _each_site(name:)
-        site_controller = get_controller(Superhosting::Controller::Site)
+        site_controller = controller(Superhosting::Controller::Site)
         site_controller.reindex_container_sites(container_name: name)
         site_controller.container_sites(container_name: name).each do |site_name, index|
           yield site_controller, site_name, index[:state]

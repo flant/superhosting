@@ -2,7 +2,7 @@ module Superhosting
   module Controller
     class Base < Base
       def repair
-        container_controller = get_controller(Container)
+        container_controller = controller(Container)
         container_controller.index.each do |container_name, hash_of_mappers|
           if hash_of_mappers[:state_mapper].value != 'up'
             container_controller.reconfigure(name: container_name).net_status_ok!
@@ -15,8 +15,8 @@ module Superhosting
       end
 
       def update
-        container_controller = get_controller(Container)
-        mux_controller = get_controller(Mux)
+        container_controller = controller(Container)
+        mux_controller = controller(Mux)
         mux_index = mux_controller.index
         containers = container_controller.index.keys
         mux_index.keys.each do |mux_name|

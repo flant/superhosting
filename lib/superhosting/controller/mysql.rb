@@ -14,11 +14,11 @@ module Superhosting
       end
 
       def db
-        get_controller(Db)
+        controller(Db)
       end
 
       def user
-        get_controller(User)
+        controller(User)
       end
 
       def alternative_name(name:)

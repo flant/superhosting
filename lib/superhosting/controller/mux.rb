@@ -41,7 +41,7 @@ module Superhosting
       def tree(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           mapper = @config.muxs.f(name)
-          { data: MapperInheritance::Mux.new(mapper).collect_inheritors_tree(mux: true)[name] }
+          { data: MapperInheritance::Mux.inheritors_tree(mapper, mux: true)[name] }
         else
           resp
         end
@@ -49,7 +49,7 @@ module Superhosting
 
       def inspect(name:, inheritance: false)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).inheritors_mapper
+          mapper = index[name][:mapper]
           if inheritance
             data = separate_inheritance(mapper) do |base, inheritors|
               ([base] + inheritors).reverse.inject([]) do |total, m|
@@ -67,7 +67,7 @@ module Superhosting
 
       def options(name:, inheritance: false)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = MapperInheritance::Mux.new(@config.muxs.f(name)).inheritors_mapper
+          mapper = index[name][:mapper]
           if inheritance
             data = separate_inheritance(mapper) do |base, inheritors|
               ([base] + inheritors).reverse.inject([]) do |total, m|
@@ -85,7 +85,7 @@ module Superhosting
 
       def inheritance(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          inheritance = MapperInheritance::Mux.new(@config.muxs.f(name)).inheritors
+          inheritance = index[name][:mapper].inheritance
           { data: inheritance.reverse.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } } }
         else
           resp
