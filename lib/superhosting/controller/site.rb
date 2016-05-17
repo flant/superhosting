@@ -31,7 +31,7 @@ module Superhosting
         mapper = index[name][:mapper]
         actual_name = mapper.name
         container_mapper = index[actual_name][:container_mapper]
-        alias_controller = get_controller(Alias, name: actual_name)
+        alias_controller = controller(Alias, name: actual_name)
         {
           'name' => actual_name,
           'container' => container_mapper.name,
@@ -172,7 +172,7 @@ module Superhosting
       end
 
       def alias(name:)
-        get_controller(Alias, name: name)
+        controller(Alias, name: name)
       end
     end
   end

@@ -49,7 +49,10 @@ module SpecHelpers
       end
 
       def admin_add_exps(**kwargs)
-        admin_base(**kwargs) do |_name, mapper, admins_mapper|
+        admin_base(**kwargs) do |name, mapper, admins_mapper|
+          # index
+          expect(admin_controller.index).to include(name)
+
           # /etc/sx/admins
           expect_dir(admins_mapper)
           expect_dir(mapper)
@@ -66,9 +69,11 @@ module SpecHelpers
 
       def admin_delete_exps(**kwargs)
         admin_base(**kwargs) do |name, mapper, _admins_mapper|
-          etc_passwd_mapper = etc.passwd
+          # index
+          expect(admin_controller.index).to_not include(name)
 
           # /etc/sx/admins
+          etc_passwd_mapper = etc.passwd
           not_expect_dir(mapper)
           not_expect_in_file(etc_passwd_mapper, /_admin_#{name}/)
         end
@@ -105,6 +110,7 @@ module SpecHelpers
         after :each do
           with_logger(logger: false) do
             command('rm -rf /var/sx/admins/test*')
+            admin_controller.reindex
           end
         end
       end

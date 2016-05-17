@@ -1,26 +1,25 @@
 module Superhosting
   module MapperInheritance
-    class Mux
-      include Base
+    module Mux
+      extend Base
 
-      def initialize(mapper)
-        super()
-        @mapper = mapper
-        @muxs_mapper = @mapper.parent
-        collect_inheritors
-      end
-
-      def inheritors_mapper(mapper = @mapper)
-        inheritance(mapper)
-      end
-
-      def collect_inheritors(m = @mapper)
-        m.inherit.lines.each do |name|
-          inherit_mapper = @muxs_mapper.f(name)
-          collect_inheritors(inherit_mapper)
+      class << self
+        def set_inheritance(mux_mapper, mapper = mux_mapper)
+          @muxs_mapper ||= mux_mapper.parent
+          inheritors = get_or_collect(mux_mapper, [], true)
+          inheritance(inheritors, mapper)
         end
 
-        collect_inheritor(m) unless m == @mapper
+        def collect_inheritors(mapper, not_save = false)
+          inheritors = []
+          mapper.inherit.lines.each do |name|
+            inherit_mapper = @muxs_mapper.f(name)
+            inheritors = get_or_collect(inherit_mapper, inheritors)
+          end
+
+          inheritors.unshift(mapper) unless not_save
+          inheritors
+        end
       end
     end
   end

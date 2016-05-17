@@ -1,47 +1,47 @@
 module Superhosting
   module MapperInheritance
-    class Model
-      include Base
+    module Model
+      extend Base
 
-      def initialize(model_mapper)
-        super()
-        @mapper = model_mapper
-        @models_mapper = @mapper.parent
-        @muxs_mapper = @models_mapper.parent.muxs
-        collect_inheritors
-      end
+      class << self
+        def set_inheritance(model_mapper, mapper = model_mapper)
+          @models_mapper ||= model_mapper.parent
+          @muxs_mapper ||= @models_mapper.parent.muxs
+          inheritors = get_or_collect(model_mapper)
 
-      def inheritors_mapper(mapper)
-        @type = case type = mapper_type(mapper)
-                  when 'container', 'site'
-                    raise NetStatus::Exception, error: :input_error, code: :model_does_not_exists, data: { name: @mapper.name } unless @mapper.dir?
-                    raise NetStatus::Exception, error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: @mapper.name } if @mapper.abstract?
-                    type
-                  when 'model'
-                    nil
-                  else
-                    raise NetStatus::Exception, error: :logical_error, code: :mapper_type_not_supported, data: { name: type }
-                end
+          type = case type_ = mapper_type(mapper)
+            when 'container', 'site'
+              raise NetStatus::Exception, error: :input_error, code: :model_does_not_exists, data: { name: mapper.name } unless mapper.dir?
+              raise NetStatus::Exception, error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: mapper.name } if mapper.abstract?
+              type_
+            when 'model'
+              nil
+            else
+              raise NetStatus::Exception, error: :logical_error, code: :mapper_type_not_supported, data: { name: type_ }
+          end
 
-        inheritance(mapper)
-      end
-
-      def collect_inheritors(m = @mapper, mux = false)
-        m.inherit.lines.each do |name|
-          inherit_mapper = (mux ? @muxs_mapper : @models_mapper).f(name)
-
-          # mixed
-          collect_inheritors(inherit_mapper, mux)
+          inheritance(inheritors, mapper, type: type)
         end
 
-        # mux
-        m.container.mux.lines.each do |name|
-          mux_mapper = @muxs_mapper.f(name)
-          collect_inheritors(mux_mapper, true)
-        end
+        def collect_inheritors(mapper, mux = false)
+          inheritors = []
+          mapper.inherit.lines.each do |name|
+            inherit_mapper = (mux ? @muxs_mapper : @models_mapper).f(name)
 
-        # model
-        collect_inheritor(m)
+            # mixed
+            inheritors = get_or_collect(inherit_mapper, inheritors, mux)
+          end
+
+          # mux
+          mapper.container.mux.lines.each do |name|
+            mux_mapper = @muxs_mapper.f(name)
+            inheritors = get_or_collect(mux_mapper, inheritors, true)
+          end
+
+          # model
+          inheritors.unshift(mapper)
+          inheritors
+        end
       end
     end
   end

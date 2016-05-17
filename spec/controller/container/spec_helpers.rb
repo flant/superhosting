@@ -82,6 +82,9 @@ module SpecHelpers
           model_name = kwargs[:model]
           models_mapper = config.models
 
+          # index
+          expect(container_controller.index).to include(name)
+
           # /etc/sx
           expect_dir(etc_mapper)
           expect_file(config.default_model)
@@ -130,6 +133,9 @@ module SpecHelpers
 
       def container_delete_exps(**kwargs)
         container_base(**kwargs) do |name, etc_mapper, lib_mapper, web_mapper|
+          # index
+          expect(container_controller.index).to_not include(name)
+
           # /etc/sx
           not_expect_dir(etc_mapper)
 
@@ -245,6 +251,8 @@ module SpecHelpers
 
             command('rm -rf /var/sx/containers/muxs/test')
           end
+
+          container_controller.reindex
         end
       end
     end

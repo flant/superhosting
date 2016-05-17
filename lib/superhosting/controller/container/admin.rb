@@ -5,8 +5,8 @@ module Superhosting
         def initialize(name:, **kwargs)
           super(kwargs)
           @container_name = name
-          @user_controller = get_controller(User)
-          @admin_controller = get_controller(Controller::Admin)
+          @user_controller = controller(User)
+          @admin_controller = controller(Controller::Admin)
         end
 
         def list
@@ -22,7 +22,7 @@ module Superhosting
 
         def add(name:)
           if (resp = @admin_controller.existing_validation(name: name)).net_status_ok?
-            admin_container_controller = get_controller(Controller::Admin::Container, name: name)
+            admin_container_controller = controller(Controller::Admin::Container, name: name)
             resp = admin_container_controller.add(name: @container_name)
           end
           resp
@@ -30,7 +30,7 @@ module Superhosting
 
         def delete(name:)
           if (resp = @admin_controller.existing_validation(name: name)).net_status_ok?
-            admin_container_controller = get_controller(Controller::Admin::Container, name: name)
+            admin_container_controller = controller(Controller::Admin::Container, name: name)
             resp = admin_container_controller.delete(name: @container_name)
           end
           resp

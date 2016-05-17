@@ -26,7 +26,7 @@ module Superhosting
         mapper.lib.sites.rename!(new_mapper.lib.sites.path)
         mapper.lib.registry.sites.rename!(new_mapper.lib.registry.sites.path)
 
-        site_controller = get_controller(Site)
+        site_controller = controller(Site)
         site_controller.reindex_container_sites(container_name: new_name)
         site_controller.reindex_container_sites(container_name: name)
 
@@ -43,7 +43,7 @@ module Superhosting
           new_mapper.lib.registry.sites.safe_rename!(mapper.lib.registry.sites.path)
         end
 
-        site_controller = get_controller(Site)
+        site_controller = controller(Site)
         site_controller.reindex_container_sites(container_name: name)
         site_controller.reindex_container_sites(container_name: new_name)
 
@@ -52,7 +52,7 @@ module Superhosting
 
       def copy_users(name:, new_name:)
         mapper = index[name][:mapper]
-        user_controller = get_controller(User)
+        user_controller = controller(User)
         container_admin_controller = admin(name: new_name)
 
         mapper.config.f('etc-passwd').lines.each do |line|

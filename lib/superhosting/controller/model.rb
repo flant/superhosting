@@ -3,7 +3,7 @@ module Superhosting
     class Model < Base
       def initialize(**kwargs)
         super
-        @container_controller = get_controller(Container)
+        @container_controller = controller(Container)
       end
 
       def list(abstract: false)
@@ -21,7 +21,7 @@ module Superhosting
 
       def tree(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          { data: MapperInheritance::Model.new(@config.models.f(name)).collect_inheritors_tree[name] }
+          { data: MapperInheritance::Model.inheritors_tree(@config.models.f(name))[name] }
         else
           resp
         end
@@ -29,7 +29,7 @@ module Superhosting
 
       def inspect(name:, inheritance: false)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = MapperInheritance::Model.new(@config.models.f(name)).inheritors_mapper(@config.models.f(name))
+          mapper = MapperInheritance::Model.set_inheritance(@config.models.f(name))
           if inheritance
             data = separate_inheritance(mapper) do |_base, inheritors|
               inheritors.reverse.inject([]) do |total, m|
@@ -47,7 +47,7 @@ module Superhosting
 
       def options(name:, inheritance: false)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = MapperInheritance::Model.new(@config.models.f(name)).inheritors_mapper(@config.models.f(name))
+          mapper = MapperInheritance::Model.set_inheritance(@config.models.f(name))
           if inheritance
             data = separate_inheritance(mapper) do |_base, inheritors|
               inheritors.reverse.inject([]) do |total, m|
@@ -68,8 +68,7 @@ module Superhosting
       def inheritance(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           model_mapper = @config.models.f(name)
-          inheritance = MapperInheritance::Model.new(model_mapper).inheritors
-          inheritance.delete(model_mapper)
+          inheritance = MapperInheritance::Model.set_inheritance(model_mapper).inheritance
           { data: inheritance.reverse.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } } }
         else
           resp

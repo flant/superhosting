@@ -13,8 +13,9 @@ module Superhosting
       end
 
       def reindex
+        self.class.index = {}
         @config.containers.grep_dirs.each { |mapper| reindex_container(name: mapper.name) }
-        self.class.index ||= {}
+        self.class.index
       end
 
       def reindex_container(name:)
@@ -31,14 +32,14 @@ module Superhosting
 
         model_name = etc_mapper.f('model', default: @config.default_model).value
         model_mapper = @config.models.f(model_name)
-        etc_mapper = MapperInheritance::Model.new(model_mapper).inheritors_mapper(etc_mapper)
+        etc_mapper = MapperInheritance::Model.set_inheritance(model_mapper, etc_mapper)
 
         mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
 
         etc_mapper.erb_options = { container: mapper, etc: @config, lib: @lib }
         mux_mapper = if (mux_file_mapper = etc_mapper.mux).file?
                        mux_name = mux_file_mapper.value
-                       mux_controller = get_controller(Mux)
+                       mux_controller = controller(Mux)
                        mux_controller.index[mux_name][:mapper] if mux_controller.existing_validation(name: mux_name).net_status_ok!
                      else
                        plug = PathMapper.new("/tmp/sx/null/#{SecureRandom.uuid}")

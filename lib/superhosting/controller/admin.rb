@@ -5,7 +5,7 @@ module Superhosting
         admins = []
         @admins_mapper.grep_dirs.map do |dir_name|
           admin_name = dir_name.name
-          container_admin_controller = get_controller(Admin::Container, name: admin_name)
+          container_admin_controller = controller(Admin::Container, name: admin_name)
 
           unless (resp = container_admin_controller.list).net_status_ok?
             return resp
@@ -31,7 +31,7 @@ module Superhosting
 
       def delete(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          admin_container_controller = get_controller(Admin::Container, name: name)
+          admin_container_controller = controller(Admin::Container, name: name)
           if (resp = admin_container_controller._delete_all_users).net_status_ok?
             admin_dir = @admins_mapper.f(name)
             admin_dir.delete!
@@ -43,7 +43,7 @@ module Superhosting
 
       def passwd(name:, generate: false)
         if (resp = existing_validation(name: name)).net_status_ok?
-          user_controller = get_controller(User)
+          user_controller = controller(User)
           admin_dir = @admins_mapper.f(name)
           passwords = user_controller._create_password(generate: generate)
           admin_dir.passwd.put!("#{name}:#{passwords[:encrypted_password]}")
@@ -60,7 +60,7 @@ module Superhosting
       end
 
       def container(name:)
-        get_controller(Container, name: name)
+        controller(Container, name: name)
       end
     end
   end

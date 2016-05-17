@@ -5,7 +5,7 @@ module Superhosting
 
       def base_validation(name:)
         @docker_api.container_rm_inactive!(name)
-        [self, get_controller(User)].each { |controller| controller.container_name_validation(name: name).net_status_ok! }
+        [self, controller(User)].each { |controller| controller.container_name_validation(name: name).net_status_ok! }
         {}
       end
 
