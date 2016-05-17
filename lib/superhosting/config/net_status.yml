@@ -117,6 +117,21 @@ en:
     command:
       failed: "Command: '%{command}': executing... FAILED"
       ok: "Command: '%{command}': executing... OK"
+    mysql_user:
+      added: "Mysql user '%{name}': ADDED"
+      dropped: "Mysql user '%{name}': DROPPED"
+      ok: "Mysql user '%{name}': OK"
+      failed: "Mysql user '%{name}': FAILED"
+    mysql_database:
+      added: "Mysql database '%{name}': ADDED"
+      dropped: "Mysql database '%{name}': DROPPED"
+      ok: "Mysql database '%{name}': OK"
+      failed: "Mysql database '%{name}': FAILED"
+    mysql_grant:
+      added: "Mysql grant to '%{database}' on '%{name}': ADDED"
+      revoked: "Mysql grant to '%{database}' on '%{name}': REVOKED"
+      ok: "Mysql grant to '%{database}' on '%{name}': OK"
+      failed: "Mysql grant to '%{database}' on '%{name}': FAILED"
 
     transition: "Transition '%{name}'..."
     transition_undo: "Transition '%{name}' (undo)..."

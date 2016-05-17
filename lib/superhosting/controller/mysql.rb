@@ -22,7 +22,7 @@ module Superhosting
       end
 
       def alternative_name(name:)
-        container_controller = get_controller(Container)
+        container_controller = controller(Container)
         container_name, name = name.split('_')
         unless container_controller.available_validation(name: container_name).net_status_ok?
           raise NetStatus::Exception, { code: :container_name_is_not_specified }
@@ -31,8 +31,8 @@ module Superhosting
       end
 
       def grant(user_name:, database_name:)
-        user_controller = get_controller(User)
-        database_controller = get_controller(Db)
+        user_controller = controller(User)
+        database_controller = controller(Db)
         if (resp = user_controller.existing_validation(name: user_name)).net_status_ok? &&
            (resp = database_controller.existing_validation(name: database_name)).net_status_ok?
           _grant(user_name: user_name, database_name: database_name)
@@ -41,15 +41,22 @@ module Superhosting
       end
 
       def _grant(user_name:, database_name:)
-        user_controller = get_controller(User)
-        container_name = user_name.split('_').first
-        client.query("GRANT ALL PRIVILEGES ON #{database_name}.* TO '#{user_name}'@'%' WITH GRANT OPTION ")
-        user_controller.reindex_container(container_name: container_name)
+        debug_operation(desc: { code: :mysql_grant, data: { database: database_name, name:  user_name } }) do |&blk|
+          with_dry_run do |dry_run|
+            user_controller = controller(User)
+            container_name = user_name.split('_').first
+
+            client.query("GRANT ALL PRIVILEGES ON #{database_name}.* TO '#{user_name}'@'%' WITH GRANT OPTION ")
+            blk.call(code: :added)
+
+            user_controller.reindex_container(container_name: container_name)
+          end
+        end
       end
 
       def revoke(user_name:, database_name:)
-        user_controller = get_controller(User)
-        database_controller = get_controller(Db)
+        user_controller = controller(User)
+        database_controller = controller(Db)
         if (resp = user_controller.existing_validation(name: user_name)).net_status_ok? &&
            (resp = database_controller.existing_validation(name: database_name)).net_status_ok?
           _revoke(user_name: user_name, database_name: database_name)
@@ -58,10 +65,17 @@ module Superhosting
       end
 
       def _revoke(user_name:, database_name:)
-        user_controller = get_controller(User)
-        container_name = user_name.split('_').first
-        client.query("REVOKE ALL PRIVILEGES ON #{database_name}.* FROM '#{user_name}'@'%'")
-        user_controller.reindex_container(container_name: container_name)
+        debug_operation(desc: { code: :mysql_grant, data: { database: database_name, name:  user_name } }) do |&blk|
+          with_dry_run do |dry_run|
+            user_controller = controller(User)
+            container_name = user_name.split('_').first
+
+            client.query("REVOKE ALL PRIVILEGES ON #{database_name}.* FROM '#{user_name}'@'%'")
+            blk.call(code: :revoked)
+
+            user_controller.reindex_container(container_name: container_name)
+          end
+        end
       end
     end
   end

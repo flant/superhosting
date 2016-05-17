@@ -6,8 +6,8 @@ module Superhosting
 
         def initialize(**kwargs)
           super
-          @container_controller = get_controller(Container)
-          @mysql_controller = get_controller(Mysql)
+          @container_controller = controller(Container)
+          @mysql_controller = controller(Mysql)
           @client = @mysql_controller.client
           index
         end

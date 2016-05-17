@@ -6,8 +6,8 @@ module Superhosting
 
         def initialize(**kwargs)
           super
-          @container_controller = get_controller(Container)
-          @mysql_controller = get_controller(Mysql)
+          @container_controller = controller(Container)
+          @mysql_controller = controller(Mysql)
           @client = @mysql_controller.client
           index
         end
@@ -30,7 +30,7 @@ module Superhosting
         def reindex_container(container_name:)
           self.class.index ||= {}
           container_dbs(container_name: container_name).each { |k, _v| self.class.index.delete(k) }
-          user_controller = get_controller(User)
+          user_controller = controller(User)
           @client.query("SHOW DATABASES LIKE '#{container_name}_%'").tap do |result|
             field_name = result.fields.first
             result.each do |obj|
