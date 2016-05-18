@@ -2,11 +2,16 @@ dist: trusty
 sudo: required
 cache: apt
 language: ruby
+addons:
+  apt:
+    packages:
+    - mysql-server-5.7
+    - mysql-client-core-5.7
+    - mysql-client-5.7
 rvm:
 - 2.2.1
 services:
 - docker
-- mysql
 
 before_script:
 - sudo -s source provision/mysql_root_password.sh
