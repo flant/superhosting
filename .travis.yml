@@ -6,8 +6,10 @@ rvm:
 - 2.2.1
 services:
 - docker
+- mysql
 
 before_script:
+- sudo -s source provision/mysql_root_password.sh
 - sudo -s source provision/docker.sh
 - sudo -s source provision/pam_docker.sh
 - sudo -s source provision/bootstrap.sh
