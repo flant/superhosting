@@ -182,7 +182,7 @@ module Superhosting
 
         def set_commands_hierarchy
           commands = COMMANDS_MODULE.constants.select { |c| COMMANDS_MODULE.const_get(c).is_a?(Class) }
-          self.commands_hierarchy = commands.sort_by { |k1, _k2| toggle_case_name(k1).one? ? 0 : 1 }.each_with_object({}) do |k, h|
+          self.commands_hierarchy = commands.sort.sort_by { |k1, _k2| toggle_case_name(k1).one? ? 0 : 1 }.each_with_object({}) do |k, h|
             node = h
             parts = toggle_case_name(k)
             parts.each do |cmd|

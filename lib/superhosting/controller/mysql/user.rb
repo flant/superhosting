@@ -2,12 +2,16 @@ module Superhosting
   module Controller
     class Mysql
       class User < Base
-        def list(container_name:)
-          if (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
-            { data: container_users(container_name: container_name).map { |k, v| { 'name' => k, 'grants' => v } } }
+        def list(container_name: nil)
+          if container_name.nil?
+            users = index
+          elsif (resp = @container_controller.available_validation(name: container_name)).net_status_ok?
+            users = container_users(container_name: container_name)
           else
             resp
           end
+
+          { data: users.map { |name, _grants| _inspect(name: name) } }
         end
 
         def add(name:, container_name: nil, generate: false, databases: [])
@@ -60,6 +64,21 @@ module Superhosting
           end
 
           reindex_container(container_name: container_name)
+        end
+
+        def inspect(name:)
+          if (resp = existing_validation(name: name)).net_status_ok?
+            { data: _inspect(name: name) }
+          else
+            resp
+          end
+        end
+
+        def _inspect(name:)
+          {
+              'name' => name,
+              'grants' => index[name]
+          }
         end
       end
     end

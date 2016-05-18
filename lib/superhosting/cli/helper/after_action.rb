@@ -43,7 +43,7 @@ module Superhosting
           if config[:json]
             show_json(data.map { |container_info| { 'name' => container_info['name'], 'state' => container_info['state'] } }, sortby: 'name')
           else
-            data.each do |container_info|
+            data.sort_by { |elm| elm['name'] }.each do |container_info|
               name = container_info['name']
               state = container_info['state']
 
@@ -111,7 +111,7 @@ module Superhosting
           end
         end
 
-        def show_mysql_user_list(data, config)
+        def show_mysql_list(data, config)
           if config[:json]
             show_json(data, sortby: 'name')
           else

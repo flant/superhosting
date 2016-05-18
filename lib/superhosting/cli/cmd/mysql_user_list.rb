@@ -3,10 +3,10 @@ module Superhosting
     module Cmd
       class MysqlUserList < Base
         include Helper::Options::List
-        include Helper::Options::Container
+        include Helper::Options::NotRequiredContainer
 
         def self.after_action(data, config)
-          show_mysql_user_list(data, config)
+          show_mysql_list(data, config)
         end
       end
     end

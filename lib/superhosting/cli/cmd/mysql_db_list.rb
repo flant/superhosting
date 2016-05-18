@@ -3,10 +3,10 @@ module Superhosting
     module Cmd
       class MysqlDbList < Base
         include Helper::Options::List
-        include Helper::Options::Container
+        include Helper::Options::NotRequiredContainer
 
-        def self.after_action(data, _config)
-          show_list(data)
+        def self.after_action(data, config)
+          show_mysql_list(data, config)
         end
       end
     end
