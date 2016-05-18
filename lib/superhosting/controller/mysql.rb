@@ -46,7 +46,7 @@ module Superhosting
 
         debug_operation(desc: { code: :mysql_grant, data: { database: database_name, name:  user_name } }) do |&blk|
           with_dry_run do |dry_run|
-            client.query("GRANT ALL PRIVILEGES ON #{database_name}.* TO '#{user_name}'@'%' WITH GRANT OPTION ")
+            client.query("GRANT ALL PRIVILEGES ON #{database_name}.* TO '#{user_name}'@'%' WITH GRANT OPTION ") unless dry_run
             blk.call(code: :added)
           end
         end
@@ -70,7 +70,7 @@ module Superhosting
 
         debug_operation(desc: { code: :mysql_grant, data: { database: database_name, name:  user_name } }) do |&blk|
           with_dry_run do |dry_run|
-            client.query("REVOKE ALL PRIVILEGES ON #{database_name}.* FROM '#{user_name}'@'%'")
+            client.query("REVOKE ALL PRIVILEGES ON #{database_name}.* FROM '#{user_name}'@'%'") unless dry_run
             blk.call(code: :revoked)
           end
         end

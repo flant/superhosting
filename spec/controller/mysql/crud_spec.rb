@@ -30,6 +30,12 @@ describe Superhosting::Controller::Mysql do
     end
   end
 
+  xit 'user list' do # TODO
+  end
+
+  xit 'user inspect' do # TODO
+  end
+
   it 'user delete with database' do # TODO
     with_mysql_db do |container_name, database_name|
       mysql_user_add_with_exps(name: @mysql_user_name, container_name: container_name, databases: [database_name], generate: true)
@@ -67,6 +73,12 @@ describe Superhosting::Controller::Mysql do
       mysql_db_add_with_exps(name: @mysql_db_name, container_name: container_name, users: [@mysql_user_name], generate: true)
       mysql_db_delete_with_exps(name: "#{container_name}_#{@mysql_db_name}")
     end
+  end
+
+  xit 'db list' do # TODO
+  end
+
+  xit 'db inspect' do # TODO
   end
 
   # negative

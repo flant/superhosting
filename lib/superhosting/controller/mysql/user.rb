@@ -31,12 +31,17 @@ module Superhosting
         def _add(name:, databases: [], generate: false)
           container_name = name.split('_').first
           user_controller = controller(Controller::User)
-          password = user_controller._create_password(generate: generate)[:password]
+          password = nil
 
           debug_operation(desc: { code: :mysql_user, data: { name: name } }) do |&blk|
             with_dry_run do |dry_run|
-              @client.query("CREATE USER #{name}@'%' IDENTIFIED BY '#{password}'") unless dry_run
-              blk.call(code: :added)
+              if not_existing_validation(name: name).net_status_ok?
+                password = user_controller._create_password(generate: generate)[:password]
+                @client.query("CREATE USER #{name}@'%' IDENTIFIED BY '#{password}'") unless dry_run
+                blk.call(code: :added)
+              else
+                blk.call(code: :ok)
+              end
             end
           end
 

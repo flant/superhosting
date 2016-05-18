@@ -21,7 +21,7 @@ module Superhosting
           user_controller = controller(User)
           if (resp = @container_controller.available_validation(name: container_name)).net_status_ok? &&
              (resp = adding_validation(name: db_name)).net_status_ok? &&
-             (users.all? { |u_name| user_controller.adding_validation(name: u_name).net_status_ok! })
+             (users.all? { |u_name| user_controller.name_validation(name: u_name).net_status_ok! })
             { data: _add(name: db_name, users: users, generate: generate) }
           else
             resp
@@ -33,8 +33,12 @@ module Superhosting
 
           debug_operation(desc: { code: :mysql_database, data: { name: name } }) do |&blk|
             with_dry_run do |dry_run|
-              @client.query("CREATE DATABASE #{name}") unless dry_run
-              blk.call(code: :added)
+              if not_existing_validation(name: name).net_status_ok?
+                @client.query("CREATE DATABASE #{name}") unless dry_run
+                blk.call(code: :added)
+              else
+                blk.call(code: :ok)
+              end
             end
           end
 
