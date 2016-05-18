@@ -26,6 +26,17 @@ module Superhosting
         resp
       end
 
+      def install_databases(name:)
+        if (resp = existing_validation(name: name)).net_status_ok?
+          mapper = index[name][:mapper]
+          container_name = index[name][:container_mapper].name
+
+          mysql_db_controller = controller(Mysql::Db)
+          mapper.default_databases.lines.each { |db_name| mysql_db_controller._add(name: "#{container_name}_#{db_name}") }
+        end
+        resp
+      end
+
       def _config_options(name:, on_reconfig:, on_config:)
         mapper = index[name][:mapper]
         container_mapper = index[name][:container_mapper]

@@ -79,6 +79,20 @@ module Superhosting
         {}
       end
 
+      def move_databases(name:, new_name:)
+        mysql_controller = controller(Mysql)
+        mysql_controller._move(container_name: name, new_container_name: new_name)
+
+        {}
+      end
+
+      def undo_move_databases(name:, new_name:)
+        mysql_controller = controller(Mysql)
+        mysql_controller._move(container_name: new_name, new_container_name: name)
+
+        {}
+      end
+
       def new_up(new_name:, model:)
         _reconfigure(name: new_name, model: model)
       end

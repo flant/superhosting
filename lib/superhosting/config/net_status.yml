@@ -115,16 +115,21 @@ en:
       pulled: "docker pull '%{name}': PULLED"
       not_found: "docker pull '%{name}': NOT FOUND"
     command:
-      failed: "Command: '%{command}': executing... FAILED"
-      ok: "Command: '%{command}': executing... OK"
+      failed: "Command '%{command}': executing... FAILED"
+      ok: "Command '%{command}': executing... OK"
+    mysql_query:
+      failed: "Mysql query '%{query}': executing... FAILED"
+      ok: "Mysql query '%{query}': executing... OK"
     mysql_user:
       added: "Mysql user '%{name}': ADDED"
       dropped: "Mysql user '%{name}': DROPPED"
+      renamed: "Mysql user '%{name}': RENAMED"
       ok: "Mysql user '%{name}': OK"
       failed: "Mysql user '%{name}': FAILED"
     mysql_database:
       added: "Mysql database '%{name}': ADDED"
       dropped: "Mysql database '%{name}': DROPPED"
+      renamed: "Mysql database '%{name}': RENAMED"
       ok: "Mysql database '%{name}': OK"
       failed: "Mysql database '%{name}': FAILED"
     mysql_grant:

@@ -5,6 +5,22 @@ module SpecHelpers
         @controller ||= Superhosting::Base.new
       end
 
+      def mysql_controller
+        controller.controller(Superhosting::Controller::Mysql)
+      end
+
+      def mysql_container_users_index(container_name)
+        controller.controller(Superhosting::Controller::Mysql::User).container_users(container_name: container_name)
+      end
+
+      def mysql_container_dbs_index(container_name)
+        controller.controller(Superhosting::Controller::Mysql::Db).container_dbs(container_name: container_name)
+      end
+
+      def mysql_query(sql)
+        mysql_controller.query(sql)
+      end
+
       def config
         controller.config
       end

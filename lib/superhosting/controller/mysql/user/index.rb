@@ -8,7 +8,6 @@ module Superhosting
           super
           @container_controller = controller(Container)
           @mysql_controller = controller(Mysql)
-          @client = @mysql_controller.client
           index
         end
 
@@ -46,9 +45,9 @@ module Superhosting
           container_users(container_name: container_name).each { |k, _v| self.class.index.delete(k) }
           container_grants(container_name: container_name).each { |k, _v| self.class.index.delete(k) }
 
-          @client.query("select User from mysql.user where Host = '%' and User like '#{container_name}_%'").each do |obj|
+          @mysql_controller.query("SELECT User FROM mysql.user WHERE Host = '%' and User LIKE '#{container_name}_%'").each do |obj|
             name = obj['User']
-            @client.query("SHOW GRANTS FOR #{name}@'%'").tap do |result|
+            @mysql_controller.query("SHOW GRANTS FOR #{name}@'%'").tap do |result|
               field_name = result.fields.first
               index_name = (self.class.index[name] ||= [])
               result.each do |grant_obj|

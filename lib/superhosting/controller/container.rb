@@ -67,7 +67,8 @@ module Superhosting
           states = {
             up: { action: :stop, undo: :run, next: :configuration_applied },
             configuration_applied: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :mux_runned },
-            mux_runned: { action: :stop_mux, undo: :run_mux, next: :users_installed },
+            mux_runned: { action: :stop_mux, undo: :run_mux, next: :databases_installed },
+            databases_installed: { action: :uninstall_databases, undo: :run_mux, next: :users_installed },
             users_installed: { action: :uninstall_users, next: :data_installed },
             data_installed: { action: :uninstall_data }
           }
@@ -101,14 +102,15 @@ module Superhosting
           model = nil if (model = mapper.f('model').value).nil?
 
           states = {
-            none: { action: :stop, undo: :run, next: :stopped },
-            stopped: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
-            unconfigured: { action: :copy_etc, next: :copied_etc },
-            copied_etc: { action: :new_up, next: :new_upped },
-            new_upped: { action: :copy_var, next: :copied_var },
-            copied_var: { action: :copy_users, next: :copied_users },
-            copied_users: { action: :new_reconfigure, next: :new_reconfigured },
-            new_reconfigured: { action: :delete }
+              none: { action: :stop, undo: :run, next: :stopped },
+              stopped: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :unconfigured },
+              unconfigured: { action: :copy_etc, next: :copied_etc },
+              copied_etc: { action: :new_up, next: :new_upped },
+              new_upped: { action: :copy_var, next: :copied_var },
+              copied_var: { action: :move_databases, next: :moved_databases },
+              moved_databases: { action: :copy_users, next: :copied_users },
+              copied_users: { action: :new_reconfigure, next: :new_reconfigured },
+              new_reconfigured: { action: :delete }
           }
 
           on_state(state_mapper: state_mapper, states: states,
@@ -134,7 +136,8 @@ module Superhosting
           none: { action: :stop_old_mux, undo: :run_mux, next: :old_mux_stopped },
           old_mux_stopped: { action: :install_data, undo: :uninstall_data, next: :data_installed },
           data_installed: { action: :install_users, undo: :uninstall_users, next: :users_installed },
-          users_installed: { action: :run_mux, undo: :stop_mux, next: :mux_runned },
+          users_installed: { action: :install_databases, undo: :uninstall_databases, next: :databases_installed },
+          databases_installed: { action: :run_mux, undo: :stop_mux, next: :mux_runned },
           mux_runned: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :configuration_applied },
           configuration_applied: { action: :run, undo: :stop, next: :up }
         }

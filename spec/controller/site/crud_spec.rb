@@ -281,6 +281,25 @@ describe Superhosting::Controller::Site do
     end
   end
 
+  it 'add@default_databases' do
+    with_container(model: 'test') do |container_name|
+      begin
+        default_databases_mapper = config.models.test.site.default_databases
+        value = default_databases_mapper.value
+        default_databases_mapper.put!('test_database2')
+
+        site_add_with_exps(name: @site_name, container_name: container_name)
+        expect(mysql_container_dbs_index(container_name)).to include("#{container_name}_test_database2")
+      ensure
+        if value.nil?
+          default_databases_mapper.delete!
+        else
+          default_databases_mapper.put!(value)
+        end
+      end
+    end
+  end
+
   it 'recreate' do
     with_container do
       2.times.each { with_site }

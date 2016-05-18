@@ -8,7 +8,6 @@ module Superhosting
           super
           @container_controller = controller(Container)
           @mysql_controller = controller(Mysql)
-          @client = @mysql_controller.client
           index
         end
 
@@ -31,7 +30,7 @@ module Superhosting
           self.class.index ||= {}
           container_dbs(container_name: container_name).each { |k, _v| self.class.index.delete(k) }
           user_controller = controller(User)
-          @client.query("SHOW DATABASES LIKE '#{container_name}_%'").tap do |result|
+          @mysql_controller.query("SHOW DATABASES LIKE '#{container_name}_%'").tap do |result|
             field_name = result.fields.first
             result.each do |obj|
               self.class.index[obj[field_name]] = user_controller.grant_index[obj[field_name]] || []

@@ -154,6 +154,10 @@ module SpecHelpers
           not_expect_user(name)
           not_expect_in_file(etc.passwd, %r{^#{name}:.*\/usr\/sbin\/nologin})
 
+          # mysql users / databases
+          expect(mysql_container_users_index(name)).to be_empty
+          expect(mysql_container_dbs_index(name)).to be_empty
+
           # docker
           not_expect_in_file(etc.security.f('docker.conf'), "@#{name} #{name}")
 

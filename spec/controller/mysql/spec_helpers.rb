@@ -98,6 +98,19 @@ module SpecHelpers
           @mysql_user_name = "tMU#{SecureRandom.hex[0..3]}"
           @mysql_db_name = "tMDB#{SecureRandom.hex[0..3]}"
         end
+
+        after :each do
+          mysql_controller.query("SHOW DATABASES LIKE 'tM%'").each do |result|
+            field_name = result.fields.first
+            result.each do |obj|
+              mysql_controller.query("DROP DATABASE #{obj[field_name]}")
+            end
+          end
+
+          mysql_controller.query("SELECT User FROM mysql.user WHERE Host = '%' and User like 'tM_%'").each do |obj|
+            mysql_controller.query("DROP DATABASE #{obj['User']}")
+          end
+        end
       end
     end
   end

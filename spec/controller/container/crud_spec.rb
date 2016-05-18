@@ -3,6 +3,7 @@ describe Superhosting::Controller::Container do
   include SpecHelpers::Controller::User
   include SpecHelpers::Controller::Container
   include SpecHelpers::Controller::Site
+  include SpecHelpers::Controller::Mysql
 
   # positive
 
@@ -48,6 +49,20 @@ describe Superhosting::Controller::Container do
     container_rename_with_exps(name: @container_name, new_name: new_name)
     user_add_exps(name: @user_name, container_name: new_name)
     admin_container_add_exps(name: new_name)
+  end
+
+  it 'rename check mysql dbs / users' do
+    container_add_with_exps(name: @container_name)
+    [@mysql_user_name, "#{@mysql_user_name}2"].each do |user_name|
+      mysql_user_add_with_exps(name: user_name, container_name: @container_name, generate: true)
+    end
+    mysql_db_add_with_exps(name: @mysql_db_name, container_name: @container_name, users: [@mysql_user_name])
+    new_name = "new#{@container_name}"
+    container_rename_with_exps(name: @container_name, new_name: new_name)
+    [@mysql_user_name, "#{@mysql_user_name}2"].each do |user_name|
+      mysql_user_add_exps(name: "#{new_name}_#{user_name}")
+    end
+    mysql_db_add_exps(name: @mysql_db_name, container_name: new_name)
   end
 
   it 'update', :docker do
@@ -297,6 +312,23 @@ describe Superhosting::Controller::Container do
     container_add_with_exps(name: @container_name, model: 'test_with_mux')
     expect(docker_api.container_image?(@container_name, test_image)).to be_falsey
     expect(docker_api.container_image?(@container_name, mux_image)).to be_truthy
+  end
+
+  it 'add@default_databases' do
+    begin
+      default_databases_mapper = config.models.test.container.default_databases
+      value = default_databases_mapper.value
+      default_databases_mapper.put!('test_database')
+
+      container_add_with_exps(name: @container_name, model: 'test')
+      expect(mysql_container_dbs_index(@container_name)).to include("#{@container_name}_test_database")
+    ensure
+      if value.nil?
+        default_databases_mapper.delete!
+      else
+        default_databases_mapper.put!(value)
+      end
+    end
   end
 
   it 'recreate@container' do

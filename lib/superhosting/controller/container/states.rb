@@ -131,6 +131,24 @@ module Superhosting
         end
       end
 
+      def install_databases(name:)
+        if (resp = existing_validation(name: name)).net_status_ok?
+          mapper = index[name][:mapper]
+
+          mysql_db_controller = controller(Mysql::Db)
+          mapper.default_databases.lines.each { |db_name| mysql_db_controller._add(name: "#{name}_#{db_name}") }
+        end
+        resp
+      end
+
+      def uninstall_databases(name:)
+        if (resp = existing_validation(name: name)).net_status_ok?
+          mysql_controller = controller(Mysql)
+          mysql_controller._drop(container_name: name)
+        end
+        resp
+      end
+
       def unconfigure(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           _each_site(name: name) do |controller, site_name, _state|

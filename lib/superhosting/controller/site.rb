@@ -164,7 +164,8 @@ module Superhosting
 
         states = {
           none: { action: :install_data, undo: :uninstall_data, next: :data_installed },
-          data_installed: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :up }
+          data_installed: { action: :install_databases, next: :databases_installed },
+          databases_installed: { action: :configure_with_apply, undo: :unconfigure_with_unapply, next: :up }
         }
 
         on_state(state_mapper: state_mapper, states: states,

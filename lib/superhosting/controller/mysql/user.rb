@@ -29,7 +29,7 @@ module Superhosting
         end
 
         def _add(name:, databases: [], generate: false)
-          container_name = name.split('_').first
+          container_name, _user_name = @mysql_controller.alternative_name(name: name)
           user_controller = controller(Controller::User)
           password = nil
 
@@ -37,7 +37,7 @@ module Superhosting
             with_dry_run do |dry_run|
               if not_existing_validation(name: name).net_status_ok?
                 password = user_controller._create_password(generate: generate)[:password]
-                @client.query("CREATE USER #{name}@'%' IDENTIFIED BY '#{password}'") unless dry_run
+                @mysql_controller.query("CREATE USER #{name}@'%' IDENTIFIED BY '#{password}'") unless dry_run
                 blk.call(code: :added)
               else
                 blk.call(code: :ok)
@@ -50,6 +50,22 @@ module Superhosting
           password if generate
         end
 
+        def _rename(name:, new_name:)
+          debug_operation(desc: { code: :mysql_user, data: { name: name } }) do |&blk|
+            with_dry_run do |dry_run|
+              container_name, _user_name = @mysql_controller.alternative_name(name: name)
+              new_container_name, _user_name = @mysql_controller.alternative_name(name: new_name)
+
+              @mysql_controller.query("RENAME USER #{name} TO #{new_name}") unless dry_run
+
+              reindex_container(container_name: container_name)
+              reindex_container(container_name: new_container_name)
+
+              blk.call(code: :renamed)
+            end
+          end
+        end
+
         def delete(name:)
           if (resp = existing_validation(name: name)).net_status_ok?
             _delete(name: name)
@@ -58,13 +74,17 @@ module Superhosting
         end
 
         def _delete(name:)
-          container_name = name.split('_').first
+          container_name, _user_name = @mysql_controller.alternative_name(name: name)
           index[name].each { |db_name| @mysql_controller._revoke(user_name: name, database_name: db_name) }
 
           debug_operation(desc: { code: :mysql_user, data: { name: name } }) do |&blk|
             with_dry_run do |dry_run|
-              @client.query("DROP USER #{name}") unless dry_run
-              blk.call(code: :dropped)
+              if existing_validation(name: name).net_status_ok?
+                @mysql_controller.query("DROP USER #{name}") unless dry_run
+                blk.call(code: :dropped)
+              else
+                blk.call(code: :ok)
+              end
             end
           end
 
