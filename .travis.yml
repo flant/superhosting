@@ -8,6 +8,7 @@ services:
 - docker
 
 before_script:
+- sudo -s source provision/mysql.sh
 - sudo -s source provision/docker.sh
 - sudo -s source provision/pam_docker.sh
 - sudo -s source provision/bootstrap.sh
