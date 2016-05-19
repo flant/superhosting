@@ -30,10 +30,18 @@ describe Superhosting::Controller::Mysql do
     end
   end
 
-  xit 'user list' do # TODO
+  it 'user list' do
+    with_container do |container_name|
+      mysql_user_add_with_exps(name: @mysql_user_name, container_name: container_name, generate: true)
+      expect(mysql_user_list_with_exps[:data].first).to include('name', 'grants')
+    end
   end
 
-  xit 'user inspect' do # TODO
+  it 'user inspect' do
+    with_container do |container_name|
+      mysql_db_add_with_exps(name: @mysql_user_name, container_name: container_name, generate: true)
+      expect(mysql_db_inspect_with_exps(name: "#{container_name}_#{@mysql_user_name}")[:data]).to include('name', 'grants')
+    end
   end
 
   it 'user delete with database' do # TODO
@@ -75,10 +83,18 @@ describe Superhosting::Controller::Mysql do
     end
   end
 
-  xit 'db list' do # TODO
+  it 'db list' do
+    with_container do |container_name|
+      mysql_db_add_with_exps(name: @mysql_db_name, container_name: container_name)
+      expect(mysql_db_list_with_exps[:data].first).to include('name', 'grants')
+    end
   end
 
-  xit 'db inspect' do # TODO
+  it 'db inspect' do
+    with_container do |container_name|
+      mysql_db_add_with_exps(name: @mysql_db_name, container_name: container_name)
+      expect(mysql_db_inspect_with_exps(name: "#{container_name}_#{@mysql_db_name}")[:data]).to include('name', 'grants')
+    end
   end
 
   # negative
@@ -90,6 +106,12 @@ describe Superhosting::Controller::Mysql do
   it 'user add with database:mysql_db_does_not_exists' do
     with_container do |container_name|
       mysql_user_add_with_exps(name: @mysql_user_name, container_name: container_name, databases: [@mysql_db_name], generate: true, code: :mysql_db_does_not_exists)
+    end
+  end
+
+  it 'user add:invalid_mysql_user_name' do
+    with_container do |container_name|
+      ["#{container_name}_#{?a*(15-container_name.length)}"].each {|user_name| mysql_user_add_with_exps(name: user_name, code: :invalid_mysql_user_name, generate: true) }
     end
   end
 end

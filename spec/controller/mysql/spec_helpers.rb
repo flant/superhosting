@@ -22,12 +22,28 @@ module SpecHelpers
         mysql_controller.user.delete(**kwargs)
       end
 
+      def mysql_user_list(**kwargs)
+        mysql_controller.user.list(**kwargs)
+      end
+
+      def mysql_user_inspect(**kwargs)
+        mysql_controller.user.inspect(**kwargs)
+      end
+
       def mysql_db_add(**kwargs)
         mysql_controller.db.add(**kwargs)
       end
 
       def mysql_db_delete(**kwargs)
         mysql_controller.db.delete(**kwargs)
+      end
+
+      def mysql_db_list(**kwargs)
+        mysql_controller.db.list(**kwargs)
+      end
+
+      def mysql_db_inspect(**kwargs)
+        mysql_controller.db.inspect(**kwargs)
       end
 
       # expectations
@@ -95,8 +111,8 @@ module SpecHelpers
 
       included do
         before :each do
-          @mysql_user_name = "tMU#{SecureRandom.hex[0..3]}"
-          @mysql_db_name = "tMDB#{SecureRandom.hex[0..3]}"
+          @mysql_user_name = "tMU#{SecureRandom.hex[0..2]}"
+          @mysql_db_name = "tMDB#{SecureRandom.hex[0..2]}"
         end
 
         after :each do

@@ -2,7 +2,7 @@ module Superhosting
   module Controller
     class Mysql
       class Db < Base
-        def list(container_name:)
+        def list(container_name: nil)
           if container_name.nil?
             databases = index
           elsif (resp = @container_controller.available_validation(name: container_name)).net_status_ok?

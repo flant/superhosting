@@ -20,11 +20,11 @@ module Superhosting
         end
 
         def container_users(container_name:)
-          self.class.index.select { |u| u.start_with? container_name }
+          self.class.index.select { |u| u.start_with? "#{container_name}_" }
         end
 
         def container_grants(container_name:)
-          self.class.grant_index.select { |u| u.start_with? container_name }
+          self.class.grant_index.select { |u| u.start_with? "#{container_name}_" }
         end
 
         def reindex

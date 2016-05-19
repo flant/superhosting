@@ -2,7 +2,7 @@ module Superhosting
   module Controller
     class Mysql
       class User
-        NAME_FORMAT = /^[a-zA-Z0-9._-]{1,16}$/
+        NAME_FORMAT = /^[a-zA-Z0-9._-]{1,15}$/
 
         def adding_validation(name:)
           resp = name_validation(name: name)

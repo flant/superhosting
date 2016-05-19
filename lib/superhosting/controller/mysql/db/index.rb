@@ -12,7 +12,7 @@ module Superhosting
         end
 
         def container_dbs(container_name:)
-          self.class.index.select { |u| u.start_with? container_name }
+          self.class.index.select { |u| u.start_with? "#{container_name}_" }
         end
 
         def index
