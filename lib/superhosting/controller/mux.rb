@@ -2,7 +2,7 @@ module Superhosting
   module Controller
     class Mux < Base
       def _delete(name:)
-        lib_mapper = index[name][:mapper].lib
+        lib_mapper = index[name].mapper.lib
 
         states = {
           up: { action: :stop, undo: :run, next: :configuration_applied },
@@ -25,12 +25,12 @@ module Superhosting
 
       def update(name:)
         if (resp = useable_validation(name: name)).net_status_ok?
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
           @container_controller._update(name: mapper.container_name, docker_options: @container_controller._load_docker_options(lib_mapper: mapper.lib))
           @docker_api.image_pull(mapper.container.docker.image.value)
           index_mux_containers(name: name).each do |container_name|
             @container_controller.instance_eval do
-              docker_options = _load_docker_options(lib_mapper: index[container_name][:mapper].lib)
+              docker_options = _load_docker_options(lib_mapper: index[container_name].lib_mapper)
               _update(name: container_name, docker_options: docker_options, with_pull: false)
             end
           end
@@ -49,7 +49,7 @@ module Superhosting
 
       def inspect(name:, inheritance: false)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
           if inheritance
             data = separate_inheritance(mapper) do |base, inheritors|
               ([base] + inheritors).reverse.inject([]) do |total, m|
@@ -67,7 +67,7 @@ module Superhosting
 
       def options(name:, inheritance: false)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
           if inheritance
             data = separate_inheritance(mapper) do |base, inheritors|
               ([base] + inheritors).reverse.inject([]) do |total, m|
@@ -85,7 +85,7 @@ module Superhosting
 
       def inheritance(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          inheritance = index[name][:mapper].inheritance
+          inheritance = index[name].mapper.inheritance
           { data: inheritance.reverse.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } } }
         else
           resp
@@ -94,7 +94,7 @@ module Superhosting
 
       def _reconfigure(name:)
         set_state(state: 'none', state_mapper: state(name: name))
-        lib_mapper = index[name][:mapper].lib
+        lib_mapper = index[name].mapper.lib
 
         states = {
           none: { action: :install_data, undo: :uninstall_data, next: :data_installed },

@@ -11,7 +11,7 @@ module Superhosting
         def tree
           if (resp = @container_controller.existing_validation(name: @container_name)).net_status_ok?
             model_controller = controller(Controller::Model)
-            tree = model_controller.tree(name: @container_controller.index[@container_name][:model_name]).net_status_ok![:data]
+            tree = model_controller.tree(name: @container_controller.index[@container_name].model_name).net_status_ok![:data]
             { data: tree }
           else
             resp
@@ -20,7 +20,7 @@ module Superhosting
 
         def name
           if (resp = @container_controller.existing_validation(name: @container_name)).net_status_ok?
-            { data: @container_controller.index[@container_name][:model_name] }
+            { data: @container_controller.index[@container_name].model_name }
           else
             resp
           end

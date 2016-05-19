@@ -10,13 +10,13 @@ module Superhosting
       end
 
       def _recreate_docker(*docker_options, name:)
-        docker_options ||= _collect_docker_options(mapper: index[name][:mapper]).net_status_ok!
+        docker_options ||= _collect_docker_options(mapper: index[name].inheritance_mapper).net_status_ok!
         _delete_docker(name: name)
         _run_docker(*docker_options, name: name)
       end
 
       def _run_docker(*docker_options, name:)
-        docker_options = _collect_docker_options(mapper: index[name][:mapper]).net_status_ok![:data] if docker_options.empty?
+        docker_options = _collect_docker_options(mapper: index[name].inheritance_mapper).net_status_ok![:data] if docker_options.empty?
         @docker_api.container_run(name, *docker_options)
       end
 

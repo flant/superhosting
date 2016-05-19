@@ -57,7 +57,7 @@ describe Superhosting::Controller::Container do
       mysql_user_add_with_exps(name: user_name, container_name: @container_name, generate: true)
     end
     mysql_db_add_with_exps(name: @mysql_db_name, container_name: @container_name, users: [@mysql_user_name])
-    new_name = "new#{@container_name}"
+    new_name = "n#{@container_name}"
     container_rename_with_exps(name: @container_name, new_name: new_name)
     [@mysql_user_name, "#{@mysql_user_name}2"].each do |user_name|
       mysql_user_add_exps(name: "#{new_name}_#{user_name}")

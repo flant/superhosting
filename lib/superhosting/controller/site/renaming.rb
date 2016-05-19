@@ -13,7 +13,7 @@ module Superhosting
       end
 
       def copy(mapper:, new_name:)
-        new_mapper = index[new_name][:mapper]
+        new_mapper = index[new_name].mapper
 
         mapper.etc.rename!(new_mapper.etc.path)
         mapper.lib.rename!(new_mapper.lib.path)
@@ -23,7 +23,7 @@ module Superhosting
       end
 
       def undo_copy(mapper:, new_name:)
-        new_mapper = index[new_name][:mapper]
+        new_mapper = index[new_name].mapper
 
         unless mapper.nil?
           new_mapper.etc.safe_rename!(mapper.etc.path)
@@ -43,8 +43,8 @@ module Superhosting
       end
 
       def keep_name_as_alias(name:, new_name:, keep_name_as_alias:)
-        new_mapper = index[new_name][:mapper]
-        new_container_mapper = index[new_name][:container_mapper]
+        new_mapper = index[new_name].mapper
+        new_container_mapper = index[new_name].container_mapper
 
         new_mapper.aliases_mapper.append_line!(name) if keep_name_as_alias
         reindex_container_sites(container_name: new_container_mapper.name)

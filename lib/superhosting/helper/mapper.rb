@@ -72,7 +72,7 @@ module Superhosting
 
       def inspect(name:, inheritance: false, erb: false)
         if inheritance
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
           separate_inheritance(mapper) do |base, inheritors|
             ([base] + inheritors).reverse.inject([]) do |total, m|
               total << { 'type' => mapper_type(m.parent), 'name' => mapper_name(m), 'options' => get_mapper_options(m, erb: erb) }
@@ -84,7 +84,7 @@ module Superhosting
       end
 
       def options(name:, inheritance: false, erb: false)
-        mapper = index[name][:mapper]
+        mapper = index[name].mapper
         mapper_type = mapper_type(mapper)
         if inheritance
           separate_inheritance(mapper) do |base, inheritors|
@@ -101,7 +101,7 @@ module Superhosting
       end
 
       def inheritance(name:)
-        mapper = index[name][:mapper]
+        mapper = index[name].mapper
         mapper.inheritance.reverse.map { |m| { 'type' => mapper_type(m.parent), 'name' => mapper_name(m) } }
       end
     end

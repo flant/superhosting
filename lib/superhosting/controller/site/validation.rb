@@ -18,7 +18,7 @@ module Superhosting
       end
 
       def alias_existing_validation(name:, alias_name:)
-        index[name][:mapper].aliases.include?(alias_name)
+        index[name].mapper.aliases.include?(alias_name)
       end
 
       def not_existing_validation(name:)
@@ -27,7 +27,7 @@ module Superhosting
 
       def available_validation(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          resp = (index[name][:state_mapper].value == 'up') ? {} : { error: :logical_error, code: :site_is_not_available, data: { name: name } }
+          resp = (index[name].state_mapper.value == 'up') ? {} : { error: :logical_error, code: :site_is_not_available, data: { name: name } }
         end
         resp
       end

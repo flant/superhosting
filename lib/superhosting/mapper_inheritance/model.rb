@@ -11,8 +11,8 @@ module Superhosting
 
           type = case type_ = mapper_type(mapper)
             when 'container', 'site'
-              raise NetStatus::Exception, error: :input_error, code: :model_does_not_exists, data: { name: mapper.name } unless mapper.dir?
-              raise NetStatus::Exception, error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: mapper.name } if mapper.abstract?
+              raise NetStatus::Exception, error: :input_error, code: :model_does_not_exists, data: { name: model_mapper.name } unless model_mapper.dir?
+              raise NetStatus::Exception, error: :logical_error, code: :base_model_should_not_be_abstract, data: { name: model_mapper.name } if model_mapper.abstract?
               type_
             when 'model'
               nil

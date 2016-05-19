@@ -28,9 +28,9 @@ module Superhosting
       end
 
       def _inspect(name:, erb: false)
-        mapper = index[name][:mapper]
+        mapper = index[name].mapper
         actual_name = mapper.name
-        container_mapper = index[actual_name][:container_mapper]
+        container_mapper = index[actual_name].container_mapper
         alias_controller = controller(Alias, name: actual_name)
         {
           'name' => actual_name,
@@ -67,7 +67,7 @@ module Superhosting
 
       def name(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          { data: index[name][:mapper].name }
+          { data: index[name].name }
         else
           resp
         end
@@ -75,7 +75,7 @@ module Superhosting
 
       def container(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          { data: index[name][:container_mapper].name }
+          { data: index[name].container_mapper.name }
         else
           resp
         end
@@ -83,8 +83,8 @@ module Superhosting
 
       def delete(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          lib_sites_mapper = index[name][:container_mapper].lib.sites
-          actual_name = index[name][:mapper].name
+          lib_sites_mapper = index[name].container_mapper.lib.sites
+          actual_name = index[name].name
           state_mapper = lib_sites_mapper.f(actual_name)
 
           states = {
@@ -115,8 +115,8 @@ module Superhosting
                         "#{name}_to_#{new_name}"
                       end
         state_mapper = @lib.process_status.f(status_name).create!
-        container_name = index[name][:container_mapper].name
-        mapper = index[name][:mapper]
+        container_name = index[name].container_mapper.name
+        mapper = index[name].mapper
         actual_name = mapper.name
         new_container_name ||= container_name
         new_name ||= actual_name
@@ -147,18 +147,18 @@ module Superhosting
 
       def reconfigure(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          actual_name = index[name][:mapper].name
+          actual_name = index[name].name
           set_state(state: :none, state_mapper: state(name: actual_name))
-          _reconfigure(name: actual_name, container_name: index[name][:container_mapper].name)
+          _reconfigure(name: actual_name, container_name: index[name].container_mapper.name)
         end
         resp
       end
 
       def _reconfigure(name:, **kwargs)
         lib_sites_mapper = if (container_name = kwargs[:container_name])
-                             @container_controller.index[container_name][:mapper].lib.sites
+                             @container_controller.index[container_name].mapper.lib.sites
                            else
-                             index[name][:container_mapper].lib.sites
+                             index[name].container_mapper.lib.sites
                            end
         state_mapper = lib_sites_mapper.f(name)
 

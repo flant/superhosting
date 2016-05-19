@@ -4,7 +4,7 @@ module Superhosting
       include Helper::States
 
       def stop_old_mux(name:, model:)
-        if (existing_validation(name: name)).net_status_ok? && model && index[name][:model_name] != model
+        if (existing_validation(name: name)).net_status_ok? && model && index[name].model_name != model
           stop_mux(name: name)
         else
           {}
@@ -22,7 +22,7 @@ module Superhosting
 
           # config
           reindex_container(name: name)
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
 
           # lib
           mapper.lib.config.create!
@@ -37,7 +37,7 @@ module Superhosting
 
       def uninstall_data(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
 
           # lib
           safe_unlink!(mapper.web.path)
@@ -58,11 +58,11 @@ module Superhosting
 
       def install_users(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = index[name][:mapper]
+          inheritance_mapper = index[name].inheritance_mapper
 
           # user / group
-          mapper.lib.config.f('etc-group').append_line!('root:x:0:')
-          mapper.lib.config.f('etc-passwd').append_line!('root:x:0:0:root:/root:/bin/bash')
+          inheritance_mapper.lib.config.f('etc-group').append_line!('root:x:0:')
+          inheritance_mapper.lib.config.f('etc-passwd').append_line!('root:x:0:0:root:/root:/bin/bash')
 
           user_controller = controller(User)
           user_controller._group_add(name: name)
@@ -78,13 +78,13 @@ module Superhosting
                          user.gid
                        end
 
-            mapper.lib.config.f('etc-group').append_line!("#{name}:x:#{user_gid}:") unless user_gid.nil?
+            inheritance_mapper.lib.config.f('etc-group').append_line!("#{name}:x:#{user_gid}:") unless user_gid.nil?
           end
 
           # system users
           current_system_users = user_controller._group_get_system_users(name: name)
-          add_users = mapper.system_users.lines - current_system_users
-          del_users = current_system_users - mapper.system_users.lines
+          add_users = inheritance_mapper.system_users.lines - current_system_users
+          del_users = current_system_users - inheritance_mapper.system_users.lines
           add_users.each do |u|
             unless (resp = user_controller._add_system_user(name: u.strip, container_name: name)).net_status_ok?
               return resp
@@ -96,14 +96,14 @@ module Superhosting
             unless (resp = user_controller._del(name: user_name, group: name)).net_status_ok?
               return resp
             end
-            mapper.lib.config.f('etc-passwd').remove_line!(/^#{user_name}:.*/)
+            inheritance_mapper.lib.config.f('etc-passwd').remove_line!(/^#{user_name}:.*/)
           end
 
           # docker
           PathMapper.new('/etc/security/docker.conf').append_line!("@#{name} #{name}")
 
           # chown
-          chown_r!(name, name, mapper.lib.web.path)
+          chown_r!(name, name, inheritance_mapper.lib.web.path)
           {}
         else
           resp
@@ -112,7 +112,7 @@ module Superhosting
 
       def uninstall_users(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
 
           user_controller = controller(User)
           if (user = user_controller._get(name: name))
@@ -133,10 +133,12 @@ module Superhosting
 
       def install_databases(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
 
-          mysql_db_controller = controller(Mysql::Db)
-          mapper.default_databases.lines.each { |db_name| mysql_db_controller._add(name: "#{name}_#{db_name}") }
+          unless mapper.default_databases.nil?
+            mysql_db_controller = controller(Mysql::Db)
+            mapper.default_databases.lines.each { |db_name| mysql_db_controller._add(name: "#{name}_#{db_name}") }
+          end
         end
         resp
       end
@@ -184,8 +186,8 @@ module Superhosting
 
       def run(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = index[name][:mapper]
-          _refresh_container(mapper: mapper, docker_options: _docker_options(mapper: mapper))
+          inheritance_mapper = index[name].inheritance_mapper
+          _refresh_container(mapper: inheritance_mapper, docker_options: _docker_options(mapper: inheritance_mapper))
         else
           resp
         end
@@ -215,7 +217,7 @@ module Superhosting
       def run_mux(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           resp = {}
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
 
           if (mux_mapper = mapper.mux).file?
             mux_name = mux_mapper.value
@@ -230,7 +232,7 @@ module Superhosting
 
       def stop_mux(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
 
           if (mux_mapper = mapper.mux).file?
             mux_name = mux_mapper.value
@@ -251,10 +253,10 @@ module Superhosting
       end
 
       def _config_options(name:, **_kwargs)
-        mapper = index[name][:mapper]
+        mapper = index[name].mapper
         model = mapper.model(default: @config.default_model)
         model_mapper = @config.models.f(:"#{model}")
-        mux_mapper = index[name][:mux_mapper]
+        mux_mapper = index[name].mux_mapper
         registry_mapper = mapper.lib.registry.f('container')
         super.merge!(container: mapper, mux: mux_mapper, model: model_mapper, registry_mapper: registry_mapper)
       end
@@ -263,7 +265,7 @@ module Superhosting
         site_controller = controller(Superhosting::Controller::Site)
         site_controller.reindex_container_sites(container_name: name)
         site_controller.container_sites(container_name: name).each do |site_name, index|
-          yield site_controller, site_name, index[:state]
+          yield site_controller, site_name, index.state_mapper
         end
       end
     end

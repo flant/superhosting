@@ -47,7 +47,7 @@ module Superhosting
 
       def state(name:)
         existing_validation(name: name).net_status_ok!
-        index[name][:state_mapper]
+        index[name].state_mapper
       end
 
       def set_state(state_mapper:, state:)

@@ -7,10 +7,10 @@ module Superhosting
           @site_controller = controller(Site)
           @site_controller.existing_validation(name: name).net_status_ok!
 
-          site = @site_controller.index[name]
-          @site_mapper = site[:mapper]
-          @aliases_mapper = site[:mapper].aliases_mapper
-          @container_mapper = site[:container_mapper]
+          site_item = @site_controller.index[name]
+          @site_mapper = site_item.mapper
+          @aliases_mapper = site_item.aliases_mapper
+          @container_mapper = site_item.container_mapper
         end
 
         def list

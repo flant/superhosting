@@ -9,6 +9,64 @@ module Superhosting
         index
       end
 
+      class IndexItem
+        attr_accessor :name, :container_name, :controller
+
+        def initialize(name:, container_name:, controller:)
+          self.name = name
+          self.container_name = container_name
+          self.controller = controller
+        end
+
+        def container_item
+          @container_item ||= controller.controller(Container).index[container_name]
+        end
+
+        def container_mapper
+          container_item.mapper
+        end
+
+        def etc_mapper
+          @etc_mapper ||= container_item.etc_mapper.sites.f(name)
+        end
+
+        def lib_mapper
+          container_item.lib_mapper.web.f(name)
+        end
+
+        def web_mapper
+          container_item.web_mapper.f(name)
+        end
+
+        def state_mapper
+          container_item.lib_mapper.sites.f(name).state
+        end
+
+        def mapper
+          @mapper ||= begin
+            mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
+            mapper.erb_options = { site: mapper, container: mapper, etc: controller.config, lib: controller.lib }
+            mapper
+          end
+        end
+
+        def inheritance_mapper
+          @inheritance_mapper ||= begin
+            model_mapper = controller.config.models.f(container_item.model_name)
+            mapper.etc_mapper = MapperInheritance::Model.set_inheritance(model_mapper, etc_mapper)
+            mapper
+          end
+        end
+
+        def aliases_mapper
+          lib_mapper.parent.parent.sites.f(name).aliases
+        end
+
+        def names
+          @names ||= [name] + aliases_mapper.lines
+        end
+      end
+
       def index
         self.class.index ||= reindex
       end
@@ -27,42 +85,30 @@ module Superhosting
       end
 
       def alias?(name:)
-        index[name][:mapper].name != name
+        index[name].name != name
       end
 
       def container_sites(container_name:)
-        index.select { |k, v| v[:container_mapper].name == container_name && !alias?(name: k) }
+        index.select { |k, v| v.container_mapper.name == container_name && !alias?(name: k) }
       end
 
       def reindex_site(name:, container_name:)
         self.class.index ||= {}
-        self.class.index[name][:names].each { |n| self.class.index.delete(n) } if self.class.index[name]
+        self.class.index[name].names.each { |n| self.class.index.delete(n) } if self.class.index[name]
 
-        container_mapper = @container_controller.index[container_name][:mapper]
-        model_name = @container_controller.index[container_name][:model_name]
-        etc_mapper = container_mapper.sites.f(name)
-        lib_mapper = container_mapper.lib.web.f(name)
-        web_mapper = container_mapper.web.f(name)
-        state_mapper = container_mapper.lib.sites.f(name).state
+        index_item = IndexItem.new(name: name, container_name: container_name, controller: self)
 
-        if etc_mapper.nil?
+        if index_item.etc_mapper.nil?
           self.class.index.delete(name)
           return
         end
 
-        model_mapper = @config.models.f(model_name)
-        etc_mapper = MapperInheritance::Model.set_inheritance(model_mapper, etc_mapper)
-
-        mapper = CompositeMapper.new(etc_mapper: etc_mapper, lib_mapper: lib_mapper, web_mapper: web_mapper)
-        etc_mapper.erb_options = { site: mapper, container: mapper, etc: @config, lib: @lib }
-
-        if self.class.index.key?(name) && self.class.index[name][:mapper].path != mapper.path
+        if self.class.index.key?(name) && self.class.index[name].etc_mapper.path != index_item.etc_mapper.path
           raise NetStatus::Exception, code: :container_site_name_conflict,
-                                      data: { site1: self.class.index[name][:mapper].path, site2: mapper.path }
+                data: { site1: self.class.index[name].etc_mapper.path.to_s, site2: index_item.etc_mapper.path.to_s }
         end
 
-        names = ([mapper.name] + mapper.aliases)
-        names.each { |n| self.class.index[n] = { mapper: mapper, container_mapper: container_mapper, state_mapper: state_mapper, names: names } }
+        index_item.names.each { |n| self.class.index[n] = index_item }
       end
     end
   end

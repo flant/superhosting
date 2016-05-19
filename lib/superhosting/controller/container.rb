@@ -10,7 +10,7 @@ module Superhosting
         containers = []
         @config.containers.grep_dirs.map do |n|
           name = n.name
-          containers << _inspect(name: name) if index.key?(name) && index[name][:mapper].lib.state.file?
+          containers << _inspect(name: name) if index.key?(name) && index[name].mapper.lib.state.file?
         end
         containers
       end
@@ -24,15 +24,15 @@ module Superhosting
       end
 
       def _inspect(name:, erb: false)
-        mapper = index[name][:mapper]
-        model_name = index[name][:model_name]
+        inheritance_mapper = index[name].inheritance_mapper
+        model_name = index[name].model_name
         user_controller = controller(User)
         {
           'name' => name,
           'state' => state(name: name).value,
           'model' => model_name,
           'users' => user_controller._list(container_name: name),
-          'options' => get_mapper_options(mapper, erb: erb)
+          'options' => get_mapper_options(inheritance_mapper, erb: erb)
         }
       end
 
@@ -81,7 +81,7 @@ module Superhosting
 
       def update(name:)
         if (resp = existing_validation(name: name)).net_status_ok? && @docker_api.container_exists?(name)
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
           _update(name: name, docker_options: _load_docker_options(lib_mapper: mapper.lib))
         end
         resp
@@ -96,7 +96,7 @@ module Superhosting
       def rename(name:, new_name:)
         if (resp = available_validation(name: name)).net_status_ok? &&
            (resp = adding_validation(name: new_name)).net_status_ok?
-          mapper = index[name][:mapper]
+          mapper = index[name].mapper
           status_name = "#{name}_to_#{new_name}"
           state_mapper = @lib.process_status.f(status_name).create!
           model = nil if (model = mapper.f('model').value).nil?

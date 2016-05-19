@@ -38,7 +38,7 @@ module Superhosting
 
       def available_validation(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          resp = (index[name][:mapper].lib.state.value == 'up') ? {} : { error: :logical_error, code: :container_is_not_available, data: { name: name } }
+          resp = (index[name].state_mapper.value == 'up') ? {} : { error: :logical_error, code: :container_is_not_available, data: { name: name } }
         end
         resp
       end

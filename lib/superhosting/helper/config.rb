@@ -3,13 +3,13 @@ module Superhosting
     module Config
       def unconfigure(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          registry_mapper = case mapper_type(index[name][:mapper])
+          registry_mapper = case mapper_type(index[name].mapper)
                               when 'container'
-                                index[name][:mapper].lib.registry.container
+                                index[name].mapper.lib.registry.container
                               when 'site'
-                                index[name][:container_mapper].lib.registry.sites.f(name)
+                                index[name].container_mapper.lib.registry.sites.f(name)
                               when 'mux'
-                                index[name][:mapper].lib.registry.mux
+                                index[name].mapper.lib.registry.mux
                               else
                                 raise NetStatus::Exception, error: :logical_error,
                                                             code: :mapper_type_not_supported,
@@ -55,7 +55,7 @@ module Superhosting
       end
 
       def _config(name:, on_reconfig:, on_config:)
-        mapper = index[name][:mapper]
+        mapper = index[name].mapper
         options = _config_options(name: name, on_reconfig: on_reconfig, on_config: on_config)
         registry_mapper = options.delete(:registry_mapper)
         registry_files = []

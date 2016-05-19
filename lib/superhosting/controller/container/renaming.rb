@@ -2,7 +2,7 @@ module Superhosting
   module Controller
     class Container
       def copy_etc(name:, new_name:)
-        mapper = index[name][:mapper]
+        mapper = index[name].mapper
         new_etc_mapper = mapper.etc.parent.f(new_name)
         mapper.rename!(new_etc_mapper.path)
         mapper.create!
@@ -11,7 +11,7 @@ module Superhosting
       end
 
       def undo_copy_etc(name:, new_name:)
-        mapper = index[name][:mapper]
+        mapper = index[name].mapper
         new_etc_mapper = mapper.etc.parent.f(new_name)
         new_etc_mapper.rename!(mapper.path)
         new_etc_mapper.delete!
@@ -20,8 +20,8 @@ module Superhosting
       end
 
       def copy_var(name:, new_name:)
-        mapper = index[name][:mapper]
-        new_mapper = index[new_name][:mapper]
+        mapper = index[name].mapper
+        new_mapper = index[new_name].mapper
         mapper.lib.web.rename!(new_mapper.lib.web.path)
         mapper.lib.sites.rename!(new_mapper.lib.sites.path)
         mapper.lib.registry.sites.rename!(new_mapper.lib.registry.sites.path)
@@ -34,8 +34,8 @@ module Superhosting
       end
 
       def undo_copy_var(name:, new_name:)
-        mapper = index[name][:mapper]
-        new_mapper = index[new_name][:mapper]
+        mapper = index[name].mapper
+        new_mapper = index[new_name].mapper
 
         unless new_mapper.nil?
           new_mapper.lib.web.safe_rename!(mapper.lib.web.path)
@@ -51,7 +51,7 @@ module Superhosting
       end
 
       def copy_users(name:, new_name:)
-        mapper = index[name][:mapper]
+        mapper = index[name].mapper
         user_controller = controller(User)
         container_admin_controller = admin(name: new_name)
 
