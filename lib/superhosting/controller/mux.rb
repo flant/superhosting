@@ -41,7 +41,7 @@ module Superhosting
       def tree(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           mapper = @config.muxs.f(name)
-          { data: MapperInheritance::Mux.inheritors_tree(mapper, mux: true)[name] }
+          { data: MapperInheritance::Mux.tree(mapper)[name] }
         else
           resp
         end

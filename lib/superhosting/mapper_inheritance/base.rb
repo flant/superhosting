@@ -46,7 +46,7 @@ module Superhosting
         inheritors.each do |inheritor|
           type_dir_mapper = type.nil? ? inheritor : inheritor.f(type)
           type_dir_mapper.changes_overlay = mapper
-          mapper << type_dir_mapper
+          mapper << type_dir_mapper if mapper != type_dir_mapper
         end
         mapper
       end

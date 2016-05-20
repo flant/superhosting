@@ -21,7 +21,7 @@ module Superhosting
 
       def tree(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          { data: MapperInheritance::Model.inheritors_tree(@config.models.f(name))[name] }
+          { data: MapperInheritance::Model.tree(@config.models.f(name))[name] }
         else
           resp
         end

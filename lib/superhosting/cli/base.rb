@@ -79,11 +79,12 @@ module Superhosting
         net_status ||= {}
 
         raise Error::Controller, net_status unless net_status[:error].nil?
-        debug('Done!')
 
         unless (data = net_status[:data]).nil?
           @node_class.after_action(data, config) if @node_class.respond_to? :after_action
         end
+
+        debug('Done!')
       rescue StandardError => e
         raise Error::Controller, e.net_status
       end

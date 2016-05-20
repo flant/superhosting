@@ -20,6 +20,12 @@ module Superhosting
           inheritors.unshift(mapper) unless not_save
           inheritors
         end
+
+        def tree(mapper)
+          @muxs_mapper = mapper.parent
+          @models_mapper = @muxs_mapper.parent.muxs
+          inheritors_tree(mapper, mux: true)
+        end
       end
     end
   end
