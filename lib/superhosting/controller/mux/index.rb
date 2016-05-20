@@ -18,6 +18,10 @@ module Superhosting
           self.controller = controller
         end
 
+        def inheritance_mapper
+          mapper
+        end
+
         def mapper
           @mapper ||= begin
             mapper = CompositeMapper::Mux.new(etc_mapper: MapperInheritance::Mux.set_inheritance(controller.config.muxs.f(name)),

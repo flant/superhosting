@@ -28,19 +28,19 @@ module Superhosting
 
       def install_databases(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          inheritance_mapper = index[name].inheritance_mapper
+          mapper = index[name].inheritance_mapper
           container_name = index[name].container_mapper.name
 
-          unless inheritance_mapper.default_databases.nil?
+          unless mapper.default_databases.nil?
             mysql_db_controller = controller(Mysql::Db)
-            inheritance_mapper.default_databases.lines.each { |db_name| mysql_db_controller._add(name: "#{container_name}_#{db_name}") }
+            mapper.default_databases.lines.each { |db_name| mysql_db_controller._add(name: "#{container_name}_#{db_name}") }
           end
         end
         resp
       end
 
       def _config_options(name:, on_reconfig:, on_config:)
-        inheritance_mapper = index[name].inheritance_mapper
+        mapper = index[name].inheritance_mapper
         container_mapper = index[name].container_item.inheritance_mapper
         registry_mapper = container_mapper.lib.registry.sites.f(name)
 
@@ -49,7 +49,7 @@ module Superhosting
           on_reconfig: on_reconfig,
           on_config: on_config
         ).merge!(
-          site: inheritance_mapper,
+          site: mapper,
           registry_mapper: registry_mapper
         )
       end

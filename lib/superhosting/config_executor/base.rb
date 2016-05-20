@@ -36,6 +36,7 @@ module Superhosting
 
       def touch(path, **options)
         return unless @on_config
+        mkdir(Pathname.new(path).dirname, **options)
         touch!(path)
         set_file_attributes(path, options)
         registry_files << path.to_s

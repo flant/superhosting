@@ -8,9 +8,8 @@ module Superhosting
 
       def _list
         containers = []
-        @config.containers.grep_dirs.map do |n|
-          name = n.name
-          containers << _inspect(name: name) if index.key?(name) && index[name].mapper.lib.state.file?
+        index.keys.each do |name|
+          containers << { 'name' => name, 'state' => state(name: name).value } if index[name].state_mapper.file?
         end
         containers
       end

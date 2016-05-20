@@ -12,12 +12,13 @@ module Superhosting
       end
 
       def install_data(name:, model: nil)
-        if (model_ = model || @config.containers.f(name).f('model', default: @config.default_model)).nil?
+        etc_mapper = @config.containers.f(name)
+        if (model_ = model || etc_mapper.f('model', default: @config.default_model)).nil?
           { error: :input_error, code: :no_model_given }
         else
           # model
           return { error: :input_error, code: :model_does_not_exists, data: { name: model_ } } unless @config.models.f(model_).dir?
-          etc_mapper = @config.containers.f(name).create!
+          etc_mapper = etc_mapper.create!
           etc_mapper.model.put!(model) unless model.nil?
 
           # config
@@ -58,11 +59,11 @@ module Superhosting
 
       def install_users(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          inheritance_mapper = index[name].inheritance_mapper
+          mapper = index[name].inheritance_mapper
 
           # user / group
-          inheritance_mapper.lib.config.f('etc-group').append_line!('root:x:0:')
-          inheritance_mapper.lib.config.f('etc-passwd').append_line!('root:x:0:0:root:/root:/bin/bash')
+          mapper.lib.config.f('etc-group').append_line!('root:x:0:')
+          mapper.lib.config.f('etc-passwd').append_line!('root:x:0:0:root:/root:/bin/bash')
 
           user_controller = controller(User)
           user_controller._group_add(name: name)
@@ -78,13 +79,13 @@ module Superhosting
                          user.gid
                        end
 
-            inheritance_mapper.lib.config.f('etc-group').append_line!("#{name}:x:#{user_gid}:") unless user_gid.nil?
+            mapper.lib.config.f('etc-group').append_line!("#{name}:x:#{user_gid}:") unless user_gid.nil?
           end
 
           # system users
           current_system_users = user_controller._group_get_system_users(name: name)
-          add_users = inheritance_mapper.system_users.lines - current_system_users
-          del_users = current_system_users - inheritance_mapper.system_users.lines
+          add_users = mapper.system_users.lines - current_system_users
+          del_users = current_system_users - mapper.system_users.lines
           add_users.each do |u|
             unless (resp = user_controller._add_system_user(name: u.strip, container_name: name)).net_status_ok?
               return resp
@@ -96,14 +97,14 @@ module Superhosting
             unless (resp = user_controller._del(name: user_name, group: name)).net_status_ok?
               return resp
             end
-            inheritance_mapper.lib.config.f('etc-passwd').remove_line!(/^#{user_name}:.*/)
+            mapper.lib.config.f('etc-passwd').remove_line!(/^#{user_name}:.*/)
           end
 
           # docker
           PathMapper.new('/etc/security/docker.conf').append_line!("@#{name} #{name}")
 
           # chown
-          chown_r!(name, name, inheritance_mapper.lib.web.path)
+          chown_r!(name, name, mapper.lib.web.path)
           {}
         else
           resp
@@ -186,8 +187,8 @@ module Superhosting
 
       def run(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          inheritance_mapper = index[name].inheritance_mapper
-          _refresh_container(mapper: inheritance_mapper, docker_options: _docker_options(mapper: inheritance_mapper))
+          mapper = index[name].inheritance_mapper
+          _refresh_container(mapper: mapper, docker_options: _docker_options(mapper: mapper))
         else
           resp
         end

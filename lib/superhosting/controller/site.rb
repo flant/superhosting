@@ -12,8 +12,13 @@ module Superhosting
       def _list(container_name: nil)
         sites = []
         sites_hash = container_name.nil? ? index : container_sites(container_name: container_name)
-        sites_hash.each do |name, _index|
-          sites << _inspect(name: name) if state(name: name).file?
+        sites_hash.each do |_name, index_item|
+          actual_name = index_item.name
+          alias_controller = controller(Alias, name: actual_name)
+          sites << { 'name' => actual_name,
+                     'container' => index_item.container_mapper.name,
+                     'state' => state(name: actual_name).value,
+                     'aliases' => alias_controller._list } if state(name: actual_name).file?
         end
 
         sites

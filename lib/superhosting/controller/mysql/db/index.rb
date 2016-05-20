@@ -20,10 +20,9 @@ module Superhosting
         end
 
         def reindex
-          @config.containers.grep_dirs.each do |container_mapper|
-            reindex_container(container_name: container_mapper.name)
-          end
-          self.class.index ||= {}
+          self.class.index = {}
+          @container_controller.index.keys.each { |container_name| reindex_container(container_name: container_name) }
+          self.class.index
         end
 
         def reindex_container(container_name:)

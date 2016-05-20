@@ -55,7 +55,7 @@ module Superhosting
       end
 
       def _config(name:, on_reconfig:, on_config:)
-        mapper = index[name].mapper
+        mapper = index[name].inheritance_mapper
         options = _config_options(name: name, on_reconfig: on_reconfig, on_config: on_config)
         registry_mapper = options.delete(:registry_mapper)
         registry_files = []
