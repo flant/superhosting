@@ -68,7 +68,7 @@ module Superhosting
             up: { action: :stop, undo: :run, next: :configuration_applied },
             configuration_applied: { action: :unconfigure_with_unapply, undo: :configure_with_apply, next: :mux_runned },
             mux_runned: { action: :stop_mux, undo: :run_mux, next: :databases_installed },
-            databases_installed: { action: :uninstall_databases, undo: :run_mux, next: :users_installed },
+            databases_installed: { action: :uninstall_databases, next: :users_installed },
             users_installed: { action: :uninstall_users, next: :data_installed },
             data_installed: { action: :uninstall_data }
           }
