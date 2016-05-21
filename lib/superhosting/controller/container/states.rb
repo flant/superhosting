@@ -263,11 +263,17 @@ module Superhosting
       end
 
       def _each_site(name:)
-        site_controller = controller(Superhosting::Controller::Site)
-        site_controller.reindex_container_sites(container_name: name)
-        site_controller.container_sites(container_name: name).each do |site_name, index|
-          yield site_controller, site_name, index.state_mapper
+        if has_sites?(name: name)
+          site_controller = controller(Superhosting::Controller::Site)
+          site_controller.reindex_container_sites(container_name: name)
+          site_controller.container_sites(container_name: name).each do |site_name, index|
+            yield site_controller, site_name, index.state_mapper
+          end
         end
+      end
+
+      def has_sites?(name:)
+        !index[name].mapper.sites.empty?
       end
     end
   end

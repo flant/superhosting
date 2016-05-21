@@ -26,9 +26,11 @@ module Superhosting
         mapper.lib.sites.rename!(new_mapper.lib.sites.path)
         mapper.lib.registry.sites.rename!(new_mapper.lib.registry.sites.path)
 
-        site_controller = controller(Site)
-        site_controller.reindex_container_sites(container_name: new_name)
-        site_controller.reindex_container_sites(container_name: name)
+        if has_sites?(name: name)
+          site_controller = controller(Site)
+          site_controller.reindex_container_sites(container_name: new_name)
+          site_controller.reindex_container_sites(container_name: name)
+        end
 
         {}
       end
@@ -43,9 +45,11 @@ module Superhosting
           new_mapper.lib.registry.sites.safe_rename!(mapper.lib.registry.sites.path)
         end
 
-        site_controller = controller(Site)
-        site_controller.reindex_container_sites(container_name: name)
-        site_controller.reindex_container_sites(container_name: new_name)
+        if has_sites?(name: name)
+          site_controller = controller(Site)
+          site_controller.reindex_container_sites(container_name: name)
+          site_controller.reindex_container_sites(container_name: new_name)
+        end
 
         {}
       end

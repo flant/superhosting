@@ -87,6 +87,7 @@ module Superhosting
         indent_step
 
         status = :failed
+        a = Time.new
         resp = yield
         status = :ok
 
@@ -94,6 +95,7 @@ module Superhosting
       rescue StandardError => _e
         raise
       ensure
+        debug(Time.new - a) if __debug
         debug(desc: { code: status })
         self.indent = old
       end
