@@ -7,7 +7,7 @@ GIT
 
 GIT
   remote: https://github.com/flant/path_mapper.git
-  revision: e4cd308409039af66fa89b67a7ecec4476a73fc6
+  revision: a9308e701f8cecda0db5bef45ef8c34192ce6413
   specs:
     path_mapper (0.0.3)
       diffy (~> 3.1)
@@ -43,7 +43,7 @@ GEM
     backports (3.6.8)
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
-    byebug (9.0.3)
+    byebug (9.0.4)
     codeclimate-test-reporter (0.5.0)
       simplecov (>= 0.7.1, < 1.0.0)
     coderay (1.1.1)
@@ -109,6 +109,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.4.0)
     rspec-support (3.4.1)
+    ruby-prof (0.15.9)
     simplecov (0.11.2)
       docile (~> 1.1.0)
       json (~> 1.8)
@@ -148,8 +149,9 @@ DEPENDENCIES
   pry-stack_explorer (>= 0.4.9.2, < 1.0)
   rake (~> 10.0)
   rspec (~> 3.4, >= 3.4.0)
+  ruby-prof (~> 0.15.9)
   superhosting!
   travis (~> 1.8, >= 1.8.2)
 
 BUNDLED WITH
-   1.11.2
+   1.12.3
