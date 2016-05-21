@@ -81,7 +81,7 @@ describe Superhosting::Controller::Container do
 
   it 'list' do
     with_container do |_container_name|
-      expect(container_list_with_exps[:data].first).to include('name', 'state', 'model', 'options', 'users')
+      expect(container_list_with_exps[:data].first).to include('name', 'state')
     end
   end
 

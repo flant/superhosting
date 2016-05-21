@@ -3,6 +3,11 @@ module Superhosting
     class Container
       class << self; attr_accessor :index end
 
+      def initialize(**kwargs)
+        super
+        index
+      end
+
       class IndexItem
         attr_reader :name, :controller
 
@@ -61,11 +66,6 @@ module Superhosting
         def model_name
           etc_mapper.f('model', default: controller.config.default_model).value
         end
-      end
-
-      def initialize(**kwargs)
-        super
-        index
       end
 
       def index

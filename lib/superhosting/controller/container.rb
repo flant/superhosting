@@ -8,9 +8,7 @@ module Superhosting
 
       def _list
         containers = []
-        index.keys.each do |name|
-          containers << { 'name' => name, 'state' => state(name: name).value } if index[name].state_mapper.file?
-        end
+        index.each { |name, index_item| containers << { 'name' => name, 'state' => index_item.state_mapper.value } }
         containers
       end
 
@@ -23,12 +21,13 @@ module Superhosting
       end
 
       def _inspect(name:, erb: false)
-        inheritance_mapper = index[name].inheritance_mapper
-        model_name = index[name].model_name
+        index_item = index[name]
+        inheritance_mapper = index_item.inheritance_mapper
+        model_name = index_item.model_name
         user_controller = controller(User)
         {
           'name' => name,
-          'state' => state(name: name).value,
+          'state' => index_item.state_mapper.value,
           'model' => model_name,
           'users' => user_controller._list(container_name: name),
           'options' => get_mapper_options(inheritance_mapper, erb: erb)

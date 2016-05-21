@@ -132,7 +132,7 @@ describe Superhosting::Controller::Site do
   it 'list' do
     with_container do |container_name|
       with_site do |_site_name|
-        expect(site_list_with_exps(container_name: container_name)[:data].first).to include('name', 'state', 'aliases', 'options')
+        expect(site_list_with_exps(container_name: container_name)[:data].first).to include('name', 'state', 'aliases')
       end
     end
   end
