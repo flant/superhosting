@@ -41,7 +41,7 @@ module Superhosting
       end
 
       def index
-        self.class.index ||= reindex
+        self.class.index ||= with_profile('mux_index') { reindex }
       end
 
       def reindex
@@ -54,7 +54,7 @@ module Superhosting
         end
 
         @container_controller.index.each do |container_name, container_index_item|
-          next unless (mux_mapper = container_index_item.mapper.mux).file?
+          next unless (mux_mapper = container_index_item.inheritance_mapper.mux).file?
           name = mux_mapper.value
           if @container_controller.running_validation(name: container_name).net_status_ok?
             index_push_container(name, container_name)

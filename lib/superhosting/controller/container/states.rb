@@ -218,7 +218,7 @@ module Superhosting
       def run_mux(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
           resp = {}
-          mapper = index[name].mapper
+          mapper = index[name].inheritance_mapper
 
           if (mux_mapper = mapper.mux).file?
             mux_name = mux_mapper.value
@@ -233,7 +233,7 @@ module Superhosting
 
       def stop_mux(name:)
         if (resp = existing_validation(name: name)).net_status_ok?
-          mapper = index[name].mapper
+          mapper = index[name].inheritance_mapper
 
           if (mux_mapper = mapper.mux).file?
             mux_name = mux_mapper.value

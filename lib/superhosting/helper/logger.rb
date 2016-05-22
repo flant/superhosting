@@ -1,6 +1,13 @@
 module Superhosting
   module Helper
     module Logger
+      def with_profile(label = 'time')
+        a = Time.now
+        res = yield
+        debug "#{label}: #{Time.now - a}" if __debug
+        res
+      end
+
       def __logger
         Thread.current[:logger]
       end

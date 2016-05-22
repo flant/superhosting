@@ -17,15 +17,15 @@ module Superhosting
         end
 
         def etc_mapper
-          @etc_mapper ||= controller.config.containers.f(name)
+          @etc_mapper ||= PathMapper.new(controller.config.path.join('containers', name))
         end
 
         def lib_mapper
-          controller.lib.containers.f(name)
+          PathMapper.new(controller.lib.path.join('containers', name))
         end
 
         def web_mapper
-          PathMapper.new('/web').f(name)
+          PathMapper.new("/web/#{name}")
         end
 
         def mapper
@@ -69,7 +69,7 @@ module Superhosting
       end
 
       def index
-        self.class.index ||= reindex
+        self.class.index ||= with_profile('container_index') { reindex }
       end
 
       def reindex

@@ -3,10 +3,8 @@ module Superhosting
     class Model
       def index
         index = {}
-        @container_controller._list.each do |container_info|
-          container_name = container_info['name']
-          model = @container_controller.index[container_name].model_name
-          (index[model] ||= []) << container_name
+        @container_controller.index.each do |container_name, container_index|
+          (index[container_index.model_name] ||= []) << container_name
         end
         index
       end

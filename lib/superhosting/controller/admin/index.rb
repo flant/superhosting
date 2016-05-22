@@ -10,7 +10,7 @@ module Superhosting
       end
 
       def index
-        self.class.index ||= reindex
+        self.class.index ||=  with_profile('admin_index') { reindex }
       end
 
       def reindex

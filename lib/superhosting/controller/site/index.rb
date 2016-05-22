@@ -27,11 +27,11 @@ module Superhosting
         end
 
         def etc_mapper
-          @etc_mapper ||= container_item.etc_mapper.sites.f(name)
+          @etc_mapper ||= PathMapper.new(container_item.etc_mapper.path.join('sites', name))
         end
 
         def lib_mapper
-          container_item.lib_mapper.web.f(name)
+          PathMapper.new(container_item.lib_mapper.path.join('web', name))
         end
 
         def web_mapper
@@ -39,7 +39,7 @@ module Superhosting
         end
 
         def state_mapper
-          container_item.lib_mapper.sites.f(name).state
+          PathMapper.new(container_item.lib_mapper.path.join('sites', name, 'state'))
         end
 
         def mapper
@@ -68,7 +68,7 @@ module Superhosting
       end
 
       def index
-        self.class.index ||= reindex
+        self.class.index ||= with_profile('site_index') { reindex }
       end
 
       def reindex
