@@ -21,7 +21,7 @@ module Superhosting
 
       def reindex_admin(name:)
         self.class.index ||= {}
-        if @admins_mapper.f(name).nil?
+        if self.class.index.key?(name) && @admins_mapper.f(name).nil?
           self.class.index.delete(name)
         else
           admin_container_controller = controller(Admin::Container, name: name)

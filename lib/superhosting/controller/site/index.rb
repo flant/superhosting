@@ -97,7 +97,7 @@ module Superhosting
 
         index_item = IndexItem.new(name: name, container_name: container_name, controller: self)
 
-        if index_item.etc_mapper.nil?
+        if self.class.index.key?(name) && index_item.etc_mapper.nil?
           self.class.index.delete(name)
           return
         end
