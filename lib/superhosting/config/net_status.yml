@@ -114,6 +114,7 @@ en:
     image_pull:
       pulled: "docker pull '%{name}': PULLED"
       not_found: "docker pull '%{name}': NOT FOUND"
+      failed: "docker pull '%{name}': FAILED"
     command:
       failed: "Command '%{command}': executing... FAILED"
       ok: "Command '%{command}': executing... OK"
