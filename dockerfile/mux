@@ -1,6 +1,8 @@
 FROM ubuntu:14.04
 MAINTAINER flant <256@flant.com>
 
-RUN apt-get update -q
-RUN apt-get install -y supervisor
-RUN apt-get install -y php5-fpm
+RUN apt-get update -q && \
+    apt-get install -y supervisor && \
+    apt-get install -y php5-fpm && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
