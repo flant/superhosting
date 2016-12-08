@@ -5,15 +5,16 @@ language: ruby
 rvm:
 - 2.2.1
 services:
-- docker
+- mysql
 
 before_script:
-- sudo -s source provision/mysql.sh
+- echo "USE mysql;\nUPDATE user SET password=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
+- sudo -s source provision/install_docker.sh
 - sudo -s source provision/docker.sh
 - sudo -s source provision/pam_docker.sh
 - sudo -s source provision/bootstrap.sh
 script:
-- sudo -E su --preserve-environment -lc 'bundle exec rake spec'
+- rvmsudo -sE bundle exec rake spec
 
 deploy:
   provider: rubygems
