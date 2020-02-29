@@ -95,7 +95,7 @@ GEM
     pusher-client (0.6.2)
       json
       websocket (~> 1.0)
-    rake (10.5.0)
+    rake (13.0.1)
     rspec (3.5.0)
       rspec-core (~> 3.5.0)
       rspec-expectations (~> 3.5.0)
@@ -146,7 +146,7 @@ DEPENDENCIES
   pry (>= 0.10.3, < 1.0)
   pry-byebug (>= 3.3.0, < 4.0)
   pry-stack_explorer (>= 0.4.9.2, < 1.0)
-  rake (~> 10.0)
+  rake (~> 13.0)
   rspec (~> 3.4, >= 3.4.0)
   superhosting!
   travis (~> 1.8, >= 1.8.2)
